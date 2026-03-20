@@ -1,0 +1,62 @@
+package aeries
+
+import "context"
+
+// SchoolsService exposes school-related read operations.
+type SchoolsService struct {
+	client *Client
+}
+
+// List returns school information records and narrows to one school when SchoolCode is provided.
+func (s *SchoolsService) List(ctx context.Context, req SchoolLookupRequest) ([]JSONDocument, error) {
+	return s.client.doDocuments(ctx, "schools.list", RequestOptions{
+		PathParams:   map[string]string{"SchoolCode": req.SchoolCode},
+		DatabaseYear: req.DatabaseYear,
+	})
+}
+
+// ListTerms returns the term definitions for one school.
+func (s *SchoolsService) ListTerms(ctx context.Context, req SchoolLookupRequest) ([]JSONDocument, error) {
+	return s.client.doDocuments(ctx, "schools.list_terms", RequestOptions{
+		PathParams:   map[string]string{"SchoolCode": req.SchoolCode},
+		DatabaseYear: req.DatabaseYear,
+	})
+}
+
+// ListCalendar returns the calendar rows for one school.
+func (s *SchoolsService) ListCalendar(ctx context.Context, req SchoolLookupRequest) ([]JSONDocument, error) {
+	return s.client.doDocuments(ctx, "schools.list_calendar", RequestOptions{
+		PathParams:   map[string]string{"SchoolCode": req.SchoolCode},
+		DatabaseYear: req.DatabaseYear,
+	})
+}
+
+// ListBellSchedule returns all bell schedule rows for one school.
+func (s *SchoolsService) ListBellSchedule(ctx context.Context, req SchoolLookupRequest) ([]JSONDocument, error) {
+	return s.client.doDocuments(ctx, "schools.list_bell_schedule", RequestOptions{
+		PathParams:   map[string]string{"SchoolCode": req.SchoolCode},
+		DatabaseYear: req.DatabaseYear,
+	})
+}
+
+// GetBellScheduleForDate returns bell schedule rows that apply to one specific school day.
+func (s *SchoolsService) GetBellScheduleForDate(ctx context.Context, req SchoolDateRequest) ([]JSONDocument, error) {
+	return s.client.doDocuments(ctx, "schools.get_bell_schedule_for_date", RequestOptions{
+		PathParams: map[string]string{
+			"SchoolCode": req.SchoolCode,
+			"Date":       req.Date,
+		},
+		DatabaseYear: req.DatabaseYear,
+	})
+}
+
+// ListAbsenceCodes returns absence code rows for one school and can narrow to one code.
+func (s *SchoolsService) ListAbsenceCodes(ctx context.Context, req AbsenceCodeLookupRequest) ([]JSONDocument, error) {
+	return s.client.doDocuments(ctx, "schools.list_absence_codes", RequestOptions{
+		PathParams: map[string]string{
+			"SchoolCode":  req.SchoolCode,
+			"AbsenceCode": req.AbsenceCode,
+		},
+		DatabaseYear: req.DatabaseYear,
+	})
+}

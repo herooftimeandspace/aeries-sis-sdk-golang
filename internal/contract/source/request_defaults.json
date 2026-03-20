@@ -1,0 +1,15 @@
+{
+  "request_defaults": {
+    "accept_header": "application/json",
+    "certificate_header": "AERIES-CERT",
+    "database_year_query_key": "DatabaseYear",
+    "supported_formats": [
+      "json"
+    ],
+    "notes": [
+      "Aeries documents both JSON and XML, but this SDK intentionally normalizes on JSON only for v1.",
+      "The district-issued AERIES-CERT header is required on every request and is case sensitive.",
+      "DatabaseYear selects a prior school year when the district configuration exposes that database."
+    ]
+  }
+}

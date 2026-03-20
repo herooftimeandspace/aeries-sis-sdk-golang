@@ -1,0 +1,128 @@
+package aeries
+
+import "context"
+
+// AttendanceService exposes enrollment and attendance history endpoints.
+type AttendanceService struct {
+	client *Client
+}
+
+// ListEnrollmentHistory returns district enrollment rows for one student or for all students when StudentID is zero.
+func (s *AttendanceService) ListEnrollmentHistory(ctx context.Context, req StudentMutationRequest) ([]JSONDocument, error) {
+	return s.client.doDocuments(ctx, "attendance.list_enrollment_history", RequestOptions{
+		PathParams:   map[string]string{"StudentID": intString(req.StudentID)},
+		DatabaseYear: req.DatabaseYear,
+	})
+}
+
+// ListEnrollmentHistoryByYear returns district enrollment rows for one student and academic year.
+func (s *AttendanceService) ListEnrollmentHistoryByYear(ctx context.Context, req StudentAcademicYearRequest) ([]JSONDocument, error) {
+	return s.client.doDocuments(ctx, "attendance.list_enrollment_history_by_year", RequestOptions{
+		PathParams: map[string]string{
+			"StudentID":    intString(req.StudentID),
+			"AcademicYear": req.AcademicYear,
+		},
+		DatabaseYear: req.DatabaseYear,
+	})
+}
+
+// ListSchoolEnrollmentHistory returns school enrollment rows for one student or all students when StudentID is zero.
+func (s *AttendanceService) ListSchoolEnrollmentHistory(ctx context.Context, req SchoolStudentLookupRequest) ([]JSONDocument, error) {
+	return s.client.doDocuments(ctx, "attendance.list_school_enrollment_history", RequestOptions{
+		PathParams: map[string]string{
+			"SchoolCode": req.SchoolCode,
+			"StudentID":  intString(req.StudentID),
+		},
+		DatabaseYear: req.DatabaseYear,
+	})
+}
+
+// ListSchoolEnrollmentHistoryByYear returns school enrollment rows for one student and academic year.
+func (s *AttendanceService) ListSchoolEnrollmentHistoryByYear(ctx context.Context, req SchoolStudentAcademicYearRequest) ([]JSONDocument, error) {
+	return s.client.doDocuments(ctx, "attendance.list_school_enrollment_history_by_year", RequestOptions{
+		PathParams: map[string]string{
+			"SchoolCode":   req.SchoolCode,
+			"StudentID":    intString(req.StudentID),
+			"AcademicYear": req.AcademicYear,
+		},
+		DatabaseYear: req.DatabaseYear,
+	})
+}
+
+// ListStudentAttendance returns attendance rows within the caller's requested date window.
+func (s *AttendanceService) ListStudentAttendance(ctx context.Context, req AttendanceWindowRequest) ([]JSONDocument, error) {
+	query := map[string]string{}
+	addQueryValue(query, "StartDate", req.StartDate)
+	addQueryValue(query, "EndDate", req.EndDate)
+	return s.client.doDocuments(ctx, "attendance.list_student_attendance", RequestOptions{
+		PathParams: map[string]string{
+			"SchoolCode": req.SchoolCode,
+			"StudentID":  intString(req.StudentID),
+		},
+		Query:        query,
+		DatabaseYear: req.DatabaseYear,
+	})
+}
+
+// ListHistorySummary returns attendance history summary rows for one school.
+func (s *AttendanceService) ListHistorySummary(ctx context.Context, req SchoolStudentLookupRequest) ([]JSONDocument, error) {
+	return s.client.doDocuments(ctx, "attendance.list_history_summary", RequestOptions{
+		PathParams: map[string]string{
+			"SchoolCode": req.SchoolCode,
+			"StudentID":  intString(req.StudentID),
+		},
+		DatabaseYear: req.DatabaseYear,
+	})
+}
+
+// ListHistorySummaryByYear returns attendance history summary rows for one school and academic year.
+func (s *AttendanceService) ListHistorySummaryByYear(ctx context.Context, req SchoolStringLookupRequest) ([]JSONDocument, error) {
+	return s.client.doDocuments(ctx, "attendance.list_history_summary_by_year", RequestOptions{
+		PathParams: map[string]string{
+			"SchoolCode":   req.SchoolCode,
+			"AcademicYear": req.Value,
+		},
+		DatabaseYear: req.DatabaseYear,
+	})
+}
+
+// ListHistoryDetail returns attendance history detail rows for one school.
+func (s *AttendanceService) ListHistoryDetail(ctx context.Context, req SchoolStudentLookupRequest) ([]JSONDocument, error) {
+	return s.client.doDocuments(ctx, "attendance.list_history_detail", RequestOptions{
+		PathParams: map[string]string{
+			"SchoolCode": req.SchoolCode,
+			"StudentID":  intString(req.StudentID),
+		},
+		DatabaseYear: req.DatabaseYear,
+	})
+}
+
+// ListHistoryDetailByYear returns attendance history detail rows for one school and academic year.
+func (s *AttendanceService) ListHistoryDetailByYear(ctx context.Context, req SchoolStringLookupRequest) ([]JSONDocument, error) {
+	return s.client.doDocuments(ctx, "attendance.list_history_detail_by_year", RequestOptions{
+		PathParams: map[string]string{
+			"SchoolCode":   req.SchoolCode,
+			"AcademicYear": req.Value,
+		},
+		DatabaseYear: req.DatabaseYear,
+	})
+}
+
+// ListHistoryAbsenceCodes returns the absence code catalog used by attendance history.
+func (s *AttendanceService) ListHistoryAbsenceCodes(ctx context.Context, req SchoolLookupRequest) ([]JSONDocument, error) {
+	return s.client.doDocuments(ctx, "attendance.list_history_absence_codes", RequestOptions{
+		PathParams:   map[string]string{"SchoolCode": req.SchoolCode},
+		DatabaseYear: req.DatabaseYear,
+	})
+}
+
+// ListHistoryAbsenceCodesByYear returns the attendance history absence code catalog for one academic year.
+func (s *AttendanceService) ListHistoryAbsenceCodesByYear(ctx context.Context, req SchoolStringLookupRequest) ([]JSONDocument, error) {
+	return s.client.doDocuments(ctx, "attendance.list_history_absence_codes_by_year", RequestOptions{
+		PathParams: map[string]string{
+			"SchoolCode":   req.SchoolCode,
+			"AcademicYear": req.Value,
+		},
+		DatabaseYear: req.DatabaseYear,
+	})
+}

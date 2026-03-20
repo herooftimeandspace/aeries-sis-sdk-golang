@@ -1,0 +1,2290 @@
+{
+  "generated_at": "2026-03-20",
+  "schema_version": "2026-02-09.aeries-public-api",
+  "request_defaults": {
+    "accept_header": "application/json",
+    "certificate_header": "AERIES-CERT",
+    "database_year_query_key": "DatabaseYear",
+    "supported_formats": [
+      "json"
+    ],
+    "notes": [
+      "Aeries documents both JSON and XML, but this SDK intentionally normalizes on JSON only for v1.",
+      "The district-issued AERIES-CERT header is required on every request and is case sensitive.",
+      "DatabaseYear selects a prior school year when the district configuration exposes that database."
+    ]
+  },
+  "sources": [
+    {
+      "id": "alerts",
+      "title": "Alerts",
+      "url": "https://support.aeries.com/support/solutions/articles/14000129264-alerts",
+      "modified_on": "2021-06-16",
+      "notes": [
+        "Documents the beta alert send endpoint for alerts and action alerts."
+      ]
+    },
+    {
+      "id": "attendance_enrollment",
+      "title": "Aeries API - Attendance and Enrollment-related end points",
+      "url": "https://support.aeries.com/support/solutions/articles/14000113684-aeries-api-attendance-and-enrollment-related-end-points",
+      "modified_on": "",
+      "notes": [
+        "Documents enrollment history, student attendance, attendance history summaries, details, and absence code views."
+      ]
+    },
+    {
+      "id": "building_request",
+      "title": "Aeries API Building a Request",
+      "url": "https://support.aeries.com/support/solutions/articles/14000113681-aeries-api-building-a-request",
+      "modified_on": "2026-02-09",
+      "notes": [
+        "Documents the Accept header and the AERIES-CERT header.",
+        "Explains that DatabaseYear can select a prior school year when the district exposes one."
+      ]
+    },
+    {
+      "id": "full_documentation",
+      "title": "Aeries API Full Documentation",
+      "url": "https://support.aeries.com/support/solutions/articles/14000077926-aeries-api-full-documentation",
+      "modified_on": "2026-02-09",
+      "notes": [
+        "Defines the current public API as v5 while noting that prior versions remain available.",
+        "Explains the Flex scheduling migration from teacher records to section-staff records."
+      ]
+    },
+    {
+      "id": "gradebook",
+      "title": "Aeries API - Gradebook-related end points",
+      "url": "https://support.aeries.com/support/solutions/articles/14000113688-aeries-api-gradebook-related-end-points",
+      "modified_on": "2022-03-15",
+      "notes": [
+        "Documents the gradebook API under v3 paths, including assignments, final marks, students, and scores.",
+        "Documents assignment and score update payloads."
+      ]
+    },
+    {
+      "id": "preenroll",
+      "title": "Aeries API - Pre-Enroll Students",
+      "url": "https://support.aeries.com/support/solutions/articles/14000120862-aeries-api-pre-enroll-students",
+      "modified_on": "",
+      "notes": [
+        "Documents the command endpoint used to trigger student pre-enrollment."
+      ]
+    },
+    {
+      "id": "quick_reference",
+      "title": "API Quick Reference Guide",
+      "url": "https://support.aeries.com/support/solutions/articles/14000070569-api-quick-reference-guide",
+      "modified_on": "2026-02-09",
+      "notes": [
+        "Summarizes the documented endpoint families, path templates, and pagination support.",
+        "Highlights that gradebook endpoints are still documented under v3 and course data changes under v2."
+      ]
+    },
+    {
+      "id": "scheduling",
+      "title": "Aeries API - Scheduling-related end points",
+      "url": "https://support.aeries.com/support/solutions/articles/14000113686-aeries-api-scheduling-related-end-points",
+      "modified_on": "",
+      "notes": [
+        "Documents courses, sections, class rosters, schedule data changes, and course request mutations.",
+        "Documents mixed-version scheduling endpoints, including v2 course data changes and v4/v5 section mutations."
+      ]
+    },
+    {
+      "id": "school_related",
+      "title": "Aeries API - School-related end points",
+      "url": "https://support.aeries.com/support/solutions/articles/14000113682-aeries-api-school-related-end-points",
+      "modified_on": "2025-12-12",
+      "notes": [
+        "Documents system information, school information, calendars, bell schedules, absence codes, and code sets."
+      ]
+    },
+    {
+      "id": "staff_related",
+      "title": "Aeries API - Staff-related end points",
+      "url": "https://support.aeries.com/support/solutions/articles/14000113687-aeries-api-staff-related-end-points",
+      "modified_on": "2022-10-06",
+      "notes": [
+        "Documents staff, staff classes, staff data changes, teachers, and staff-teacher mappings."
+      ]
+    },
+    {
+      "id": "student_grades",
+      "title": "Aeries API - Student Grades-related end points",
+      "url": "https://support.aeries.com/support/solutions/articles/14000113685-aeries-api-student-grades-related-end-points",
+      "modified_on": "",
+      "notes": [
+        "Documents GPA, student grades update, report cards, graduation requirements, graduation status, transcripts, and valid marks."
+      ]
+    },
+    {
+      "id": "student_related",
+      "title": "Aeries API - Student-related end points",
+      "url": "https://support.aeries.com/support/solutions/articles/14000113683-aeries-api-student-related-end-points",
+      "modified_on": "2025-12-12",
+      "notes": [
+        "Documents student information, contacts, programs, testing, supplemental data, fees, pictures, and groups.",
+        "Documents mutation endpoints including InsertStudent, UpdateStudent, UpdateStudentAddress, UpdateContact, DeleteContact, UpdateSchoolSupplemental, and testing/UpdateScores."
+      ]
+    }
+  ],
+  "endpoints": [
+    {
+      "id": "alerts.send",
+      "service": "Alerts",
+      "method_name": "Send",
+      "summary": "Send an alert or action alert by alert name.",
+      "http_method": "POST",
+      "path_template": "/api/v5/SendAlert/{AlertName}",
+      "api_version": "v5",
+      "response_shape": "object",
+      "path_parameters": [
+        "AlertName"
+      ],
+      "query_parameters": [
+        "DatabaseYear"
+      ],
+      "supports_database_year": true,
+      "mutation": true,
+      "source_ids": [
+        "alerts"
+      ]
+    },
+    {
+      "id": "attendance.list_enrollment_history",
+      "service": "Attendance",
+      "method_name": "ListEnrollmentHistory",
+      "summary": "List district enrollment history for one student or for all students when StudentID is zero.",
+      "http_method": "GET",
+      "path_template": "/api/v5/enrollment/{StudentID}",
+      "api_version": "v5",
+      "response_shape": "list",
+      "path_parameters": [
+        "StudentID"
+      ],
+      "query_parameters": [
+        "DatabaseYear"
+      ],
+      "supports_database_year": true,
+      "mutation": false,
+      "source_ids": [
+        "quick_reference",
+        "attendance_enrollment"
+      ]
+    },
+    {
+      "id": "attendance.list_enrollment_history_by_year",
+      "service": "Attendance",
+      "method_name": "ListEnrollmentHistoryByYear",
+      "summary": "List district enrollment history for one student and academic year.",
+      "http_method": "GET",
+      "path_template": "/api/v5/enrollment/{StudentID}/year/{AcademicYear}",
+      "api_version": "v5",
+      "response_shape": "list",
+      "path_parameters": [
+        "StudentID",
+        "AcademicYear"
+      ],
+      "query_parameters": [
+        "DatabaseYear"
+      ],
+      "supports_database_year": true,
+      "mutation": false,
+      "source_ids": [
+        "quick_reference",
+        "attendance_enrollment"
+      ]
+    },
+    {
+      "id": "attendance.list_history_absence_codes",
+      "service": "Attendance",
+      "method_name": "ListHistoryAbsenceCodes",
+      "summary": "List attendance history absence code records for one school.",
+      "http_method": "GET",
+      "path_template": "/api/v5/schools/{SchoolCode}/AttendanceHistory/AbsenceCodes",
+      "api_version": "v5",
+      "response_shape": "list",
+      "path_parameters": [
+        "SchoolCode"
+      ],
+      "query_parameters": [
+        "DatabaseYear"
+      ],
+      "supports_database_year": true,
+      "mutation": false,
+      "source_ids": [
+        "quick_reference",
+        "attendance_enrollment"
+      ]
+    },
+    {
+      "id": "attendance.list_history_absence_codes_by_year",
+      "service": "Attendance",
+      "method_name": "ListHistoryAbsenceCodesByYear",
+      "summary": "List attendance history absence code records for one school and academic year.",
+      "http_method": "GET",
+      "path_template": "/api/v5/schools/{SchoolCode}/AttendanceHistory/AbsenceCodes/year/{AcademicYear}",
+      "api_version": "v5",
+      "response_shape": "list",
+      "path_parameters": [
+        "SchoolCode",
+        "AcademicYear"
+      ],
+      "query_parameters": [
+        "DatabaseYear"
+      ],
+      "supports_database_year": true,
+      "mutation": false,
+      "source_ids": [
+        "quick_reference",
+        "attendance_enrollment"
+      ]
+    },
+    {
+      "id": "attendance.list_history_detail",
+      "service": "Attendance",
+      "method_name": "ListHistoryDetail",
+      "summary": "List attendance history detail records for one school and optional student ID.",
+      "http_method": "GET",
+      "path_template": "/api/v5/schools/{SchoolCode}/AttendanceHistory/details/{StudentID}",
+      "api_version": "v5",
+      "response_shape": "list",
+      "path_parameters": [
+        "SchoolCode",
+        "StudentID"
+      ],
+      "query_parameters": [
+        "DatabaseYear"
+      ],
+      "supports_database_year": true,
+      "mutation": false,
+      "source_ids": [
+        "quick_reference",
+        "attendance_enrollment"
+      ]
+    },
+    {
+      "id": "attendance.list_history_detail_by_year",
+      "service": "Attendance",
+      "method_name": "ListHistoryDetailByYear",
+      "summary": "List attendance history detail records for one school and academic year.",
+      "http_method": "GET",
+      "path_template": "/api/v5/schools/{SchoolCode}/AttendanceHistory/details/year/{AcademicYear}",
+      "api_version": "v5",
+      "response_shape": "list",
+      "path_parameters": [
+        "SchoolCode",
+        "AcademicYear"
+      ],
+      "query_parameters": [
+        "DatabaseYear"
+      ],
+      "supports_database_year": true,
+      "mutation": false,
+      "source_ids": [
+        "quick_reference",
+        "attendance_enrollment"
+      ]
+    },
+    {
+      "id": "attendance.list_history_summary",
+      "service": "Attendance",
+      "method_name": "ListHistorySummary",
+      "summary": "List attendance history summary records for one school and optional student ID.",
+      "http_method": "GET",
+      "path_template": "/api/v5/schools/{SchoolCode}/AttendanceHistory/summary/{StudentID}",
+      "api_version": "v5",
+      "response_shape": "list",
+      "path_parameters": [
+        "SchoolCode",
+        "StudentID"
+      ],
+      "query_parameters": [
+        "DatabaseYear"
+      ],
+      "supports_database_year": true,
+      "mutation": false,
+      "source_ids": [
+        "quick_reference",
+        "attendance_enrollment"
+      ]
+    },
+    {
+      "id": "attendance.list_history_summary_by_year",
+      "service": "Attendance",
+      "method_name": "ListHistorySummaryByYear",
+      "summary": "List attendance history summary records for one school and academic year.",
+      "http_method": "GET",
+      "path_template": "/api/v5/schools/{SchoolCode}/AttendanceHistory/summary/year/{AcademicYear}",
+      "api_version": "v5",
+      "response_shape": "list",
+      "path_parameters": [
+        "SchoolCode",
+        "AcademicYear"
+      ],
+      "query_parameters": [
+        "DatabaseYear"
+      ],
+      "supports_database_year": true,
+      "mutation": false,
+      "source_ids": [
+        "quick_reference",
+        "attendance_enrollment"
+      ]
+    },
+    {
+      "id": "attendance.list_school_enrollment_history",
+      "service": "Attendance",
+      "method_name": "ListSchoolEnrollmentHistory",
+      "summary": "List school enrollment history for one student or for all students when StudentID is zero.",
+      "http_method": "GET",
+      "path_template": "/api/v5/schools/{SchoolCode}/enrollment/{StudentID}",
+      "api_version": "v5",
+      "response_shape": "list",
+      "path_parameters": [
+        "SchoolCode",
+        "StudentID"
+      ],
+      "query_parameters": [
+        "DatabaseYear"
+      ],
+      "supports_database_year": true,
+      "mutation": false,
+      "source_ids": [
+        "quick_reference",
+        "attendance_enrollment"
+      ]
+    },
+    {
+      "id": "attendance.list_school_enrollment_history_by_year",
+      "service": "Attendance",
+      "method_name": "ListSchoolEnrollmentHistoryByYear",
+      "summary": "List school enrollment history for one student and academic year.",
+      "http_method": "GET",
+      "path_template": "/api/v5/schools/{SchoolCode}/enrollment/{StudentID}/year/{AcademicYear}",
+      "api_version": "v5",
+      "response_shape": "list",
+      "path_parameters": [
+        "SchoolCode",
+        "StudentID",
+        "AcademicYear"
+      ],
+      "query_parameters": [
+        "DatabaseYear"
+      ],
+      "supports_database_year": true,
+      "mutation": false,
+      "source_ids": [
+        "quick_reference",
+        "attendance_enrollment"
+      ]
+    },
+    {
+      "id": "attendance.list_student_attendance",
+      "service": "Attendance",
+      "method_name": "ListStudentAttendance",
+      "summary": "List attendance records for one student or many students within a date window.",
+      "http_method": "GET",
+      "path_template": "/api/v5/schools/{SchoolCode}/attendance/{StudentID}",
+      "api_version": "v5",
+      "response_shape": "list",
+      "path_parameters": [
+        "SchoolCode",
+        "StudentID"
+      ],
+      "query_parameters": [
+        "StartDate",
+        "EndDate",
+        "DatabaseYear"
+      ],
+      "supports_database_year": true,
+      "mutation": false,
+      "source_ids": [
+        "quick_reference",
+        "attendance_enrollment"
+      ]
+    },
+    {
+      "id": "codesets.list",
+      "service": "CodeSets",
+      "method_name": "List",
+      "summary": "List code values for a documented table and field pair.",
+      "http_method": "GET",
+      "path_template": "/api/v5/codes/{Table}/{Field}",
+      "api_version": "v5",
+      "response_shape": "list",
+      "path_parameters": [
+        "Table",
+        "Field"
+      ],
+      "query_parameters": [
+        "DatabaseYear"
+      ],
+      "supports_database_year": true,
+      "mutation": false,
+      "source_ids": [
+        "quick_reference",
+        "school_related"
+      ]
+    },
+    {
+      "id": "gradebook.create_assignment",
+      "service": "Gradebook",
+      "method_name": "CreateAssignment",
+      "summary": "Insert one new assignment into a gradebook.",
+      "http_method": "POST",
+      "path_template": "/api/v3/gradebooks/{GradebookNumber}/InsertAssignment",
+      "api_version": "v3",
+      "response_shape": "list",
+      "path_parameters": [
+        "GradebookNumber"
+      ],
+      "query_parameters": [
+        "DatabaseYear"
+      ],
+      "supports_database_year": true,
+      "mutation": true,
+      "source_ids": [
+        "quick_reference",
+        "gradebook"
+      ]
+    },
+    {
+      "id": "gradebook.get",
+      "service": "Gradebook",
+      "method_name": "Get",
+      "summary": "Get one gradebook by gradebook number.",
+      "http_method": "GET",
+      "path_template": "/api/v3/gradebooks/{GradebookNumber}",
+      "api_version": "v3",
+      "response_shape": "object",
+      "path_parameters": [
+        "GradebookNumber"
+      ],
+      "query_parameters": [
+        "DatabaseYear"
+      ],
+      "supports_database_year": true,
+      "mutation": false,
+      "source_ids": [
+        "quick_reference",
+        "gradebook"
+      ]
+    },
+    {
+      "id": "gradebook.get_assignment_by_unique_id",
+      "service": "Gradebook",
+      "method_name": "GetAssignmentByUniqueID",
+      "summary": "Get one assignment by district-wide assignment unique ID.",
+      "http_method": "GET",
+      "path_template": "/api/v3/gradebooks/Assignments/{UniqueID}",
+      "api_version": "v3",
+      "response_shape": "object",
+      "path_parameters": [
+        "UniqueID"
+      ],
+      "query_parameters": [
+        "DatabaseYear"
+      ],
+      "supports_database_year": true,
+      "mutation": false,
+      "source_ids": [
+        "quick_reference",
+        "gradebook"
+      ]
+    },
+    {
+      "id": "gradebook.list_assignment_scores",
+      "service": "Gradebook",
+      "method_name": "ListAssignmentScores",
+      "summary": "List assignment scores for one assignment and optional student ID.",
+      "http_method": "GET",
+      "path_template": "/api/v3/gradebooks/{GradebookNumber}/assignments/{AssignmentNumber}/scores/{StudentID}",
+      "api_version": "v3",
+      "response_shape": "list",
+      "path_parameters": [
+        "GradebookNumber",
+        "AssignmentNumber",
+        "StudentID"
+      ],
+      "query_parameters": [
+        "DatabaseYear"
+      ],
+      "supports_database_year": true,
+      "mutation": false,
+      "source_ids": [
+        "quick_reference",
+        "gradebook"
+      ]
+    },
+    {
+      "id": "gradebook.list_assignment_scores_by_unique_id",
+      "service": "Gradebook",
+      "method_name": "ListAssignmentScoresByUniqueID",
+      "summary": "List assignment scores for one assignment unique ID and optional student ID.",
+      "http_method": "GET",
+      "path_template": "/api/v3/gradebooks/assignments/{UniqueID}/scores/{StudentID}",
+      "api_version": "v3",
+      "response_shape": "list",
+      "path_parameters": [
+        "UniqueID",
+        "StudentID"
+      ],
+      "query_parameters": [
+        "DatabaseYear"
+      ],
+      "supports_database_year": true,
+      "mutation": false,
+      "source_ids": [
+        "quick_reference",
+        "gradebook"
+      ]
+    },
+    {
+      "id": "gradebook.list_assignments",
+      "service": "Gradebook",
+      "method_name": "ListAssignments",
+      "summary": "List assignments for one gradebook or one assignment when AssignmentNumber is provided.",
+      "http_method": "GET",
+      "path_template": "/api/v3/gradebooks/{GradebookNumber}/assignments/{AssignmentNumber}",
+      "api_version": "v3",
+      "response_shape": "list",
+      "path_parameters": [
+        "GradebookNumber",
+        "AssignmentNumber"
+      ],
+      "query_parameters": [
+        "DatabaseYear"
+      ],
+      "supports_database_year": true,
+      "mutation": false,
+      "source_ids": [
+        "quick_reference",
+        "gradebook"
+      ]
+    },
+    {
+      "id": "gradebook.list_by_section",
+      "service": "Gradebook",
+      "method_name": "ListBySection",
+      "summary": "List gradebooks for one school section.",
+      "http_method": "GET",
+      "path_template": "/api/v3/schools/{SchoolCode}/sections/{SectionNumber}/gradebooks",
+      "api_version": "v3",
+      "response_shape": "list",
+      "path_parameters": [
+        "SchoolCode",
+        "SectionNumber"
+      ],
+      "query_parameters": [
+        "DatabaseYear"
+      ],
+      "supports_database_year": true,
+      "mutation": false,
+      "source_ids": [
+        "quick_reference",
+        "gradebook"
+      ]
+    },
+    {
+      "id": "gradebook.list_by_staff",
+      "service": "Gradebook",
+      "method_name": "ListByStaff",
+      "summary": "List gradebooks for one staff member.",
+      "http_method": "GET",
+      "path_template": "/api/v3/staff/{StaffID}/gradebooks",
+      "api_version": "v3",
+      "response_shape": "list",
+      "path_parameters": [
+        "StaffID"
+      ],
+      "query_parameters": [
+        "DatabaseYear"
+      ],
+      "supports_database_year": true,
+      "mutation": false,
+      "source_ids": [
+        "quick_reference",
+        "gradebook"
+      ]
+    },
+    {
+      "id": "gradebook.list_final_mark_ranges",
+      "service": "Gradebook",
+      "method_name": "ListFinalMarkRanges",
+      "summary": "List final mark ranges for one gradebook.",
+      "http_method": "GET",
+      "path_template": "/api/v3/gradebooks/{GradebookNumber}/FinalMarks",
+      "api_version": "v3",
+      "response_shape": "list",
+      "path_parameters": [
+        "GradebookNumber"
+      ],
+      "query_parameters": [
+        "DatabaseYear"
+      ],
+      "supports_database_year": true,
+      "mutation": false,
+      "source_ids": [
+        "quick_reference",
+        "gradebook"
+      ]
+    },
+    {
+      "id": "gradebook.list_students",
+      "service": "Gradebook",
+      "method_name": "ListStudents",
+      "summary": "List gradebook students for one gradebook term and optional student ID.",
+      "http_method": "GET",
+      "path_template": "/api/v3/gradebooks/{GradebookNumber}/{GradebookTerm}/students/{StudentID}",
+      "api_version": "v3",
+      "response_shape": "list",
+      "path_parameters": [
+        "GradebookNumber",
+        "GradebookTerm",
+        "StudentID"
+      ],
+      "query_parameters": [
+        "DatabaseYear"
+      ],
+      "supports_database_year": true,
+      "mutation": false,
+      "source_ids": [
+        "quick_reference",
+        "gradebook"
+      ]
+    },
+    {
+      "id": "gradebook.update_assignment",
+      "service": "Gradebook",
+      "method_name": "UpdateAssignment",
+      "summary": "Update one assignment by gradebook and assignment number.",
+      "http_method": "POST",
+      "path_template": "/api/v3/gradebooks/{GradebookNumber}/assignments/{AssignmentNumber}",
+      "api_version": "v3",
+      "response_shape": "list",
+      "path_parameters": [
+        "GradebookNumber",
+        "AssignmentNumber"
+      ],
+      "query_parameters": [
+        "DatabaseYear"
+      ],
+      "supports_database_year": true,
+      "mutation": true,
+      "source_ids": [
+        "quick_reference",
+        "gradebook"
+      ]
+    },
+    {
+      "id": "gradebook.update_assignment_by_unique_id",
+      "service": "Gradebook",
+      "method_name": "UpdateAssignmentByUniqueID",
+      "summary": "Update one assignment by assignment unique ID.",
+      "http_method": "POST",
+      "path_template": "/api/v3/gradebooks/Assignments/{UniqueID}",
+      "api_version": "v3",
+      "response_shape": "list",
+      "path_parameters": [
+        "UniqueID"
+      ],
+      "query_parameters": [
+        "DatabaseYear"
+      ],
+      "supports_database_year": true,
+      "mutation": true,
+      "source_ids": [
+        "quick_reference",
+        "gradebook"
+      ]
+    },
+    {
+      "id": "gradebook.update_assignment_scores",
+      "service": "Gradebook",
+      "method_name": "UpdateAssignmentScores",
+      "summary": "Update assignment scores by gradebook and assignment number.",
+      "http_method": "POST",
+      "path_template": "/api/v3/gradebooks/{GradebookNumber}/assignments/{AssignmentNumber}/UpdateScores",
+      "api_version": "v3",
+      "response_shape": "list",
+      "path_parameters": [
+        "GradebookNumber",
+        "AssignmentNumber"
+      ],
+      "query_parameters": [
+        "DatabaseYear"
+      ],
+      "supports_database_year": true,
+      "mutation": true,
+      "source_ids": [
+        "quick_reference",
+        "gradebook"
+      ]
+    },
+    {
+      "id": "gradebook.update_assignment_scores_by_unique_id",
+      "service": "Gradebook",
+      "method_name": "UpdateAssignmentScoresByUniqueID",
+      "summary": "Update assignment scores by assignment unique ID.",
+      "http_method": "POST",
+      "path_template": "/api/v3/gradebooks/assignments/{UniqueID}/UpdateScores",
+      "api_version": "v3",
+      "response_shape": "list",
+      "path_parameters": [
+        "UniqueID"
+      ],
+      "query_parameters": [
+        "DatabaseYear"
+      ],
+      "supports_database_year": true,
+      "mutation": true,
+      "source_ids": [
+        "quick_reference",
+        "gradebook"
+      ]
+    },
+    {
+      "id": "preenroll.trigger",
+      "service": "PreEnroll",
+      "method_name": "Trigger",
+      "summary": "Trigger student pre-enrollment for one student.",
+      "http_method": "POST",
+      "path_template": "/api/v5/PreEnrollStudent/{StudentID}",
+      "api_version": "v5",
+      "response_shape": "object",
+      "path_parameters": [
+        "StudentID"
+      ],
+      "query_parameters": [
+        "DatabaseYear"
+      ],
+      "supports_database_year": true,
+      "mutation": true,
+      "source_ids": [
+        "full_documentation",
+        "preenroll"
+      ]
+    },
+    {
+      "id": "programs.list",
+      "service": "Programs",
+      "method_name": "List",
+      "summary": "List program records for one student or all students when StudentID is zero.",
+      "http_method": "GET",
+      "path_template": "/api/v5/schools/{SchoolCode}/students/{StudentID}/programs",
+      "api_version": "v5",
+      "response_shape": "list",
+      "path_parameters": [
+        "SchoolCode",
+        "StudentID"
+      ],
+      "query_parameters": [
+        "code",
+        "DatabaseYear"
+      ],
+      "supports_database_year": true,
+      "mutation": false,
+      "source_ids": [
+        "quick_reference",
+        "student_related"
+      ]
+    },
+    {
+      "id": "scheduling.create_alternate_course_request",
+      "service": "Scheduling",
+      "method_name": "CreateAlternateCourseRequest",
+      "summary": "Create one alternate course request record.",
+      "http_method": "POST",
+      "path_template": "/api/v5/schools/{SchoolCode}/students/{StudentID}/alternatecourserequests",
+      "api_version": "v5",
+      "response_shape": "object",
+      "path_parameters": [
+        "SchoolCode",
+        "StudentID"
+      ],
+      "query_parameters": [
+        "DatabaseYear"
+      ],
+      "supports_database_year": true,
+      "mutation": true,
+      "source_ids": [
+        "scheduling"
+      ]
+    },
+    {
+      "id": "scheduling.create_section",
+      "service": "Scheduling",
+      "method_name": "CreateSection",
+      "summary": "Create one scheduling master schedule section.",
+      "http_method": "POST",
+      "path_template": "/api/v5/schools/{SchoolCode}/scheduling/sections",
+      "api_version": "v5",
+      "response_shape": "object",
+      "path_parameters": [
+        "SchoolCode"
+      ],
+      "query_parameters": [
+        "DatabaseYear"
+      ],
+      "supports_database_year": true,
+      "mutation": true,
+      "source_ids": [
+        "scheduling"
+      ]
+    },
+    {
+      "id": "scheduling.create_student_course_request",
+      "service": "Scheduling",
+      "method_name": "CreateStudentCourseRequest",
+      "summary": "Create one student course request record.",
+      "http_method": "POST",
+      "path_template": "/api/v5/schools/{SchoolCode}/students/{StudentID}/courserequests",
+      "api_version": "v5",
+      "response_shape": "object",
+      "path_parameters": [
+        "SchoolCode",
+        "StudentID"
+      ],
+      "query_parameters": [
+        "DatabaseYear"
+      ],
+      "supports_database_year": true,
+      "mutation": true,
+      "source_ids": [
+        "scheduling"
+      ]
+    },
+    {
+      "id": "scheduling.delete_alternate_course_request",
+      "service": "Scheduling",
+      "method_name": "DeleteAlternateCourseRequest",
+      "summary": "Delete one alternate course request record.",
+      "http_method": "DELETE",
+      "path_template": "/api/v5/schools/{SchoolCode}/students/{StudentID}/alternatecourserequests/{SequenceNumber}",
+      "api_version": "v5",
+      "response_shape": "empty",
+      "path_parameters": [
+        "SchoolCode",
+        "StudentID",
+        "SequenceNumber"
+      ],
+      "query_parameters": [
+        "DatabaseYear"
+      ],
+      "supports_database_year": true,
+      "mutation": true,
+      "source_ids": [
+        "scheduling"
+      ]
+    },
+    {
+      "id": "scheduling.delete_section",
+      "service": "Scheduling",
+      "method_name": "DeleteSection",
+      "summary": "Delete one scheduling master schedule section.",
+      "http_method": "DELETE",
+      "path_template": "/api/v5/schools/{SchoolCode}/scheduling/sections/{SectionNumber}",
+      "api_version": "v5",
+      "response_shape": "empty",
+      "path_parameters": [
+        "SchoolCode",
+        "SectionNumber"
+      ],
+      "query_parameters": [
+        "DatabaseYear"
+      ],
+      "supports_database_year": true,
+      "mutation": true,
+      "source_ids": [
+        "scheduling"
+      ]
+    },
+    {
+      "id": "scheduling.delete_student_course_request",
+      "service": "Scheduling",
+      "method_name": "DeleteStudentCourseRequest",
+      "summary": "Delete one student course request by sequence number.",
+      "http_method": "DELETE",
+      "path_template": "/api/v5/schools/{SchoolCode}/students/{StudentID}/courserequests/{SequenceNumber}",
+      "api_version": "v5",
+      "response_shape": "empty",
+      "path_parameters": [
+        "SchoolCode",
+        "StudentID",
+        "SequenceNumber"
+      ],
+      "query_parameters": [
+        "DatabaseYear"
+      ],
+      "supports_database_year": true,
+      "mutation": true,
+      "source_ids": [
+        "scheduling"
+      ]
+    },
+    {
+      "id": "scheduling.list_alternate_course_requests",
+      "service": "Scheduling",
+      "method_name": "ListAlternateCourseRequests",
+      "summary": "List alternate course request rows for one student and optional sequence number.",
+      "http_method": "GET",
+      "path_template": "/api/v5/schools/{SchoolCode}/students/{StudentID}/alternatecourserequests/{SequenceNumber}",
+      "api_version": "v5",
+      "response_shape": "list",
+      "path_parameters": [
+        "SchoolCode",
+        "StudentID",
+        "SequenceNumber"
+      ],
+      "query_parameters": [
+        "DatabaseYear"
+      ],
+      "supports_database_year": true,
+      "mutation": false,
+      "source_ids": [
+        "scheduling"
+      ]
+    },
+    {
+      "id": "scheduling.list_course_data_changes",
+      "service": "Scheduling",
+      "method_name": "ListCourseDataChanges",
+      "summary": "List course IDs with changes since a specific time.",
+      "http_method": "GET",
+      "path_template": "/api/v2/CourseDataChanges/{Year}/{Month}/{Day}/{Hour}/{Minute}",
+      "api_version": "v2",
+      "response_shape": "list",
+      "path_parameters": [
+        "Year",
+        "Month",
+        "Day",
+        "Hour",
+        "Minute"
+      ],
+      "query_parameters": [
+        "DatabaseYear"
+      ],
+      "supports_database_year": true,
+      "mutation": false,
+      "source_ids": [
+        "quick_reference",
+        "scheduling"
+      ]
+    },
+    {
+      "id": "scheduling.list_course_requests",
+      "service": "Scheduling",
+      "method_name": "ListCourseRequests",
+      "summary": "List course request rows for one school.",
+      "http_method": "GET",
+      "path_template": "/api/v5/schools/{SchoolCode}/scheduling/courserequests",
+      "api_version": "v5",
+      "response_shape": "list",
+      "path_parameters": [
+        "SchoolCode"
+      ],
+      "query_parameters": [
+        "DatabaseYear"
+      ],
+      "supports_database_year": true,
+      "mutation": false,
+      "source_ids": [
+        "scheduling"
+      ]
+    },
+    {
+      "id": "scheduling.list_courses",
+      "service": "Scheduling",
+      "method_name": "ListCourses",
+      "summary": "List course records or one course by district course ID.",
+      "http_method": "GET",
+      "path_template": "/api/v5/courses/{CourseID}",
+      "api_version": "v5",
+      "response_shape": "list",
+      "path_parameters": [
+        "CourseID"
+      ],
+      "query_parameters": [
+        "DatabaseYear"
+      ],
+      "supports_database_year": true,
+      "mutation": false,
+      "source_ids": [
+        "quick_reference",
+        "scheduling"
+      ]
+    },
+    {
+      "id": "scheduling.list_section_data_changes",
+      "service": "Scheduling",
+      "method_name": "ListSectionDataChanges",
+      "summary": "List section numbers with changes since a specific time.",
+      "http_method": "GET",
+      "path_template": "/api/v5/SectionDataChanges/{Year}/{Month}/{Day}/{Hour}/{Minute}",
+      "api_version": "v5",
+      "response_shape": "list",
+      "path_parameters": [
+        "Year",
+        "Month",
+        "Day",
+        "Hour",
+        "Minute"
+      ],
+      "query_parameters": [
+        "DatabaseYear"
+      ],
+      "supports_database_year": true,
+      "mutation": false,
+      "source_ids": [
+        "quick_reference",
+        "scheduling"
+      ]
+    },
+    {
+      "id": "scheduling.list_section_roster",
+      "service": "Scheduling",
+      "method_name": "ListSectionRoster",
+      "summary": "List students assigned to one section.",
+      "http_method": "GET",
+      "path_template": "/api/v5/schools/{SchoolCode}/sections/{SectionNumber}/students",
+      "api_version": "v5",
+      "response_shape": "list",
+      "path_parameters": [
+        "SchoolCode",
+        "SectionNumber"
+      ],
+      "query_parameters": [
+        "DatabaseYear"
+      ],
+      "supports_database_year": true,
+      "mutation": false,
+      "source_ids": [
+        "quick_reference",
+        "scheduling"
+      ]
+    },
+    {
+      "id": "scheduling.list_section_roster_data_changes",
+      "service": "Scheduling",
+      "method_name": "ListSectionRosterDataChanges",
+      "summary": "List section roster changes since a specific time.",
+      "http_method": "GET",
+      "path_template": "/api/v5/SectionRosterDataChanges/{Year}/{Month}/{Day}/{Hour}/{Minute}",
+      "api_version": "v5",
+      "response_shape": "list",
+      "path_parameters": [
+        "Year",
+        "Month",
+        "Day",
+        "Hour",
+        "Minute"
+      ],
+      "query_parameters": [
+        "DatabaseYear"
+      ],
+      "supports_database_year": true,
+      "mutation": false,
+      "source_ids": [
+        "quick_reference",
+        "scheduling"
+      ]
+    },
+    {
+      "id": "scheduling.list_sections",
+      "service": "Scheduling",
+      "method_name": "ListSections",
+      "summary": "List section rows or one section by school section number.",
+      "http_method": "GET",
+      "path_template": "/api/v5/schools/{SchoolCode}/sections/{SectionNumber}",
+      "api_version": "v5",
+      "response_shape": "list",
+      "path_parameters": [
+        "SchoolCode",
+        "SectionNumber"
+      ],
+      "query_parameters": [
+        "DatabaseYear"
+      ],
+      "supports_database_year": true,
+      "mutation": false,
+      "source_ids": [
+        "quick_reference",
+        "scheduling"
+      ]
+    },
+    {
+      "id": "scheduling.list_student_class_schedule",
+      "service": "Scheduling",
+      "method_name": "ListStudentClassSchedule",
+      "summary": "List class schedule rows for one student or many students in one school.",
+      "http_method": "GET",
+      "path_template": "/api/v5/schools/{SchoolCode}/classes/{StudentID}",
+      "api_version": "v5",
+      "response_shape": "list",
+      "path_parameters": [
+        "SchoolCode",
+        "StudentID"
+      ],
+      "query_parameters": [
+        "DatabaseYear"
+      ],
+      "supports_database_year": true,
+      "mutation": false,
+      "source_ids": [
+        "quick_reference",
+        "scheduling"
+      ]
+    },
+    {
+      "id": "scheduling.list_student_course_requests",
+      "service": "Scheduling",
+      "method_name": "ListStudentCourseRequests",
+      "summary": "List course request rows for one student and optional sequence number.",
+      "http_method": "GET",
+      "path_template": "/api/v5/schools/{SchoolCode}/students/{StudentID}/courserequests/{SequenceNumber}",
+      "api_version": "v5",
+      "response_shape": "list",
+      "path_parameters": [
+        "SchoolCode",
+        "StudentID",
+        "SequenceNumber"
+      ],
+      "query_parameters": [
+        "DatabaseYear"
+      ],
+      "supports_database_year": true,
+      "mutation": false,
+      "source_ids": [
+        "scheduling"
+      ]
+    },
+    {
+      "id": "scheduling.update_alternate_course_request",
+      "service": "Scheduling",
+      "method_name": "UpdateAlternateCourseRequest",
+      "summary": "Update one alternate course request record.",
+      "http_method": "PUT",
+      "path_template": "/api/v5/schools/{SchoolCode}/students/{StudentID}/alternatecourserequests/{SequenceNumber}",
+      "api_version": "v5",
+      "response_shape": "object",
+      "path_parameters": [
+        "SchoolCode",
+        "StudentID",
+        "SequenceNumber"
+      ],
+      "query_parameters": [
+        "DatabaseYear"
+      ],
+      "supports_database_year": true,
+      "mutation": true,
+      "source_ids": [
+        "scheduling"
+      ]
+    },
+    {
+      "id": "scheduling.update_section",
+      "service": "Scheduling",
+      "method_name": "UpdateSection",
+      "summary": "Update one scheduling master schedule section.",
+      "http_method": "PUT",
+      "path_template": "/api/v5/schools/{SchoolCode}/scheduling/sections/{SectionNumber}",
+      "api_version": "v5",
+      "response_shape": "object",
+      "path_parameters": [
+        "SchoolCode",
+        "SectionNumber"
+      ],
+      "query_parameters": [
+        "DatabaseYear"
+      ],
+      "supports_database_year": true,
+      "mutation": true,
+      "source_ids": [
+        "scheduling"
+      ]
+    },
+    {
+      "id": "scheduling.update_student_course_request",
+      "service": "Scheduling",
+      "method_name": "UpdateStudentCourseRequest",
+      "summary": "Update or create one student course request by sequence number.",
+      "http_method": "PUT",
+      "path_template": "/api/v5/schools/{SchoolCode}/students/{StudentID}/courserequests/{SequenceNumber}",
+      "api_version": "v5",
+      "response_shape": "object",
+      "path_parameters": [
+        "SchoolCode",
+        "StudentID",
+        "SequenceNumber"
+      ],
+      "query_parameters": [
+        "DatabaseYear"
+      ],
+      "supports_database_year": true,
+      "mutation": true,
+      "source_ids": [
+        "scheduling"
+      ]
+    },
+    {
+      "id": "schools.get_bell_schedule_for_date",
+      "service": "Schools",
+      "method_name": "GetBellScheduleForDate",
+      "summary": "Get the bell schedule for one school and date.",
+      "http_method": "GET",
+      "path_template": "/api/v5/schools/{SchoolCode}/BellSchedule/date/{Date}",
+      "api_version": "v5",
+      "response_shape": "list",
+      "path_parameters": [
+        "SchoolCode",
+        "Date"
+      ],
+      "query_parameters": [
+        "DatabaseYear"
+      ],
+      "supports_database_year": true,
+      "mutation": false,
+      "source_ids": [
+        "quick_reference",
+        "school_related"
+      ]
+    },
+    {
+      "id": "schools.list",
+      "service": "Schools",
+      "method_name": "List",
+      "summary": "List school information or one school when SchoolCode is provided.",
+      "http_method": "GET",
+      "path_template": "/api/v5/schools/{SchoolCode}",
+      "api_version": "v5",
+      "response_shape": "list",
+      "path_parameters": [
+        "SchoolCode"
+      ],
+      "query_parameters": [
+        "DatabaseYear"
+      ],
+      "supports_database_year": true,
+      "mutation": false,
+      "source_ids": [
+        "quick_reference",
+        "school_related"
+      ]
+    },
+    {
+      "id": "schools.list_absence_codes",
+      "service": "Schools",
+      "method_name": "ListAbsenceCodes",
+      "summary": "List absence codes for one school or one absence code when a code is provided.",
+      "http_method": "GET",
+      "path_template": "/api/v5/schools/{SchoolCode}/AbsenceCodes/{AbsenceCode}",
+      "api_version": "v5",
+      "response_shape": "list",
+      "path_parameters": [
+        "SchoolCode",
+        "AbsenceCode"
+      ],
+      "query_parameters": [
+        "DatabaseYear"
+      ],
+      "supports_database_year": true,
+      "mutation": false,
+      "source_ids": [
+        "quick_reference",
+        "school_related"
+      ]
+    },
+    {
+      "id": "schools.list_bell_schedule",
+      "service": "Schools",
+      "method_name": "ListBellSchedule",
+      "summary": "List bell schedule entries for one school.",
+      "http_method": "GET",
+      "path_template": "/api/v5/schools/{SchoolCode}/BellSchedule",
+      "api_version": "v5",
+      "response_shape": "list",
+      "path_parameters": [
+        "SchoolCode"
+      ],
+      "query_parameters": [
+        "DatabaseYear"
+      ],
+      "supports_database_year": true,
+      "mutation": false,
+      "source_ids": [
+        "quick_reference",
+        "school_related"
+      ]
+    },
+    {
+      "id": "schools.list_calendar",
+      "service": "Schools",
+      "method_name": "ListCalendar",
+      "summary": "List calendar entries for one school.",
+      "http_method": "GET",
+      "path_template": "/api/v5/schools/{SchoolCode}/calendar",
+      "api_version": "v5",
+      "response_shape": "list",
+      "path_parameters": [
+        "SchoolCode"
+      ],
+      "query_parameters": [
+        "DatabaseYear"
+      ],
+      "supports_database_year": true,
+      "mutation": false,
+      "source_ids": [
+        "quick_reference",
+        "school_related"
+      ]
+    },
+    {
+      "id": "schools.list_terms",
+      "service": "Schools",
+      "method_name": "ListTerms",
+      "summary": "List terms for one school.",
+      "http_method": "GET",
+      "path_template": "/api/v5/schools/{SchoolCode}/terms",
+      "api_version": "v5",
+      "response_shape": "list",
+      "path_parameters": [
+        "SchoolCode"
+      ],
+      "query_parameters": [
+        "DatabaseYear"
+      ],
+      "supports_database_year": true,
+      "mutation": false,
+      "source_ids": [
+        "quick_reference",
+        "school_related"
+      ]
+    },
+    {
+      "id": "staff.get_by_hrid",
+      "service": "Staff",
+      "method_name": "GetByHRID",
+      "summary": "Get a staff record by HR ID.",
+      "http_method": "GET",
+      "path_template": "/api/v5/staff/hrid/{HRID}",
+      "api_version": "v5",
+      "response_shape": "object",
+      "path_parameters": [
+        "HRID"
+      ],
+      "query_parameters": [
+        "DatabaseYear"
+      ],
+      "supports_database_year": true,
+      "mutation": false,
+      "source_ids": [
+        "quick_reference",
+        "staff_related"
+      ]
+    },
+    {
+      "id": "staff.list",
+      "service": "Staff",
+      "method_name": "List",
+      "summary": "List staff records or one staff record by district staff ID.",
+      "http_method": "GET",
+      "path_template": "/api/v5/staff/{StaffID}",
+      "api_version": "v5",
+      "response_shape": "list",
+      "path_parameters": [
+        "StaffID"
+      ],
+      "query_parameters": [
+        "DatabaseYear"
+      ],
+      "supports_database_year": true,
+      "mutation": false,
+      "source_ids": [
+        "quick_reference",
+        "staff_related"
+      ]
+    },
+    {
+      "id": "staff.list_classes",
+      "service": "Staff",
+      "method_name": "ListClasses",
+      "summary": "List classes or sections assigned to one staff member.",
+      "http_method": "GET",
+      "path_template": "/api/v5/staff/{StaffID}/classes",
+      "api_version": "v5",
+      "response_shape": "list",
+      "path_parameters": [
+        "StaffID"
+      ],
+      "query_parameters": [
+        "DatabaseYear"
+      ],
+      "supports_database_year": true,
+      "mutation": false,
+      "source_ids": [
+        "quick_reference",
+        "staff_related"
+      ]
+    },
+    {
+      "id": "staff.list_data_changes",
+      "service": "Staff",
+      "method_name": "ListDataChanges",
+      "summary": "List staff IDs with changes since a specific time.",
+      "http_method": "GET",
+      "path_template": "/api/v5/StaffDataChanges/{Year}/{Month}/{Day}/{Hour}/{Minute}",
+      "api_version": "v5",
+      "response_shape": "list",
+      "path_parameters": [
+        "Year",
+        "Month",
+        "Day",
+        "Hour",
+        "Minute"
+      ],
+      "query_parameters": [
+        "DatabaseYear"
+      ],
+      "supports_database_year": true,
+      "mutation": false,
+      "source_ids": [
+        "quick_reference",
+        "staff_related"
+      ]
+    },
+    {
+      "id": "staff.list_teacher_bridge",
+      "service": "Staff",
+      "method_name": "ListTeacherBridge",
+      "summary": "List teacher records associated with one staff ID.",
+      "http_method": "GET",
+      "path_template": "/api/v5/staff/{StaffID}/teachers",
+      "api_version": "v5",
+      "response_shape": "list",
+      "path_parameters": [
+        "StaffID"
+      ],
+      "query_parameters": [
+        "DatabaseYear"
+      ],
+      "supports_database_year": true,
+      "mutation": false,
+      "source_ids": [
+        "quick_reference",
+        "staff_related"
+      ]
+    },
+    {
+      "id": "staff.list_teachers",
+      "service": "Staff",
+      "method_name": "ListTeachers",
+      "summary": "List teacher rows for one school or one teacher number.",
+      "http_method": "GET",
+      "path_template": "/api/v5/schools/{SchoolCode}/teachers/{TeacherNumber}",
+      "api_version": "v5",
+      "response_shape": "list",
+      "path_parameters": [
+        "SchoolCode",
+        "TeacherNumber"
+      ],
+      "query_parameters": [
+        "DatabaseYear"
+      ],
+      "supports_database_year": true,
+      "mutation": false,
+      "source_ids": [
+        "quick_reference",
+        "staff_related",
+        "scheduling"
+      ]
+    },
+    {
+      "id": "student_grades.list_gpa",
+      "service": "StudentGrades",
+      "method_name": "ListGPA",
+      "summary": "List GPA records for one student or many students.",
+      "http_method": "GET",
+      "path_template": "/api/v5/schools/{SchoolCode}/gpas/{StudentID}",
+      "api_version": "v5",
+      "response_shape": "list",
+      "path_parameters": [
+        "SchoolCode",
+        "StudentID"
+      ],
+      "query_parameters": [
+        "StartingRecord",
+        "EndingRecord",
+        "DatabaseYear"
+      ],
+      "supports_database_year": true,
+      "mutation": false,
+      "source_ids": [
+        "quick_reference",
+        "student_grades"
+      ]
+    },
+    {
+      "id": "student_grades.list_graduation_requirements",
+      "service": "StudentGrades",
+      "method_name": "ListGraduationRequirements",
+      "summary": "List graduation requirement definitions for one school.",
+      "http_method": "GET",
+      "path_template": "/api/v5/schools/{SchoolCode}/GraduationRequirements",
+      "api_version": "v5",
+      "response_shape": "list",
+      "path_parameters": [
+        "SchoolCode"
+      ],
+      "query_parameters": [
+        "DatabaseYear"
+      ],
+      "supports_database_year": true,
+      "mutation": false,
+      "source_ids": [
+        "quick_reference",
+        "student_grades"
+      ]
+    },
+    {
+      "id": "student_grades.list_graduation_status",
+      "service": "StudentGrades",
+      "method_name": "ListGraduationStatus",
+      "summary": "List graduation status summary rows for one student or many students.",
+      "http_method": "GET",
+      "path_template": "/api/v5/schools/{SchoolCode}/GraduationStatusSummary/{StudentID}",
+      "api_version": "v5",
+      "response_shape": "list",
+      "path_parameters": [
+        "SchoolCode",
+        "StudentID"
+      ],
+      "query_parameters": [
+        "StartingRecord",
+        "EndingRecord",
+        "DatabaseYear"
+      ],
+      "supports_database_year": true,
+      "mutation": false,
+      "source_ids": [
+        "quick_reference",
+        "student_grades"
+      ]
+    },
+    {
+      "id": "student_grades.list_graduation_status_by_grade",
+      "service": "StudentGrades",
+      "method_name": "ListGraduationStatusByGrade",
+      "summary": "List graduation status summary rows for one grade level.",
+      "http_method": "GET",
+      "path_template": "/api/v5/schools/{SchoolCode}/GraduationStatusSummary/grade/{GradeLevel}",
+      "api_version": "v5",
+      "response_shape": "list",
+      "path_parameters": [
+        "SchoolCode",
+        "GradeLevel"
+      ],
+      "query_parameters": [
+        "StartingRecord",
+        "EndingRecord",
+        "DatabaseYear"
+      ],
+      "supports_database_year": true,
+      "mutation": false,
+      "source_ids": [
+        "quick_reference",
+        "student_grades"
+      ]
+    },
+    {
+      "id": "student_grades.list_report_card_marking_periods",
+      "service": "StudentGrades",
+      "method_name": "ListReportCardMarkingPeriods",
+      "summary": "List report card marking periods for one school.",
+      "http_method": "GET",
+      "path_template": "/api/v5/schools/{SchoolCode}/ReportCardMarkingPeriods",
+      "api_version": "v5",
+      "response_shape": "list",
+      "path_parameters": [
+        "SchoolCode"
+      ],
+      "query_parameters": [
+        "DatabaseYear"
+      ],
+      "supports_database_year": true,
+      "mutation": false,
+      "source_ids": [
+        "quick_reference",
+        "student_grades"
+      ]
+    },
+    {
+      "id": "student_grades.list_report_cards",
+      "service": "StudentGrades",
+      "method_name": "ListReportCards",
+      "summary": "List report card records for one student or many students.",
+      "http_method": "GET",
+      "path_template": "/api/v5/schools/{SchoolCode}/ReportCard/{StudentID}",
+      "api_version": "v5",
+      "response_shape": "list",
+      "path_parameters": [
+        "SchoolCode",
+        "StudentID"
+      ],
+      "query_parameters": [
+        "DatabaseYear"
+      ],
+      "supports_database_year": true,
+      "mutation": false,
+      "source_ids": [
+        "quick_reference",
+        "student_grades"
+      ]
+    },
+    {
+      "id": "student_grades.list_transcripts",
+      "service": "StudentGrades",
+      "method_name": "ListTranscripts",
+      "summary": "List transcript rows for one student or many students.",
+      "http_method": "GET",
+      "path_template": "/api/v5/schools/{SchoolCode}/Transcript/{StudentID}",
+      "api_version": "v5",
+      "response_shape": "list",
+      "path_parameters": [
+        "SchoolCode",
+        "StudentID"
+      ],
+      "query_parameters": [
+        "StartingRecord",
+        "EndingRecord",
+        "DatabaseYear"
+      ],
+      "supports_database_year": true,
+      "mutation": false,
+      "source_ids": [
+        "quick_reference",
+        "student_grades"
+      ]
+    },
+    {
+      "id": "student_grades.list_valid_marks",
+      "service": "StudentGrades",
+      "method_name": "ListValidMarks",
+      "summary": "List valid transcript marks for one school.",
+      "http_method": "GET",
+      "path_template": "/api/v5/schools/{SchoolCode}/Transcript/validmarks",
+      "api_version": "v5",
+      "response_shape": "list",
+      "path_parameters": [
+        "SchoolCode"
+      ],
+      "query_parameters": [
+        "DatabaseYear"
+      ],
+      "supports_database_year": true,
+      "mutation": false,
+      "source_ids": [
+        "quick_reference",
+        "student_grades"
+      ]
+    },
+    {
+      "id": "student_grades.update_grades",
+      "service": "StudentGrades",
+      "method_name": "UpdateGrades",
+      "summary": "Update student grades in bulk for one school.",
+      "http_method": "POST",
+      "path_template": "/api/v5/schools/{SchoolCode}/grades",
+      "api_version": "v5",
+      "response_shape": "list",
+      "path_parameters": [
+        "SchoolCode"
+      ],
+      "query_parameters": [
+        "DatabaseYear"
+      ],
+      "supports_database_year": true,
+      "mutation": true,
+      "source_ids": [
+        "quick_reference",
+        "student_grades"
+      ]
+    },
+    {
+      "id": "students.create",
+      "service": "Students",
+      "method_name": "Create",
+      "summary": "Insert a new district student who has never been enrolled.",
+      "http_method": "POST",
+      "path_template": "/api/v5/schools/{SchoolCode}/InsertStudent",
+      "api_version": "v5",
+      "response_shape": "object",
+      "path_parameters": [
+        "SchoolCode"
+      ],
+      "query_parameters": [
+        "DatabaseYear"
+      ],
+      "supports_database_year": true,
+      "mutation": true,
+      "source_ids": [
+        "student_related"
+      ]
+    },
+    {
+      "id": "students.delete_contact",
+      "service": "Students",
+      "method_name": "DeleteContact",
+      "summary": "Delete one student contact by sequence number.",
+      "http_method": "DELETE",
+      "path_template": "/api/v5/DeleteContact/{StudentID}/{SequenceNumber}",
+      "api_version": "v5",
+      "response_shape": "empty",
+      "path_parameters": [
+        "StudentID",
+        "SequenceNumber"
+      ],
+      "query_parameters": [
+        "DatabaseYear"
+      ],
+      "supports_database_year": true,
+      "mutation": true,
+      "source_ids": [
+        "quick_reference",
+        "student_related"
+      ]
+    },
+    {
+      "id": "students.get_by_student_number",
+      "service": "Students",
+      "method_name": "GetByStudentNumber",
+      "summary": "Get one student by school-scoped student number.",
+      "http_method": "GET",
+      "path_template": "/api/v5/schools/{SchoolCode}/students/sn/{StudentNumber}",
+      "api_version": "v5",
+      "response_shape": "object",
+      "path_parameters": [
+        "SchoolCode",
+        "StudentNumber"
+      ],
+      "query_parameters": [
+        "DatabaseYear"
+      ],
+      "supports_database_year": true,
+      "mutation": false,
+      "source_ids": [
+        "quick_reference",
+        "student_related"
+      ]
+    },
+    {
+      "id": "students.get_extended_by_student_number",
+      "service": "Students",
+      "method_name": "GetExtendedByStudentNumber",
+      "summary": "Get one extended student record by school-scoped student number.",
+      "http_method": "GET",
+      "path_template": "/api/v5/schools/{SchoolCode}/students/sn/{StudentNumber}/extended",
+      "api_version": "v5",
+      "response_shape": "object",
+      "path_parameters": [
+        "SchoolCode",
+        "StudentNumber"
+      ],
+      "query_parameters": [
+        "DatabaseYear"
+      ],
+      "supports_database_year": true,
+      "mutation": false,
+      "source_ids": [
+        "quick_reference",
+        "student_related"
+      ]
+    },
+    {
+      "id": "students.list",
+      "service": "Students",
+      "method_name": "List",
+      "summary": "List students or one student by district student ID.",
+      "http_method": "GET",
+      "path_template": "/api/v5/schools/{SchoolCode}/students/{StudentID}",
+      "api_version": "v5",
+      "response_shape": "list",
+      "path_parameters": [
+        "SchoolCode",
+        "StudentID"
+      ],
+      "query_parameters": [
+        "StartingRecord",
+        "EndingRecord",
+        "DatabaseYear"
+      ],
+      "supports_database_year": true,
+      "mutation": false,
+      "source_ids": [
+        "quick_reference",
+        "student_related"
+      ]
+    },
+    {
+      "id": "students.list_assertive_discipline",
+      "service": "Students",
+      "method_name": "ListAssertiveDiscipline",
+      "summary": "List assertive discipline records for one student or many students.",
+      "http_method": "GET",
+      "path_template": "/api/v5/schools/{SchoolCode}/AssertiveDiscipline/{StudentID}",
+      "api_version": "v5",
+      "response_shape": "list",
+      "path_parameters": [
+        "SchoolCode",
+        "StudentID"
+      ],
+      "query_parameters": [
+        "DatabaseYear"
+      ],
+      "supports_database_year": true,
+      "mutation": false,
+      "source_ids": [
+        "quick_reference",
+        "student_related"
+      ]
+    },
+    {
+      "id": "students.list_available_tests",
+      "service": "Students",
+      "method_name": "ListAvailableTests",
+      "summary": "List test definitions that can be used with testing updates.",
+      "http_method": "GET",
+      "path_template": "/api/v5/testing/availabletests",
+      "api_version": "v5",
+      "response_shape": "list",
+      "path_parameters": [],
+      "query_parameters": [
+        "DatabaseYear"
+      ],
+      "supports_database_year": true,
+      "mutation": false,
+      "source_ids": [
+        "quick_reference",
+        "student_related"
+      ]
+    },
+    {
+      "id": "students.list_by_grade",
+      "service": "Students",
+      "method_name": "ListByGrade",
+      "summary": "List students for one school and grade level.",
+      "http_method": "GET",
+      "path_template": "/api/v5/schools/{SchoolCode}/students/grade/{GradeLevel}",
+      "api_version": "v5",
+      "response_shape": "list",
+      "path_parameters": [
+        "SchoolCode",
+        "GradeLevel"
+      ],
+      "query_parameters": [
+        "StartingRecord",
+        "EndingRecord",
+        "DatabaseYear"
+      ],
+      "supports_database_year": true,
+      "mutation": false,
+      "source_ids": [
+        "quick_reference",
+        "student_related"
+      ]
+    },
+    {
+      "id": "students.list_college_test_scores",
+      "service": "Students",
+      "method_name": "ListCollegeTestScores",
+      "summary": "List college entrance test scores for one student or many students.",
+      "http_method": "GET",
+      "path_template": "/api/v5/schools/{SchoolCode}/CollegeTestScores/{StudentID}",
+      "api_version": "v5",
+      "response_shape": "list",
+      "path_parameters": [
+        "SchoolCode",
+        "StudentID"
+      ],
+      "query_parameters": [
+        "DatabaseYear"
+      ],
+      "supports_database_year": true,
+      "mutation": false,
+      "source_ids": [
+        "quick_reference",
+        "student_related"
+      ]
+    },
+    {
+      "id": "students.list_contacts",
+      "service": "Students",
+      "method_name": "ListContacts",
+      "summary": "List contacts for one student or all contacts when StudentID is zero.",
+      "http_method": "GET",
+      "path_template": "/api/v5/schools/{SchoolCode}/contacts/{StudentID}",
+      "api_version": "v5",
+      "response_shape": "list",
+      "path_parameters": [
+        "SchoolCode",
+        "StudentID"
+      ],
+      "query_parameters": [
+        "DatabaseYear"
+      ],
+      "supports_database_year": true,
+      "mutation": false,
+      "source_ids": [
+        "quick_reference",
+        "student_related"
+      ]
+    },
+    {
+      "id": "students.list_data_changes",
+      "service": "Students",
+      "method_name": "ListDataChanges",
+      "summary": "List student IDs with changes since a specific time for one student data area.",
+      "http_method": "GET",
+      "path_template": "/api/v5/StudentDataChanges/{DataArea}/{Year}/{Month}/{Day}/{Hour}/{Minute}",
+      "api_version": "v5",
+      "response_shape": "list",
+      "path_parameters": [
+        "DataArea",
+        "Year",
+        "Month",
+        "Day",
+        "Hour",
+        "Minute"
+      ],
+      "query_parameters": [
+        "DatabaseYear"
+      ],
+      "supports_database_year": true,
+      "mutation": false,
+      "source_ids": [
+        "quick_reference",
+        "student_related"
+      ]
+    },
+    {
+      "id": "students.list_district_supplemental",
+      "service": "Students",
+      "method_name": "ListDistrictSupplemental",
+      "summary": "List district supplemental records for one student or many students.",
+      "http_method": "GET",
+      "path_template": "/api/v5/schools/{SchoolCode}/DistrictSupplemental/{StudentID}",
+      "api_version": "v5",
+      "response_shape": "list",
+      "path_parameters": [
+        "SchoolCode",
+        "StudentID"
+      ],
+      "query_parameters": [
+        "DatabaseYear"
+      ],
+      "supports_database_year": true,
+      "mutation": false,
+      "source_ids": [
+        "quick_reference",
+        "student_related"
+      ]
+    },
+    {
+      "id": "students.list_extended",
+      "service": "Students",
+      "method_name": "ListExtended",
+      "summary": "List extended student records or one student by district student ID.",
+      "http_method": "GET",
+      "path_template": "/api/v5/schools/{SchoolCode}/students/{StudentID}/extended",
+      "api_version": "v5",
+      "response_shape": "list",
+      "path_parameters": [
+        "SchoolCode",
+        "StudentID"
+      ],
+      "query_parameters": [
+        "StartingRecord",
+        "EndingRecord",
+        "DatabaseYear"
+      ],
+      "supports_database_year": true,
+      "mutation": false,
+      "source_ids": [
+        "quick_reference",
+        "student_related"
+      ]
+    },
+    {
+      "id": "students.list_extended_by_grade",
+      "service": "Students",
+      "method_name": "ListExtendedByGrade",
+      "summary": "List extended student records for one grade level.",
+      "http_method": "GET",
+      "path_template": "/api/v5/schools/{SchoolCode}/students/grade/{GradeLevel}/extended",
+      "api_version": "v5",
+      "response_shape": "list",
+      "path_parameters": [
+        "SchoolCode",
+        "GradeLevel"
+      ],
+      "query_parameters": [
+        "StartingRecord",
+        "EndingRecord",
+        "DatabaseYear"
+      ],
+      "supports_database_year": true,
+      "mutation": false,
+      "source_ids": [
+        "quick_reference",
+        "student_related"
+      ]
+    },
+    {
+      "id": "students.list_fees",
+      "service": "Students",
+      "method_name": "ListFees",
+      "summary": "List fee and fine records for one student or many students.",
+      "http_method": "GET",
+      "path_template": "/api/v5/schools/{SchoolCode}/fees/{StudentID}",
+      "api_version": "v5",
+      "response_shape": "list",
+      "path_parameters": [
+        "SchoolCode",
+        "StudentID"
+      ],
+      "query_parameters": [
+        "DatabaseYear"
+      ],
+      "supports_database_year": true,
+      "mutation": false,
+      "source_ids": [
+        "quick_reference",
+        "student_related"
+      ]
+    },
+    {
+      "id": "students.list_groups",
+      "service": "Students",
+      "method_name": "ListGroups",
+      "summary": "List student groups for one school or for all schools.",
+      "http_method": "GET",
+      "path_template": "/api/v5/schools/{SchoolCode}/StudentGroups",
+      "api_version": "v5",
+      "response_shape": "list",
+      "path_parameters": [
+        "SchoolCode"
+      ],
+      "query_parameters": [
+        "DatabaseYear"
+      ],
+      "supports_database_year": true,
+      "mutation": false,
+      "source_ids": [
+        "quick_reference",
+        "student_related"
+      ]
+    },
+    {
+      "id": "students.list_pictures",
+      "service": "Students",
+      "method_name": "ListPictures",
+      "summary": "List student pictures for one student or many students.",
+      "http_method": "GET",
+      "path_template": "/api/v5/schools/{SchoolCode}/StudentPictures/{StudentID}",
+      "api_version": "v5",
+      "response_shape": "list",
+      "path_parameters": [
+        "SchoolCode",
+        "StudentID"
+      ],
+      "query_parameters": [
+        "StartingRecord",
+        "EndingRecord",
+        "DatabaseYear"
+      ],
+      "supports_database_year": true,
+      "mutation": false,
+      "source_ids": [
+        "quick_reference",
+        "student_related"
+      ]
+    },
+    {
+      "id": "students.list_school_supplemental",
+      "service": "Students",
+      "method_name": "ListSchoolSupplemental",
+      "summary": "List school supplemental records for one student or many students.",
+      "http_method": "GET",
+      "path_template": "/api/v5/schools/{SchoolCode}/SchoolSupplemental/{StudentID}",
+      "api_version": "v5",
+      "response_shape": "list",
+      "path_parameters": [
+        "SchoolCode",
+        "StudentID"
+      ],
+      "query_parameters": [
+        "DatabaseYear"
+      ],
+      "supports_database_year": true,
+      "mutation": false,
+      "source_ids": [
+        "quick_reference",
+        "student_related"
+      ]
+    },
+    {
+      "id": "students.list_test_scores",
+      "service": "Students",
+      "method_name": "ListTestScores",
+      "summary": "List test scores for one student.",
+      "http_method": "GET",
+      "path_template": "/api/v5/students/{StudentID}/tests",
+      "api_version": "v5",
+      "response_shape": "list",
+      "path_parameters": [
+        "StudentID"
+      ],
+      "query_parameters": [
+        "DatabaseYear"
+      ],
+      "supports_database_year": true,
+      "mutation": false,
+      "source_ids": [
+        "quick_reference",
+        "student_related"
+      ]
+    },
+    {
+      "id": "students.update",
+      "service": "Students",
+      "method_name": "Update",
+      "summary": "Update one district student record across any matching schools.",
+      "http_method": "POST",
+      "path_template": "/api/v5/UpdateStudent/{StudentID}",
+      "api_version": "v5",
+      "response_shape": "list",
+      "path_parameters": [
+        "StudentID"
+      ],
+      "query_parameters": [
+        "DatabaseYear"
+      ],
+      "supports_database_year": true,
+      "mutation": true,
+      "source_ids": [
+        "student_related"
+      ]
+    },
+    {
+      "id": "students.update_address",
+      "service": "Students",
+      "method_name": "UpdateAddress",
+      "summary": "Update a student's mailing or residence address.",
+      "http_method": "POST",
+      "path_template": "/api/v5/UpdateStudentAddress/{StudentID}",
+      "api_version": "v5",
+      "response_shape": "list",
+      "path_parameters": [
+        "StudentID"
+      ],
+      "query_parameters": [
+        "DatabaseYear"
+      ],
+      "supports_database_year": true,
+      "mutation": true,
+      "source_ids": [
+        "student_related"
+      ]
+    },
+    {
+      "id": "students.update_contact",
+      "service": "Students",
+      "method_name": "UpdateContact",
+      "summary": "Update one student contact by sequence number.",
+      "http_method": "POST",
+      "path_template": "/api/v5/UpdateContact/{StudentID}/{SequenceNumber}",
+      "api_version": "v5",
+      "response_shape": "object",
+      "path_parameters": [
+        "StudentID",
+        "SequenceNumber"
+      ],
+      "query_parameters": [
+        "DatabaseYear"
+      ],
+      "supports_database_year": true,
+      "mutation": true,
+      "source_ids": [
+        "quick_reference",
+        "student_related"
+      ]
+    },
+    {
+      "id": "students.update_school_supplemental",
+      "service": "Students",
+      "method_name": "UpdateSchoolSupplemental",
+      "summary": "Update school supplemental data for one student number within one school.",
+      "http_method": "POST",
+      "path_template": "/api/v5/UpdateSchoolSupplemental/{SchoolCode}/{StudentNumber}",
+      "api_version": "v5",
+      "response_shape": "object",
+      "path_parameters": [
+        "SchoolCode",
+        "StudentNumber"
+      ],
+      "query_parameters": [
+        "DatabaseYear"
+      ],
+      "supports_database_year": true,
+      "mutation": true,
+      "source_ids": [
+        "quick_reference",
+        "student_related"
+      ]
+    },
+    {
+      "id": "students.update_test_scores",
+      "service": "Students",
+      "method_name": "UpdateTestScores",
+      "summary": "Insert or update student test scores in bulk.",
+      "http_method": "POST",
+      "path_template": "/api/v5/testing/UpdateScores",
+      "api_version": "v5",
+      "response_shape": "list",
+      "path_parameters": [],
+      "query_parameters": [
+        "DatabaseYear"
+      ],
+      "supports_database_year": true,
+      "mutation": true,
+      "source_ids": [
+        "quick_reference",
+        "student_related"
+      ]
+    },
+    {
+      "id": "system.get_info",
+      "service": "System",
+      "method_name": "GetInfo",
+      "summary": "Get Aeries installation information.",
+      "http_method": "GET",
+      "path_template": "/api/v5/systeminfo",
+      "api_version": "v5",
+      "response_shape": "object",
+      "path_parameters": [],
+      "query_parameters": [
+        "DatabaseYear"
+      ],
+      "supports_database_year": true,
+      "mutation": false,
+      "source_ids": [
+        "full_documentation",
+        "building_request",
+        "quick_reference",
+        "school_related"
+      ]
+    }
+  ]
+}

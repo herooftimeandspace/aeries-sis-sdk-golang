@@ -1,0 +1,22 @@
+package aeries
+
+import "context"
+
+// ProgramsService exposes student program endpoints as their own beginner-friendly service.
+type ProgramsService struct {
+	client *Client
+}
+
+// List returns program rows for one student or all students when StudentID is zero.
+func (s *ProgramsService) List(ctx context.Context, req ProgramLookupRequest) ([]JSONDocument, error) {
+	query := map[string]string{}
+	addQueryValue(query, "code", req.ProgramCode)
+	return s.client.doDocuments(ctx, "programs.list", RequestOptions{
+		PathParams: map[string]string{
+			"SchoolCode": req.SchoolCode,
+			"StudentID":  intString(req.StudentID),
+		},
+		Query:        query,
+		DatabaseYear: req.DatabaseYear,
+	})
+}

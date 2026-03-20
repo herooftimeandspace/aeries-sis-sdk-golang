@@ -1,0 +1,148 @@
+package aeries
+
+import "context"
+
+// GradebookService exposes gradebook, assignment, and score endpoints.
+type GradebookService struct {
+	client *Client
+}
+
+// ListByStaff returns the gradebooks assigned to one staff member.
+func (s *GradebookService) ListByStaff(ctx context.Context, req GradebookByStaffRequest) ([]JSONDocument, error) {
+	return s.client.doDocuments(ctx, "gradebook.list_by_staff", RequestOptions{
+		PathParams:   map[string]string{"StaffID": intString(req.StaffID)},
+		DatabaseYear: req.DatabaseYear,
+	})
+}
+
+// ListBySection returns the gradebooks assigned to one section.
+func (s *GradebookService) ListBySection(ctx context.Context, req GradebookBySectionRequest) ([]JSONDocument, error) {
+	return s.client.doDocuments(ctx, "gradebook.list_by_section", RequestOptions{
+		PathParams: map[string]string{
+			"SchoolCode":    req.SchoolCode,
+			"SectionNumber": intString(req.SectionNumber),
+		},
+		DatabaseYear: req.DatabaseYear,
+	})
+}
+
+// Get returns one gradebook by gradebook number.
+func (s *GradebookService) Get(ctx context.Context, req GradebookLookupRequest) (JSONDocument, error) {
+	return s.client.doDocument(ctx, "gradebook.get", RequestOptions{
+		PathParams:   map[string]string{"GradebookNumber": intString(req.GradebookNumber)},
+		DatabaseYear: req.DatabaseYear,
+	})
+}
+
+// ListAssignments returns assignments for one gradebook and can narrow to one assignment number.
+func (s *GradebookService) ListAssignments(ctx context.Context, req AssignmentLookupRequest) ([]JSONDocument, error) {
+	return s.client.doDocuments(ctx, "gradebook.list_assignments", RequestOptions{
+		PathParams: map[string]string{
+			"GradebookNumber":  intString(req.GradebookNumber),
+			"AssignmentNumber": intString(req.AssignmentNumber),
+		},
+		DatabaseYear: req.DatabaseYear,
+	})
+}
+
+// GetAssignmentByUniqueID returns one assignment by its district-wide assignment unique ID.
+func (s *GradebookService) GetAssignmentByUniqueID(ctx context.Context, req AssignmentLookupRequest) (JSONDocument, error) {
+	return s.client.doDocument(ctx, "gradebook.get_assignment_by_unique_id", RequestOptions{
+		PathParams:   map[string]string{"UniqueID": req.UniqueID},
+		DatabaseYear: req.DatabaseYear,
+	})
+}
+
+// UpdateAssignment updates one assignment addressed by gradebook and assignment number.
+func (s *GradebookService) UpdateAssignment(ctx context.Context, req AssignmentMutationRequest) ([]JSONDocument, error) {
+	return s.client.doDocuments(ctx, "gradebook.update_assignment", RequestOptions{
+		PathParams: map[string]string{
+			"GradebookNumber":  intString(req.GradebookNumber),
+			"AssignmentNumber": intString(req.AssignmentNumber),
+		},
+		JSONBody:     req.Values,
+		DatabaseYear: req.DatabaseYear,
+	})
+}
+
+// UpdateAssignmentByUniqueID updates one assignment addressed by assignment unique ID.
+func (s *GradebookService) UpdateAssignmentByUniqueID(ctx context.Context, req AssignmentMutationRequest) ([]JSONDocument, error) {
+	return s.client.doDocuments(ctx, "gradebook.update_assignment_by_unique_id", RequestOptions{
+		PathParams:   map[string]string{"UniqueID": req.UniqueID},
+		JSONBody:     req.Values,
+		DatabaseYear: req.DatabaseYear,
+	})
+}
+
+// CreateAssignment inserts one new assignment into a gradebook.
+func (s *GradebookService) CreateAssignment(ctx context.Context, req AssignmentMutationRequest) ([]JSONDocument, error) {
+	return s.client.doDocuments(ctx, "gradebook.create_assignment", RequestOptions{
+		PathParams:   map[string]string{"GradebookNumber": intString(req.GradebookNumber)},
+		JSONBody:     req.Values,
+		DatabaseYear: req.DatabaseYear,
+	})
+}
+
+// ListFinalMarkRanges returns the final mark range configuration for one gradebook.
+func (s *GradebookService) ListFinalMarkRanges(ctx context.Context, req GradebookLookupRequest) ([]JSONDocument, error) {
+	return s.client.doDocuments(ctx, "gradebook.list_final_mark_ranges", RequestOptions{
+		PathParams:   map[string]string{"GradebookNumber": intString(req.GradebookNumber)},
+		DatabaseYear: req.DatabaseYear,
+	})
+}
+
+// ListStudents returns the students enrolled in one gradebook term.
+func (s *GradebookService) ListStudents(ctx context.Context, req GradebookStudentsRequest) ([]JSONDocument, error) {
+	return s.client.doDocuments(ctx, "gradebook.list_students", RequestOptions{
+		PathParams: map[string]string{
+			"GradebookNumber": intString(req.GradebookNumber),
+			"GradebookTerm":   req.GradebookTerm,
+			"StudentID":       intString(req.StudentID),
+		},
+		DatabaseYear: req.DatabaseYear,
+	})
+}
+
+// ListAssignmentScores returns assignment scores addressed by gradebook and assignment number.
+func (s *GradebookService) ListAssignmentScores(ctx context.Context, req AssignmentScoresLookupRequest) ([]JSONDocument, error) {
+	return s.client.doDocuments(ctx, "gradebook.list_assignment_scores", RequestOptions{
+		PathParams: map[string]string{
+			"GradebookNumber":  intString(req.GradebookNumber),
+			"AssignmentNumber": intString(req.AssignmentNumber),
+			"StudentID":        intString(req.StudentID),
+		},
+		DatabaseYear: req.DatabaseYear,
+	})
+}
+
+// ListAssignmentScoresByUniqueID returns assignment scores addressed by assignment unique ID.
+func (s *GradebookService) ListAssignmentScoresByUniqueID(ctx context.Context, req AssignmentScoresLookupRequest) ([]JSONDocument, error) {
+	return s.client.doDocuments(ctx, "gradebook.list_assignment_scores_by_unique_id", RequestOptions{
+		PathParams: map[string]string{
+			"UniqueID":  req.UniqueID,
+			"StudentID": intString(req.StudentID),
+		},
+		DatabaseYear: req.DatabaseYear,
+	})
+}
+
+// UpdateAssignmentScores updates assignment score rows addressed by gradebook and assignment number.
+func (s *GradebookService) UpdateAssignmentScores(ctx context.Context, req AssignmentScoresUpdateRequest) ([]JSONDocument, error) {
+	return s.client.doDocuments(ctx, "gradebook.update_assignment_scores", RequestOptions{
+		PathParams: map[string]string{
+			"GradebookNumber":  intString(req.GradebookNumber),
+			"AssignmentNumber": intString(req.AssignmentNumber),
+		},
+		JSONBody:     req.Items,
+		DatabaseYear: req.DatabaseYear,
+	})
+}
+
+// UpdateAssignmentScoresByUniqueID updates assignment score rows addressed by assignment unique ID.
+func (s *GradebookService) UpdateAssignmentScoresByUniqueID(ctx context.Context, req AssignmentScoresUpdateRequest) ([]JSONDocument, error) {
+	return s.client.doDocuments(ctx, "gradebook.update_assignment_scores_by_unique_id", RequestOptions{
+		PathParams:   map[string]string{"UniqueID": req.UniqueID},
+		JSONBody:     req.Items,
+		DatabaseYear: req.DatabaseYear,
+	})
+}

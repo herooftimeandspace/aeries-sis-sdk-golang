@@ -1,0 +1,118 @@
+{
+  "sources": [
+    {
+      "id": "full_documentation",
+      "title": "Aeries API Full Documentation",
+      "url": "https://support.aeries.com/support/solutions/articles/14000077926-aeries-api-full-documentation",
+      "modified_on": "2026-02-09",
+      "notes": [
+        "Defines the current public API as v5 while noting that prior versions remain available.",
+        "Explains the Flex scheduling migration from teacher records to section-staff records."
+      ]
+    },
+    {
+      "id": "building_request",
+      "title": "Aeries API Building a Request",
+      "url": "https://support.aeries.com/support/solutions/articles/14000113681-aeries-api-building-a-request",
+      "modified_on": "2026-02-09",
+      "notes": [
+        "Documents the Accept header and the AERIES-CERT header.",
+        "Explains that DatabaseYear can select a prior school year when the district exposes one."
+      ]
+    },
+    {
+      "id": "quick_reference",
+      "title": "API Quick Reference Guide",
+      "url": "https://support.aeries.com/support/solutions/articles/14000070569-api-quick-reference-guide",
+      "modified_on": "2026-02-09",
+      "notes": [
+        "Summarizes the documented endpoint families, path templates, and pagination support.",
+        "Highlights that gradebook endpoints are still documented under v3 and course data changes under v2."
+      ]
+    },
+    {
+      "id": "school_related",
+      "title": "Aeries API - School-related end points",
+      "url": "https://support.aeries.com/support/solutions/articles/14000113682-aeries-api-school-related-end-points",
+      "modified_on": "2025-12-12",
+      "notes": [
+        "Documents system information, school information, calendars, bell schedules, absence codes, and code sets."
+      ]
+    },
+    {
+      "id": "preenroll",
+      "title": "Aeries API - Pre-Enroll Students",
+      "url": "https://support.aeries.com/support/solutions/articles/14000120862-aeries-api-pre-enroll-students",
+      "modified_on": "",
+      "notes": [
+        "Documents the command endpoint used to trigger student pre-enrollment."
+      ]
+    },
+    {
+      "id": "student_related",
+      "title": "Aeries API - Student-related end points",
+      "url": "https://support.aeries.com/support/solutions/articles/14000113683-aeries-api-student-related-end-points",
+      "modified_on": "2025-12-12",
+      "notes": [
+        "Documents student information, contacts, programs, testing, supplemental data, fees, pictures, and groups.",
+        "Documents mutation endpoints including InsertStudent, UpdateStudent, UpdateStudentAddress, UpdateContact, DeleteContact, UpdateSchoolSupplemental, and testing/UpdateScores."
+      ]
+    },
+    {
+      "id": "attendance_enrollment",
+      "title": "Aeries API - Attendance and Enrollment-related end points",
+      "url": "https://support.aeries.com/support/solutions/articles/14000113684-aeries-api-attendance-and-enrollment-related-end-points",
+      "modified_on": "",
+      "notes": [
+        "Documents enrollment history, student attendance, attendance history summaries, details, and absence code views."
+      ]
+    },
+    {
+      "id": "student_grades",
+      "title": "Aeries API - Student Grades-related end points",
+      "url": "https://support.aeries.com/support/solutions/articles/14000113685-aeries-api-student-grades-related-end-points",
+      "modified_on": "",
+      "notes": [
+        "Documents GPA, student grades update, report cards, graduation requirements, graduation status, transcripts, and valid marks."
+      ]
+    },
+    {
+      "id": "staff_related",
+      "title": "Aeries API - Staff-related end points",
+      "url": "https://support.aeries.com/support/solutions/articles/14000113687-aeries-api-staff-related-end-points",
+      "modified_on": "2022-10-06",
+      "notes": [
+        "Documents staff, staff classes, staff data changes, teachers, and staff-teacher mappings."
+      ]
+    },
+    {
+      "id": "scheduling",
+      "title": "Aeries API - Scheduling-related end points",
+      "url": "https://support.aeries.com/support/solutions/articles/14000113686-aeries-api-scheduling-related-end-points",
+      "modified_on": "",
+      "notes": [
+        "Documents courses, sections, class rosters, schedule data changes, and course request mutations.",
+        "Documents mixed-version scheduling endpoints, including v2 course data changes and v4/v5 section mutations."
+      ]
+    },
+    {
+      "id": "gradebook",
+      "title": "Aeries API - Gradebook-related end points",
+      "url": "https://support.aeries.com/support/solutions/articles/14000113688-aeries-api-gradebook-related-end-points",
+      "modified_on": "2022-03-15",
+      "notes": [
+        "Documents the gradebook API under v3 paths, including assignments, final marks, students, and scores.",
+        "Documents assignment and score update payloads."
+      ]
+    },
+    {
+      "id": "alerts",
+      "title": "Alerts",
+      "url": "https://support.aeries.com/support/solutions/articles/14000129264-alerts",
+      "modified_on": "2021-06-16",
+      "notes": [
+        "Documents the beta alert send endpoint for alerts and action alerts."
+      ]
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+SHELL := /bin/sh
+
+README := README.md
+DOCS := docs
+GOMARKDOC ?= $(shell go env GOPATH)/bin/gomarkdoc
+
+.PHONY: docs docs-check docs-generate pages-help
+
+docs:
+	@mkdir -p $(DOCS)
+	@sed 's#](docs/#](#g' $(README) > $(DOCS)/index.md
+	@printf '%s\n' "Docs home refreshed from README.md."
+
+docs-check:
+	@tmp="$$(mktemp)"; sed 's#](docs/#](#g' $(README) > "$$tmp" && cmp -s "$$tmp" $(DOCS)/index.md; status=$$?; rm -f "$$tmp"; exit $$status
+
+docs-generate:
+	@mkdir -p $(DOCS)/reference
+	@$(GOMARKDOC) -u -o $(DOCS)/reference/aeries.md .
+	@$(GOMARKDOC) -u -o $(DOCS)/reference/contract.md ./contract
+	@$(GOMARKDOC) -u -o $(DOCS)/reference/internal.md ./internal/contract
+	@printf '%s\n' "# Generated API Reference" "" "- [Public Package](aeries.md)" "- [Contract Package](contract.md)" "- [Internal Packages](internal.md)" > $(DOCS)/reference/index.md
+
+pages-help:
+	@printf '%s\n' "Use 'make docs' to mirror README.md, 'make docs-generate' for API docs, and mkdocs build after installing MkDocs Material and gomarkdoc."

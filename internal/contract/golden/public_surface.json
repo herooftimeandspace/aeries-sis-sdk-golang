@@ -1,0 +1,566 @@
+[
+  {
+    "id": "alerts.send",
+    "service": "Alerts",
+    "method_name": "Send",
+    "response_shape": "object"
+  },
+  {
+    "id": "attendance.list_enrollment_history",
+    "service": "Attendance",
+    "method_name": "ListEnrollmentHistory",
+    "response_shape": "list"
+  },
+  {
+    "id": "attendance.list_enrollment_history_by_year",
+    "service": "Attendance",
+    "method_name": "ListEnrollmentHistoryByYear",
+    "response_shape": "list"
+  },
+  {
+    "id": "attendance.list_history_absence_codes",
+    "service": "Attendance",
+    "method_name": "ListHistoryAbsenceCodes",
+    "response_shape": "list"
+  },
+  {
+    "id": "attendance.list_history_absence_codes_by_year",
+    "service": "Attendance",
+    "method_name": "ListHistoryAbsenceCodesByYear",
+    "response_shape": "list"
+  },
+  {
+    "id": "attendance.list_history_detail",
+    "service": "Attendance",
+    "method_name": "ListHistoryDetail",
+    "response_shape": "list"
+  },
+  {
+    "id": "attendance.list_history_detail_by_year",
+    "service": "Attendance",
+    "method_name": "ListHistoryDetailByYear",
+    "response_shape": "list"
+  },
+  {
+    "id": "attendance.list_history_summary",
+    "service": "Attendance",
+    "method_name": "ListHistorySummary",
+    "response_shape": "list"
+  },
+  {
+    "id": "attendance.list_history_summary_by_year",
+    "service": "Attendance",
+    "method_name": "ListHistorySummaryByYear",
+    "response_shape": "list"
+  },
+  {
+    "id": "attendance.list_school_enrollment_history",
+    "service": "Attendance",
+    "method_name": "ListSchoolEnrollmentHistory",
+    "response_shape": "list"
+  },
+  {
+    "id": "attendance.list_school_enrollment_history_by_year",
+    "service": "Attendance",
+    "method_name": "ListSchoolEnrollmentHistoryByYear",
+    "response_shape": "list"
+  },
+  {
+    "id": "attendance.list_student_attendance",
+    "service": "Attendance",
+    "method_name": "ListStudentAttendance",
+    "response_shape": "list"
+  },
+  {
+    "id": "codesets.list",
+    "service": "CodeSets",
+    "method_name": "List",
+    "response_shape": "list"
+  },
+  {
+    "id": "gradebook.create_assignment",
+    "service": "Gradebook",
+    "method_name": "CreateAssignment",
+    "response_shape": "list"
+  },
+  {
+    "id": "gradebook.get",
+    "service": "Gradebook",
+    "method_name": "Get",
+    "response_shape": "object"
+  },
+  {
+    "id": "gradebook.get_assignment_by_unique_id",
+    "service": "Gradebook",
+    "method_name": "GetAssignmentByUniqueID",
+    "response_shape": "object"
+  },
+  {
+    "id": "gradebook.list_assignment_scores",
+    "service": "Gradebook",
+    "method_name": "ListAssignmentScores",
+    "response_shape": "list"
+  },
+  {
+    "id": "gradebook.list_assignment_scores_by_unique_id",
+    "service": "Gradebook",
+    "method_name": "ListAssignmentScoresByUniqueID",
+    "response_shape": "list"
+  },
+  {
+    "id": "gradebook.list_assignments",
+    "service": "Gradebook",
+    "method_name": "ListAssignments",
+    "response_shape": "list"
+  },
+  {
+    "id": "gradebook.list_by_section",
+    "service": "Gradebook",
+    "method_name": "ListBySection",
+    "response_shape": "list"
+  },
+  {
+    "id": "gradebook.list_by_staff",
+    "service": "Gradebook",
+    "method_name": "ListByStaff",
+    "response_shape": "list"
+  },
+  {
+    "id": "gradebook.list_final_mark_ranges",
+    "service": "Gradebook",
+    "method_name": "ListFinalMarkRanges",
+    "response_shape": "list"
+  },
+  {
+    "id": "gradebook.list_students",
+    "service": "Gradebook",
+    "method_name": "ListStudents",
+    "response_shape": "list"
+  },
+  {
+    "id": "gradebook.update_assignment",
+    "service": "Gradebook",
+    "method_name": "UpdateAssignment",
+    "response_shape": "list"
+  },
+  {
+    "id": "gradebook.update_assignment_by_unique_id",
+    "service": "Gradebook",
+    "method_name": "UpdateAssignmentByUniqueID",
+    "response_shape": "list"
+  },
+  {
+    "id": "gradebook.update_assignment_scores",
+    "service": "Gradebook",
+    "method_name": "UpdateAssignmentScores",
+    "response_shape": "list"
+  },
+  {
+    "id": "gradebook.update_assignment_scores_by_unique_id",
+    "service": "Gradebook",
+    "method_name": "UpdateAssignmentScoresByUniqueID",
+    "response_shape": "list"
+  },
+  {
+    "id": "preenroll.trigger",
+    "service": "PreEnroll",
+    "method_name": "Trigger",
+    "response_shape": "object"
+  },
+  {
+    "id": "programs.list",
+    "service": "Programs",
+    "method_name": "List",
+    "response_shape": "list"
+  },
+  {
+    "id": "scheduling.create_alternate_course_request",
+    "service": "Scheduling",
+    "method_name": "CreateAlternateCourseRequest",
+    "response_shape": "object"
+  },
+  {
+    "id": "scheduling.create_section",
+    "service": "Scheduling",
+    "method_name": "CreateSection",
+    "response_shape": "object"
+  },
+  {
+    "id": "scheduling.create_student_course_request",
+    "service": "Scheduling",
+    "method_name": "CreateStudentCourseRequest",
+    "response_shape": "object"
+  },
+  {
+    "id": "scheduling.delete_alternate_course_request",
+    "service": "Scheduling",
+    "method_name": "DeleteAlternateCourseRequest",
+    "response_shape": "empty"
+  },
+  {
+    "id": "scheduling.delete_section",
+    "service": "Scheduling",
+    "method_name": "DeleteSection",
+    "response_shape": "empty"
+  },
+  {
+    "id": "scheduling.delete_student_course_request",
+    "service": "Scheduling",
+    "method_name": "DeleteStudentCourseRequest",
+    "response_shape": "empty"
+  },
+  {
+    "id": "scheduling.list_alternate_course_requests",
+    "service": "Scheduling",
+    "method_name": "ListAlternateCourseRequests",
+    "response_shape": "list"
+  },
+  {
+    "id": "scheduling.list_course_data_changes",
+    "service": "Scheduling",
+    "method_name": "ListCourseDataChanges",
+    "response_shape": "list"
+  },
+  {
+    "id": "scheduling.list_course_requests",
+    "service": "Scheduling",
+    "method_name": "ListCourseRequests",
+    "response_shape": "list"
+  },
+  {
+    "id": "scheduling.list_courses",
+    "service": "Scheduling",
+    "method_name": "ListCourses",
+    "response_shape": "list"
+  },
+  {
+    "id": "scheduling.list_section_data_changes",
+    "service": "Scheduling",
+    "method_name": "ListSectionDataChanges",
+    "response_shape": "list"
+  },
+  {
+    "id": "scheduling.list_section_roster",
+    "service": "Scheduling",
+    "method_name": "ListSectionRoster",
+    "response_shape": "list"
+  },
+  {
+    "id": "scheduling.list_section_roster_data_changes",
+    "service": "Scheduling",
+    "method_name": "ListSectionRosterDataChanges",
+    "response_shape": "list"
+  },
+  {
+    "id": "scheduling.list_sections",
+    "service": "Scheduling",
+    "method_name": "ListSections",
+    "response_shape": "list"
+  },
+  {
+    "id": "scheduling.list_student_class_schedule",
+    "service": "Scheduling",
+    "method_name": "ListStudentClassSchedule",
+    "response_shape": "list"
+  },
+  {
+    "id": "scheduling.list_student_course_requests",
+    "service": "Scheduling",
+    "method_name": "ListStudentCourseRequests",
+    "response_shape": "list"
+  },
+  {
+    "id": "scheduling.update_alternate_course_request",
+    "service": "Scheduling",
+    "method_name": "UpdateAlternateCourseRequest",
+    "response_shape": "object"
+  },
+  {
+    "id": "scheduling.update_section",
+    "service": "Scheduling",
+    "method_name": "UpdateSection",
+    "response_shape": "object"
+  },
+  {
+    "id": "scheduling.update_student_course_request",
+    "service": "Scheduling",
+    "method_name": "UpdateStudentCourseRequest",
+    "response_shape": "object"
+  },
+  {
+    "id": "schools.get_bell_schedule_for_date",
+    "service": "Schools",
+    "method_name": "GetBellScheduleForDate",
+    "response_shape": "list"
+  },
+  {
+    "id": "schools.list",
+    "service": "Schools",
+    "method_name": "List",
+    "response_shape": "list"
+  },
+  {
+    "id": "schools.list_absence_codes",
+    "service": "Schools",
+    "method_name": "ListAbsenceCodes",
+    "response_shape": "list"
+  },
+  {
+    "id": "schools.list_bell_schedule",
+    "service": "Schools",
+    "method_name": "ListBellSchedule",
+    "response_shape": "list"
+  },
+  {
+    "id": "schools.list_calendar",
+    "service": "Schools",
+    "method_name": "ListCalendar",
+    "response_shape": "list"
+  },
+  {
+    "id": "schools.list_terms",
+    "service": "Schools",
+    "method_name": "ListTerms",
+    "response_shape": "list"
+  },
+  {
+    "id": "staff.get_by_hrid",
+    "service": "Staff",
+    "method_name": "GetByHRID",
+    "response_shape": "object"
+  },
+  {
+    "id": "staff.list",
+    "service": "Staff",
+    "method_name": "List",
+    "response_shape": "list"
+  },
+  {
+    "id": "staff.list_classes",
+    "service": "Staff",
+    "method_name": "ListClasses",
+    "response_shape": "list"
+  },
+  {
+    "id": "staff.list_data_changes",
+    "service": "Staff",
+    "method_name": "ListDataChanges",
+    "response_shape": "list"
+  },
+  {
+    "id": "staff.list_teacher_bridge",
+    "service": "Staff",
+    "method_name": "ListTeacherBridge",
+    "response_shape": "list"
+  },
+  {
+    "id": "staff.list_teachers",
+    "service": "Staff",
+    "method_name": "ListTeachers",
+    "response_shape": "list"
+  },
+  {
+    "id": "student_grades.list_gpa",
+    "service": "StudentGrades",
+    "method_name": "ListGPA",
+    "response_shape": "list"
+  },
+  {
+    "id": "student_grades.list_graduation_requirements",
+    "service": "StudentGrades",
+    "method_name": "ListGraduationRequirements",
+    "response_shape": "list"
+  },
+  {
+    "id": "student_grades.list_graduation_status",
+    "service": "StudentGrades",
+    "method_name": "ListGraduationStatus",
+    "response_shape": "list"
+  },
+  {
+    "id": "student_grades.list_graduation_status_by_grade",
+    "service": "StudentGrades",
+    "method_name": "ListGraduationStatusByGrade",
+    "response_shape": "list"
+  },
+  {
+    "id": "student_grades.list_report_card_marking_periods",
+    "service": "StudentGrades",
+    "method_name": "ListReportCardMarkingPeriods",
+    "response_shape": "list"
+  },
+  {
+    "id": "student_grades.list_report_cards",
+    "service": "StudentGrades",
+    "method_name": "ListReportCards",
+    "response_shape": "list"
+  },
+  {
+    "id": "student_grades.list_transcripts",
+    "service": "StudentGrades",
+    "method_name": "ListTranscripts",
+    "response_shape": "list"
+  },
+  {
+    "id": "student_grades.list_valid_marks",
+    "service": "StudentGrades",
+    "method_name": "ListValidMarks",
+    "response_shape": "list"
+  },
+  {
+    "id": "student_grades.update_grades",
+    "service": "StudentGrades",
+    "method_name": "UpdateGrades",
+    "response_shape": "list"
+  },
+  {
+    "id": "students.create",
+    "service": "Students",
+    "method_name": "Create",
+    "response_shape": "object"
+  },
+  {
+    "id": "students.delete_contact",
+    "service": "Students",
+    "method_name": "DeleteContact",
+    "response_shape": "empty"
+  },
+  {
+    "id": "students.get_by_student_number",
+    "service": "Students",
+    "method_name": "GetByStudentNumber",
+    "response_shape": "object"
+  },
+  {
+    "id": "students.get_extended_by_student_number",
+    "service": "Students",
+    "method_name": "GetExtendedByStudentNumber",
+    "response_shape": "object"
+  },
+  {
+    "id": "students.list",
+    "service": "Students",
+    "method_name": "List",
+    "response_shape": "list"
+  },
+  {
+    "id": "students.list_assertive_discipline",
+    "service": "Students",
+    "method_name": "ListAssertiveDiscipline",
+    "response_shape": "list"
+  },
+  {
+    "id": "students.list_available_tests",
+    "service": "Students",
+    "method_name": "ListAvailableTests",
+    "response_shape": "list"
+  },
+  {
+    "id": "students.list_by_grade",
+    "service": "Students",
+    "method_name": "ListByGrade",
+    "response_shape": "list"
+  },
+  {
+    "id": "students.list_college_test_scores",
+    "service": "Students",
+    "method_name": "ListCollegeTestScores",
+    "response_shape": "list"
+  },
+  {
+    "id": "students.list_contacts",
+    "service": "Students",
+    "method_name": "ListContacts",
+    "response_shape": "list"
+  },
+  {
+    "id": "students.list_data_changes",
+    "service": "Students",
+    "method_name": "ListDataChanges",
+    "response_shape": "list"
+  },
+  {
+    "id": "students.list_district_supplemental",
+    "service": "Students",
+    "method_name": "ListDistrictSupplemental",
+    "response_shape": "list"
+  },
+  {
+    "id": "students.list_extended",
+    "service": "Students",
+    "method_name": "ListExtended",
+    "response_shape": "list"
+  },
+  {
+    "id": "students.list_extended_by_grade",
+    "service": "Students",
+    "method_name": "ListExtendedByGrade",
+    "response_shape": "list"
+  },
+  {
+    "id": "students.list_fees",
+    "service": "Students",
+    "method_name": "ListFees",
+    "response_shape": "list"
+  },
+  {
+    "id": "students.list_groups",
+    "service": "Students",
+    "method_name": "ListGroups",
+    "response_shape": "list"
+  },
+  {
+    "id": "students.list_pictures",
+    "service": "Students",
+    "method_name": "ListPictures",
+    "response_shape": "list"
+  },
+  {
+    "id": "students.list_school_supplemental",
+    "service": "Students",
+    "method_name": "ListSchoolSupplemental",
+    "response_shape": "list"
+  },
+  {
+    "id": "students.list_test_scores",
+    "service": "Students",
+    "method_name": "ListTestScores",
+    "response_shape": "list"
+  },
+  {
+    "id": "students.update",
+    "service": "Students",
+    "method_name": "Update",
+    "response_shape": "list"
+  },
+  {
+    "id": "students.update_address",
+    "service": "Students",
+    "method_name": "UpdateAddress",
+    "response_shape": "list"
+  },
+  {
+    "id": "students.update_contact",
+    "service": "Students",
+    "method_name": "UpdateContact",
+    "response_shape": "object"
+  },
+  {
+    "id": "students.update_school_supplemental",
+    "service": "Students",
+    "method_name": "UpdateSchoolSupplemental",
+    "response_shape": "object"
+  },
+  {
+    "id": "students.update_test_scores",
+    "service": "Students",
+    "method_name": "UpdateTestScores",
+    "response_shape": "list"
+  },
+  {
+    "id": "system.get_info",
+    "service": "System",
+    "method_name": "GetInfo",
+    "response_shape": "object"
+  }
+]

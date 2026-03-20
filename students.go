@@ -1,0 +1,277 @@
+package aeries
+
+import "context"
+
+// StudentsService exposes student data, contacts, testing, and other student-centered endpoints.
+type StudentsService struct {
+	client *Client
+}
+
+// List returns student rows and supports the documented StartingRecord and EndingRecord pagination filters.
+func (s *StudentsService) List(ctx context.Context, req StudentLookupRequest) ([]JSONDocument, error) {
+	query := map[string]string{}
+	addIntQueryValue(query, "StartingRecord", req.StartingRecord)
+	addIntQueryValue(query, "EndingRecord", req.EndingRecord)
+	return s.client.doDocuments(ctx, "students.list", RequestOptions{
+		PathParams: map[string]string{
+			"SchoolCode": req.SchoolCode,
+			"StudentID":  intString(req.StudentID),
+		},
+		Query:        query,
+		DatabaseYear: req.DatabaseYear,
+	})
+}
+
+// ListByGrade returns student rows for one school and grade level.
+func (s *StudentsService) ListByGrade(ctx context.Context, req StudentGradeLookupRequest) ([]JSONDocument, error) {
+	query := map[string]string{}
+	addIntQueryValue(query, "StartingRecord", req.StartingRecord)
+	addIntQueryValue(query, "EndingRecord", req.EndingRecord)
+	return s.client.doDocuments(ctx, "students.list_by_grade", RequestOptions{
+		PathParams: map[string]string{
+			"SchoolCode": req.SchoolCode,
+			"GradeLevel": req.GradeLevel,
+		},
+		Query:        query,
+		DatabaseYear: req.DatabaseYear,
+	})
+}
+
+// GetByStudentNumber returns one student using the school-scoped student number path.
+func (s *StudentsService) GetByStudentNumber(ctx context.Context, req StudentNumberLookupRequest) (JSONDocument, error) {
+	return s.client.doDocument(ctx, "students.get_by_student_number", RequestOptions{
+		PathParams: map[string]string{
+			"SchoolCode":    req.SchoolCode,
+			"StudentNumber": req.StudentNumber,
+		},
+		DatabaseYear: req.DatabaseYear,
+	})
+}
+
+// ListExtended returns the extended student rows documented by Aeries.
+func (s *StudentsService) ListExtended(ctx context.Context, req StudentLookupRequest) ([]JSONDocument, error) {
+	query := map[string]string{}
+	addIntQueryValue(query, "StartingRecord", req.StartingRecord)
+	addIntQueryValue(query, "EndingRecord", req.EndingRecord)
+	return s.client.doDocuments(ctx, "students.list_extended", RequestOptions{
+		PathParams: map[string]string{
+			"SchoolCode": req.SchoolCode,
+			"StudentID":  intString(req.StudentID),
+		},
+		Query:        query,
+		DatabaseYear: req.DatabaseYear,
+	})
+}
+
+// ListExtendedByGrade returns the extended student rows for one grade level.
+func (s *StudentsService) ListExtendedByGrade(ctx context.Context, req StudentGradeLookupRequest) ([]JSONDocument, error) {
+	query := map[string]string{}
+	addIntQueryValue(query, "StartingRecord", req.StartingRecord)
+	addIntQueryValue(query, "EndingRecord", req.EndingRecord)
+	return s.client.doDocuments(ctx, "students.list_extended_by_grade", RequestOptions{
+		PathParams: map[string]string{
+			"SchoolCode": req.SchoolCode,
+			"GradeLevel": req.GradeLevel,
+		},
+		Query:        query,
+		DatabaseYear: req.DatabaseYear,
+	})
+}
+
+// GetExtendedByStudentNumber returns one extended student record by school-scoped student number.
+func (s *StudentsService) GetExtendedByStudentNumber(ctx context.Context, req StudentNumberLookupRequest) (JSONDocument, error) {
+	return s.client.doDocument(ctx, "students.get_extended_by_student_number", RequestOptions{
+		PathParams: map[string]string{
+			"SchoolCode":    req.SchoolCode,
+			"StudentNumber": req.StudentNumber,
+		},
+		DatabaseYear: req.DatabaseYear,
+	})
+}
+
+// ListDataChanges returns student IDs that changed since the caller's last sync cursor.
+func (s *StudentsService) ListDataChanges(ctx context.Context, req StudentDataChangesRequest) ([]JSONDocument, error) {
+	return s.client.doDocuments(ctx, "students.list_data_changes", RequestOptions{
+		PathParams: map[string]string{
+			"DataArea": req.DataArea,
+			"Year":     intString(req.Year),
+			"Month":    intString(req.Month),
+			"Day":      intString(req.Day),
+			"Hour":     intString(req.Hour),
+			"Minute":   intString(req.Minute),
+		},
+		DatabaseYear: req.DatabaseYear,
+	})
+}
+
+// Create inserts a new student record in the district.
+func (s *StudentsService) Create(ctx context.Context, req StudentCreateRequest) (JSONDocument, error) {
+	return s.client.doDocument(ctx, "students.create", RequestOptions{
+		PathParams:   map[string]string{"SchoolCode": req.SchoolCode},
+		JSONBody:     req.Values,
+		DatabaseYear: req.DatabaseYear,
+	})
+}
+
+// Update changes one existing student record using the documented UpdateStudent endpoint.
+func (s *StudentsService) Update(ctx context.Context, req StudentMutationRequest) ([]JSONDocument, error) {
+	return s.client.doDocuments(ctx, "students.update", RequestOptions{
+		PathParams:   map[string]string{"StudentID": intString(req.StudentID)},
+		JSONBody:     req.Values,
+		DatabaseYear: req.DatabaseYear,
+	})
+}
+
+// UpdateAddress changes a student's mailing and residence address fields.
+func (s *StudentsService) UpdateAddress(ctx context.Context, req StudentMutationRequest) ([]JSONDocument, error) {
+	return s.client.doDocuments(ctx, "students.update_address", RequestOptions{
+		PathParams:   map[string]string{"StudentID": intString(req.StudentID)},
+		JSONBody:     req.Values,
+		DatabaseYear: req.DatabaseYear,
+	})
+}
+
+// ListContacts returns contact rows for one student or all contacts when StudentID is zero.
+func (s *StudentsService) ListContacts(ctx context.Context, req SchoolStudentLookupRequest) ([]JSONDocument, error) {
+	return s.client.doDocuments(ctx, "students.list_contacts", RequestOptions{
+		PathParams: map[string]string{
+			"SchoolCode": req.SchoolCode,
+			"StudentID":  intString(req.StudentID),
+		},
+		DatabaseYear: req.DatabaseYear,
+	})
+}
+
+// UpdateContact changes one student contact identified by sequence number.
+func (s *StudentsService) UpdateContact(ctx context.Context, req StudentSequenceMutationRequest) (JSONDocument, error) {
+	return s.client.doDocument(ctx, "students.update_contact", RequestOptions{
+		PathParams: map[string]string{
+			"StudentID":      intString(req.StudentID),
+			"SequenceNumber": intString(req.SequenceNumber),
+		},
+		JSONBody:     req.Values,
+		DatabaseYear: req.DatabaseYear,
+	})
+}
+
+// DeleteContact removes one student contact identified by sequence number.
+func (s *StudentsService) DeleteContact(ctx context.Context, req StudentSequenceMutationRequest) error {
+	return s.client.doNoContent(ctx, "students.delete_contact", RequestOptions{
+		PathParams: map[string]string{
+			"StudentID":      intString(req.StudentID),
+			"SequenceNumber": intString(req.SequenceNumber),
+		},
+		DatabaseYear: req.DatabaseYear,
+	})
+}
+
+// ListTestScores returns test score rows for one student.
+func (s *StudentsService) ListTestScores(ctx context.Context, req StudentMutationRequest) ([]JSONDocument, error) {
+	return s.client.doDocuments(ctx, "students.list_test_scores", RequestOptions{
+		PathParams:   map[string]string{"StudentID": intString(req.StudentID)},
+		DatabaseYear: req.DatabaseYear,
+	})
+}
+
+// ListAvailableTests returns the test definitions documented by the testing API.
+func (s *StudentsService) ListAvailableTests(ctx context.Context, req SystemInfoRequest) ([]JSONDocument, error) {
+	return s.client.doDocuments(ctx, "students.list_available_tests", RequestOptions{DatabaseYear: req.DatabaseYear})
+}
+
+// UpdateTestScores inserts or updates test score rows in bulk.
+func (s *StudentsService) UpdateTestScores(ctx context.Context, req TestScoresUpdateRequest) ([]JSONDocument, error) {
+	return s.client.doDocuments(ctx, "students.update_test_scores", RequestOptions{
+		JSONBody:     req.Items,
+		DatabaseYear: req.DatabaseYear,
+	})
+}
+
+// ListCollegeTestScores returns college entrance test rows for one student or many students.
+func (s *StudentsService) ListCollegeTestScores(ctx context.Context, req SchoolStudentLookupRequest) ([]JSONDocument, error) {
+	return s.client.doDocuments(ctx, "students.list_college_test_scores", RequestOptions{
+		PathParams: map[string]string{
+			"SchoolCode": req.SchoolCode,
+			"StudentID":  intString(req.StudentID),
+		},
+		DatabaseYear: req.DatabaseYear,
+	})
+}
+
+// ListAssertiveDiscipline returns assertive discipline rows for one student or many students.
+func (s *StudentsService) ListAssertiveDiscipline(ctx context.Context, req SchoolStudentLookupRequest) ([]JSONDocument, error) {
+	return s.client.doDocuments(ctx, "students.list_assertive_discipline", RequestOptions{
+		PathParams: map[string]string{
+			"SchoolCode": req.SchoolCode,
+			"StudentID":  intString(req.StudentID),
+		},
+		DatabaseYear: req.DatabaseYear,
+	})
+}
+
+// ListDistrictSupplemental returns district supplemental rows for one student or many students.
+func (s *StudentsService) ListDistrictSupplemental(ctx context.Context, req SchoolStudentLookupRequest) ([]JSONDocument, error) {
+	return s.client.doDocuments(ctx, "students.list_district_supplemental", RequestOptions{
+		PathParams: map[string]string{
+			"SchoolCode": req.SchoolCode,
+			"StudentID":  intString(req.StudentID),
+		},
+		DatabaseYear: req.DatabaseYear,
+	})
+}
+
+// ListSchoolSupplemental returns school supplemental rows for one student or many students.
+func (s *StudentsService) ListSchoolSupplemental(ctx context.Context, req SchoolStudentLookupRequest) ([]JSONDocument, error) {
+	return s.client.doDocuments(ctx, "students.list_school_supplemental", RequestOptions{
+		PathParams: map[string]string{
+			"SchoolCode": req.SchoolCode,
+			"StudentID":  intString(req.StudentID),
+		},
+		DatabaseYear: req.DatabaseYear,
+	})
+}
+
+// UpdateSchoolSupplemental changes school supplemental data using the school-scoped student number endpoint.
+func (s *StudentsService) UpdateSchoolSupplemental(ctx context.Context, req SchoolStudentNumberMutationRequest) (JSONDocument, error) {
+	return s.client.doDocument(ctx, "students.update_school_supplemental", RequestOptions{
+		PathParams: map[string]string{
+			"SchoolCode":    req.SchoolCode,
+			"StudentNumber": req.StudentNumber,
+		},
+		JSONBody:     req.Values,
+		DatabaseYear: req.DatabaseYear,
+	})
+}
+
+// ListFees returns fee and fine rows for one student or many students.
+func (s *StudentsService) ListFees(ctx context.Context, req SchoolStudentLookupRequest) ([]JSONDocument, error) {
+	return s.client.doDocuments(ctx, "students.list_fees", RequestOptions{
+		PathParams: map[string]string{
+			"SchoolCode": req.SchoolCode,
+			"StudentID":  intString(req.StudentID),
+		},
+		DatabaseYear: req.DatabaseYear,
+	})
+}
+
+// ListPictures returns student picture rows and supports the documented pagination filters.
+func (s *StudentsService) ListPictures(ctx context.Context, req SchoolStudentLookupRequest) ([]JSONDocument, error) {
+	query := map[string]string{}
+	addIntQueryValue(query, "StartingRecord", req.StartingRecord)
+	addIntQueryValue(query, "EndingRecord", req.EndingRecord)
+	return s.client.doDocuments(ctx, "students.list_pictures", RequestOptions{
+		PathParams: map[string]string{
+			"SchoolCode": req.SchoolCode,
+			"StudentID":  intString(req.StudentID),
+		},
+		Query:        query,
+		DatabaseYear: req.DatabaseYear,
+	})
+}
+
+// ListGroups returns student group rows for one school or all schools.
+func (s *StudentsService) ListGroups(ctx context.Context, req SchoolLookupRequest) ([]JSONDocument, error) {
+	return s.client.doDocuments(ctx, "students.list_groups", RequestOptions{
+		PathParams:   map[string]string{"SchoolCode": req.SchoolCode},
+		DatabaseYear: req.DatabaseYear,
+	})
+}

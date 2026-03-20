@@ -1,0 +1,112 @@
+package aeries
+
+import "context"
+
+// StudentGradesService exposes GPA, report card, transcript, and graduation endpoints.
+type StudentGradesService struct {
+	client *Client
+}
+
+// ListGPA returns GPA rows for one student or many students.
+func (s *StudentGradesService) ListGPA(ctx context.Context, req SchoolStudentLookupRequest) ([]JSONDocument, error) {
+	query := map[string]string{}
+	addIntQueryValue(query, "StartingRecord", req.StartingRecord)
+	addIntQueryValue(query, "EndingRecord", req.EndingRecord)
+	return s.client.doDocuments(ctx, "student_grades.list_gpa", RequestOptions{
+		PathParams: map[string]string{
+			"SchoolCode": req.SchoolCode,
+			"StudentID":  intString(req.StudentID),
+		},
+		Query:        query,
+		DatabaseYear: req.DatabaseYear,
+	})
+}
+
+// UpdateGrades sends the bulk student grade update payload documented by Aeries.
+func (s *StudentGradesService) UpdateGrades(ctx context.Context, req SchoolPayloadRequest) ([]JSONDocument, error) {
+	return s.client.doDocuments(ctx, "student_grades.update_grades", RequestOptions{
+		PathParams:   map[string]string{"SchoolCode": req.SchoolCode},
+		JSONBody:     req.Values,
+		DatabaseYear: req.DatabaseYear,
+	})
+}
+
+// ListReportCards returns report card rows for one student or many students.
+func (s *StudentGradesService) ListReportCards(ctx context.Context, req SchoolStudentLookupRequest) ([]JSONDocument, error) {
+	return s.client.doDocuments(ctx, "student_grades.list_report_cards", RequestOptions{
+		PathParams: map[string]string{
+			"SchoolCode": req.SchoolCode,
+			"StudentID":  intString(req.StudentID),
+		},
+		DatabaseYear: req.DatabaseYear,
+	})
+}
+
+// ListReportCardMarkingPeriods returns the marking period definitions used by report cards.
+func (s *StudentGradesService) ListReportCardMarkingPeriods(ctx context.Context, req SchoolLookupRequest) ([]JSONDocument, error) {
+	return s.client.doDocuments(ctx, "student_grades.list_report_card_marking_periods", RequestOptions{
+		PathParams:   map[string]string{"SchoolCode": req.SchoolCode},
+		DatabaseYear: req.DatabaseYear,
+	})
+}
+
+// ListGraduationRequirements returns the graduation requirement catalog for one school.
+func (s *StudentGradesService) ListGraduationRequirements(ctx context.Context, req SchoolLookupRequest) ([]JSONDocument, error) {
+	return s.client.doDocuments(ctx, "student_grades.list_graduation_requirements", RequestOptions{
+		PathParams:   map[string]string{"SchoolCode": req.SchoolCode},
+		DatabaseYear: req.DatabaseYear,
+	})
+}
+
+// ListGraduationStatus returns graduation status summary rows for one student or many students.
+func (s *StudentGradesService) ListGraduationStatus(ctx context.Context, req SchoolStudentLookupRequest) ([]JSONDocument, error) {
+	query := map[string]string{}
+	addIntQueryValue(query, "StartingRecord", req.StartingRecord)
+	addIntQueryValue(query, "EndingRecord", req.EndingRecord)
+	return s.client.doDocuments(ctx, "student_grades.list_graduation_status", RequestOptions{
+		PathParams: map[string]string{
+			"SchoolCode": req.SchoolCode,
+			"StudentID":  intString(req.StudentID),
+		},
+		Query:        query,
+		DatabaseYear: req.DatabaseYear,
+	})
+}
+
+// ListGraduationStatusByGrade returns graduation status summary rows for one grade level.
+func (s *StudentGradesService) ListGraduationStatusByGrade(ctx context.Context, req StudentGradeLookupRequest) ([]JSONDocument, error) {
+	query := map[string]string{}
+	addIntQueryValue(query, "StartingRecord", req.StartingRecord)
+	addIntQueryValue(query, "EndingRecord", req.EndingRecord)
+	return s.client.doDocuments(ctx, "student_grades.list_graduation_status_by_grade", RequestOptions{
+		PathParams: map[string]string{
+			"SchoolCode": req.SchoolCode,
+			"GradeLevel": req.GradeLevel,
+		},
+		Query:        query,
+		DatabaseYear: req.DatabaseYear,
+	})
+}
+
+// ListTranscripts returns transcript rows for one student or many students.
+func (s *StudentGradesService) ListTranscripts(ctx context.Context, req SchoolStudentLookupRequest) ([]JSONDocument, error) {
+	query := map[string]string{}
+	addIntQueryValue(query, "StartingRecord", req.StartingRecord)
+	addIntQueryValue(query, "EndingRecord", req.EndingRecord)
+	return s.client.doDocuments(ctx, "student_grades.list_transcripts", RequestOptions{
+		PathParams: map[string]string{
+			"SchoolCode": req.SchoolCode,
+			"StudentID":  intString(req.StudentID),
+		},
+		Query:        query,
+		DatabaseYear: req.DatabaseYear,
+	})
+}
+
+// ListValidMarks returns the transcript mark codes that Aeries allows for one school.
+func (s *StudentGradesService) ListValidMarks(ctx context.Context, req SchoolLookupRequest) ([]JSONDocument, error) {
+	return s.client.doDocuments(ctx, "student_grades.list_valid_marks", RequestOptions{
+		PathParams:   map[string]string{"SchoolCode": req.SchoolCode},
+		DatabaseYear: req.DatabaseYear,
+	})
+}

@@ -1,0 +1,61 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install docs tooling
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install mkdocs-material
+          go install github.com/princjef/gomarkdoc/cmd/gomarkdoc@latest
+
+      - name: Mirror README into docs
+        run: make docs
+
+      - name: Generate API reference pages
+        run: make docs-generate
+
+      - name: Verify contract artifacts are current
+        run: go run ./cmd/contractsync -check
+
+      - name: Verify docs are current
+        run: |
+          make docs-check
+          git diff --exit-code
+
+      - name: Run tests with coverage
+        run: go test ./... -covermode=atomic -coverprofile=coverage.out
+
+      - name: Enforce 95 percent coverage floor
+        run: |
+          total="$(go tool cover -func=coverage.out | tail -n 1 | awk '{print $3}' | tr -d '%')"
+          python - "$total" <<'PY'
+import sys
+coverage = float(sys.argv[1])
+if coverage < 95.0:
+    raise SystemExit(f"coverage floor not met: {coverage:.1f}% < 95.0%")
+print(f"coverage floor met: {coverage:.1f}%")
+PY
+
+      - name: Build docs site
+        run: mkdocs build --strict

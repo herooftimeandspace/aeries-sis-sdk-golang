@@ -1,0 +1,39 @@
+site_name: Aeries SIS Go SDK
+site_description: Go SDK documentation for the Aeries SIS API
+site_url: https://herooftimeandspace.github.io/aeries-sis-sdk-golang/
+repo_url: https://github.com/herooftimeandspace/aeries-sis-sdk-golang
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  features:
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - content.code.copy
+    - content.action.edit
+
+nav:
+  - Home: index.md
+  - Quickstart: quickstart.md
+  - Configuration: configuration.md
+  - API Contract: contract.md
+  - Testing Guide: testing.md
+  - Generated API Reference:
+      - Overview: reference/index.md
+      - Public Package: reference/aeries.md
+      - Contract Package: reference/contract.md
+      - Internal Packages: reference/internal.md
+
+plugins:
+  - search
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - codehilite
+  - footnotes
+  - pymdownx.details
+  - pymdownx.superfences
+  - tables
+
