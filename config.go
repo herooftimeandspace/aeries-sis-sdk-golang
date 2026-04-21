@@ -44,26 +44,27 @@ func (c Config) normalizedBaseURL() (string, error) {
 	if parsed.Host == "" {
 		return "", &ConfigError{Field: "BaseURL", Message: "must include a host"}
 	}
-	trimmed := strings.TrimSuffix(parsed.Path, "/")
-	switch {
-	case trimmed == "":
+	trimmed := normalizePortalRoot(parsed.Path)
+	if trimmed == "" {
+		// A bare host is the one place where we still supply the historical /aeries default for convenience.
 		trimmed = "/aeries"
-	case strings.HasSuffix(trimmed, "/aeries/api/v5"):
-		trimmed = strings.TrimSuffix(trimmed, "/api/v5")
-	case strings.HasSuffix(trimmed, "/aeries/api/v4"):
-		trimmed = strings.TrimSuffix(trimmed, "/api/v4")
-	case strings.HasSuffix(trimmed, "/aeries/api/v3"):
-		trimmed = strings.TrimSuffix(trimmed, "/api/v3")
-	case strings.HasSuffix(trimmed, "/aeries/api"):
-		trimmed = strings.TrimSuffix(trimmed, "/api")
-	case !strings.HasSuffix(trimmed, "/aeries"):
-		trimmed = strings.TrimSuffix(trimmed, "/") + "/aeries"
 	}
 	parsed.Path = trimmed
 	parsed.RawPath = ""
 	parsed.RawQuery = ""
 	parsed.Fragment = ""
 	return strings.TrimSuffix(parsed.String(), "/"), nil
+}
+
+// normalizePortalRoot preserves an explicit portal root and strips any trailing API suffix from it.
+func normalizePortalRoot(rawPath string) string {
+	trimmed := strings.TrimSuffix(strings.TrimSpace(rawPath), "/")
+	for _, suffix := range []string{"/api/v5", "/api/v4", "/api/v3", "/api"} {
+		if strings.HasSuffix(trimmed, suffix) {
+			return strings.TrimSuffix(trimmed, suffix)
+		}
+	}
+	return trimmed
 }
 
 // normalizedHTTPClient fills in a safe default HTTP client when the caller does not provide one.

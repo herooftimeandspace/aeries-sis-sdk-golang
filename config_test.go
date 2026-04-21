@@ -15,7 +15,10 @@ func TestConfigNormalizedBaseURLVariants(t *testing.T) {
 	}{
 		{name: "root host", input: "https://demo.aeries.net", wantURL: "https://demo.aeries.net/aeries"},
 		{name: "aeries path", input: "https://demo.aeries.net/aeries", wantURL: "https://demo.aeries.net/aeries"},
+		{name: "admin path", input: "https://demo.aeries.net/admin", wantURL: "https://demo.aeries.net/admin"},
 		{name: "api v5 path", input: "https://demo.aeries.net/aeries/api/v5", wantURL: "https://demo.aeries.net/aeries"},
+		{name: "admin api v5 path", input: "https://demo.aeries.net/admin/api/v5", wantURL: "https://demo.aeries.net/admin"},
+		{name: "custom api path", input: "https://demo.aeries.net/portal/api", wantURL: "https://demo.aeries.net/portal"},
 		{name: "trailing slash", input: "https://demo.aeries.net/aeries/", wantURL: "https://demo.aeries.net/aeries"},
 	}
 	for _, tt := range tests {

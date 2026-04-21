@@ -153,6 +153,7 @@ func TestClientBranchCoverage(t *testing.T) {
 func TestConfigValidationCoversRemainingBranches(t *testing.T) {
 	tests := []string{
 		"https://district.example.test/aeries/api/v4",
+		"https://district.example.test/admin/api/v5",
 		"https://district.example.test/aeries/api",
 		"https://district.example.test/custom",
 	}

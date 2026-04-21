@@ -6,7 +6,7 @@ This page will become the first-stop guide for a developer who is new to Aeries 
 
 - How to create a client
 - How the certificate header works
-- How the base URL is normalized
+- How the base URL is normalized for `/aeries`, `/admin`, and explicit `/api/...` inputs
 - How to make a safe first request
 
 ## Planned examples
@@ -14,4 +14,3 @@ This page will become the first-stop guide for a developer who is new to Aeries 
 - A minimal `aeries.NewClient(...)` example
 - A read-only student lookup
 - A request with a typed response model
-

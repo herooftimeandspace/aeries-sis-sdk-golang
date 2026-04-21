@@ -14,7 +14,7 @@
   - `(*Client).Do(ctx, method, path string, opts RequestOptions, out any) error`
   - service accessors on `Client`: `System`, `Schools`, `CodeSets`, `PreEnroll`, `Students`, `StudentGrades`, `Attendance`, `Staff`, `Scheduling`, `Gradebook`, `Alerts`, `Programs`
   - public `contract` package with `Load() (*Manifest, error)` plus read-only `Manifest` and `Endpoint` types
-- `Config` includes `BaseURL`, `Certificate`, `HTTPClient`, `UserAgent`, `Timeout`, retry/backoff settings, and optional default `DatabaseYear`. Base URL normalization must resolve requests against the `/aeries/api/...` root.
+- `Config` includes `BaseURL`, `Certificate`, `HTTPClient`, `UserAgent`, `Timeout`, retry/backoff settings, and optional default `DatabaseYear`. Base URL normalization must preserve an explicitly provided portal root such as `/aeries` or `/admin`, strip any explicit `/api` or `/api/vN` suffix, and default a bare host to `/aeries`.
 - Service methods map 1:1 to the currently documented endpoint families and use consistent verbs: `List...`, `Get...`, `Create...`, `Update...`, `Delete...`, and `Trigger...`. Each method accepts typed request structs and returns typed models or slices matching the documented JSON shape.
 - Include all currently documented read and write operations in scope, including school updates, contacts update/delete, pre-enroll triggers, test-score updates, grade updates, scheduling section create/update/delete, gradebook mutations, and alerts.
 - Keep pagination explicit in typed request structs using Aeries’ documented fields such as `StartingRecord`, `EndingRecord`, `StartingStudent`, and `EndingStudent`; do not invent a generic cursor abstraction for v1.

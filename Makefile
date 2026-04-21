@@ -4,7 +4,7 @@ README := README.md
 DOCS := docs
 GOMARKDOC ?= $(shell go env GOPATH)/bin/gomarkdoc
 
-.PHONY: docs docs-check docs-generate pages-help
+.PHONY: docs docs-check docs-generate integration-test pages-help
 
 docs:
 	@mkdir -p $(DOCS)
@@ -21,5 +21,8 @@ docs-generate:
 	@$(GOMARKDOC) -u -o $(DOCS)/reference/internal.md ./internal/contract
 	@printf '%s\n' "# Generated API Reference" "" "- [Public Package](aeries.md)" "- [Contract Package](contract.md)" "- [Internal Packages](internal.md)" > $(DOCS)/reference/index.md
 
+integration-test:
+	@go test -tags=integration ./...
+
 pages-help:
-	@printf '%s\n' "Use 'make docs' to mirror README.md, 'make docs-generate' for API docs, and mkdocs build after installing MkDocs Material and gomarkdoc."
+	@printf '%s\n' "Use 'make docs' to mirror README.md, 'make docs-generate' for API docs, 'make integration-test' for live read-only smoke checks, and mkdocs build after installing MkDocs Material and gomarkdoc."

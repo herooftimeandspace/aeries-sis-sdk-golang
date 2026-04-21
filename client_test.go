@@ -11,41 +11,54 @@ import (
 
 // TestClientDoSendsHeadersBodyAndDefaultDatabaseYear verifies the low-level request contract.
 func TestClientDoSendsHeadersBodyAndDefaultDatabaseYear(t *testing.T) {
-	var sawRequest atomic.Bool
-	client, err := NewClient(Config{
-		BaseURL:             "https://district.example.test",
-		Certificate:         testCertificate,
-		DefaultDatabaseYear: "2024",
-		HTTPClient: &http.Client{Transport: roundTripFunc(func(r *http.Request) (*http.Response, error) {
-			sawRequest.Store(true)
-			if got := r.Header.Get("AERIES-CERT"); got != testCertificate {
-				t.Fatalf("AERIES-CERT = %q, want %q", got, testCertificate)
-			}
-			if got := r.Header.Get("Accept"); got != "application/json" {
-				t.Fatalf("Accept = %q", got)
-			}
-			if got := r.URL.Query().Get("DatabaseYear"); got != "2024" {
-				t.Fatalf("DatabaseYear = %q, want 2024", got)
-			}
-			if r.URL.Path != "/aeries/api/v5/systeminfo" {
-				t.Fatalf("path = %q", r.URL.Path)
-			}
-			return jsonResponse(http.StatusOK, `{"status":"ok"}`), nil
-		})},
-	})
-	if err != nil {
-		t.Fatalf("NewClient: %v", err)
+	tests := []struct {
+		name     string
+		baseURL  string
+		wantPath string
+	}{
+		{name: "bare host defaults to aeries", baseURL: "https://district.example.test", wantPath: "/aeries/api/v5/systeminfo"},
+		{name: "admin portal root is preserved", baseURL: "https://district.example.test/admin/", wantPath: "/admin/api/v5/systeminfo"},
 	}
 
-	var response JSONDocument
-	if err := client.Do(context.Background(), http.MethodGet, "/api/v5/systeminfo", RequestOptions{}, &response); err != nil {
-		t.Fatalf("Do returned error: %v", err)
-	}
-	if !sawRequest.Load() {
-		t.Fatal("expected the server to receive one request")
-	}
-	if response["status"] != "ok" {
-		t.Fatalf("response status = %#v", response["status"])
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var sawRequest atomic.Bool
+			client, err := NewClient(Config{
+				BaseURL:             tt.baseURL,
+				Certificate:         testCertificate,
+				DefaultDatabaseYear: "2024",
+				HTTPClient: &http.Client{Transport: roundTripFunc(func(r *http.Request) (*http.Response, error) {
+					sawRequest.Store(true)
+					if got := r.Header.Get("AERIES-CERT"); got != testCertificate {
+						t.Fatalf("AERIES-CERT = %q, want %q", got, testCertificate)
+					}
+					if got := r.Header.Get("Accept"); got != "application/json" {
+						t.Fatalf("Accept = %q", got)
+					}
+					if got := r.URL.Query().Get("DatabaseYear"); got != "2024" {
+						t.Fatalf("DatabaseYear = %q, want 2024", got)
+					}
+					if r.URL.Path != tt.wantPath {
+						t.Fatalf("path = %q, want %q", r.URL.Path, tt.wantPath)
+					}
+					return jsonResponse(http.StatusOK, `{"status":"ok"}`), nil
+				})},
+			})
+			if err != nil {
+				t.Fatalf("NewClient: %v", err)
+			}
+
+			var response JSONDocument
+			if err := client.Do(context.Background(), http.MethodGet, "/api/v5/systeminfo", RequestOptions{}, &response); err != nil {
+				t.Fatalf("Do returned error: %v", err)
+			}
+			if !sawRequest.Load() {
+				t.Fatal("expected the server to receive one request")
+			}
+			if response["status"] != "ok" {
+				t.Fatalf("response status = %#v", response["status"])
+			}
+		})
 	}
 }
 
