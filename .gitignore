@@ -1,2 +1,11 @@
+.env
+/bin/
+/dist/
+/.cache/
+/.gocache/
+/.gomodcache/
+/coverage.out
+/coverage.txt
+*.test
 coverage.out
 site/
