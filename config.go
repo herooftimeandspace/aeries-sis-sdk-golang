@@ -9,23 +9,27 @@ import (
 )
 
 const (
-	defaultUserAgent    = "aeries-sis-sdk-golang/0.1.0"
-	defaultTimeout      = 30 * time.Second
-	defaultMaxRetries   = 2
-	defaultRetryBackoff = 300 * time.Millisecond
+	defaultUserAgent              = "aeries-sis-sdk-golang/0.1.0"
+	defaultTimeout                = 30 * time.Second
+	defaultMaxRetries             = 2
+	defaultRetryBackoff           = 300 * time.Millisecond
+	defaultMaxResponseBytes int64 = 32 << 20
+	maxResponseBytesLimit   int64 = 1 << 40
 )
 
 var certificatePattern = regexp.MustCompile(`^[A-Za-z0-9]{32}$`)
 
 // Config describes how the SDK should connect to one district's Aeries instance.
 type Config struct {
-	BaseURL             string
-	Certificate         string
-	HTTPClient          *http.Client
-	UserAgent           string
-	Timeout             time.Duration
-	MaxRetries          int
-	RetryBackoff        time.Duration
+	BaseURL      string
+	Certificate  string
+	HTTPClient   *http.Client
+	UserAgent    string
+	Timeout      time.Duration
+	MaxRetries   int
+	RetryBackoff time.Duration
+	// MaxResponseBytes limits every response body before error handling or JSON decoding. Zero uses the 32 MiB default.
+	MaxResponseBytes    int64
 	DefaultDatabaseYear string
 }
 
@@ -106,6 +110,14 @@ func (c Config) normalizedRetryBackoff() time.Duration {
 	return c.RetryBackoff
 }
 
+// normalizedMaxResponseBytes fills in the conservative response-body limit when the caller does not provide one.
+func (c Config) normalizedMaxResponseBytes() int64 {
+	if c.MaxResponseBytes == 0 {
+		return defaultMaxResponseBytes
+	}
+	return c.MaxResponseBytes
+}
+
 // validate checks that the caller provided the minimum information needed to build requests safely.
 func (c Config) validate() error {
 	if _, err := c.normalizedBaseURL(); err != nil {
@@ -122,6 +134,12 @@ func (c Config) validate() error {
 	}
 	if c.RetryBackoff < 0 {
 		return &ConfigError{Field: "RetryBackoff", Message: "cannot be negative"}
+	}
+	if c.MaxResponseBytes < 0 {
+		return &ConfigError{Field: "MaxResponseBytes", Message: "cannot be negative"}
+	}
+	if c.MaxResponseBytes > maxResponseBytesLimit {
+		return &ConfigError{Field: "MaxResponseBytes", Message: "cannot exceed 1 TiB"}
 	}
 	return nil
 }

@@ -17,10 +17,14 @@ The package is intentionally organized around plain\-language service groups so 
 - [func addIntQueryValue\(target map\[string\]string, key string, value int\)](<#addIntQueryValue>)
 - [func addQueryValue\(target map\[string\]string, key string, value string\)](<#addQueryValue>)
 - [func cloneMap\(source map\[string\]string\) map\[string\]string](<#cloneMap>)
-- [func decodeAPIError\(statusCode int, method string, path string, payload \[\]byte\) error](<#decodeAPIError>)
+- [func decodeAPIError\(statusCode int, method string, path string, payload \[\]byte, sensitiveValues \[\]string\) error](<#decodeAPIError>)
 - [func encodeBody\(body any\) \(\[\]byte, error\)](<#encodeBody>)
 - [func intString\(value int\) string](<#intString>)
 - [func isRetriable\(err error\) bool](<#isRetriable>)
+- [func normalizePortalRoot\(rawPath string\) string](<#normalizePortalRoot>)
+- [func readBoundedResponse\(reader io.Reader, limit int64\) \(\[\]byte, bool, error\)](<#readBoundedResponse>)
+- [func sanitizeProviderDetail\(detail string, sensitiveValues \[\]string\) string](<#sanitizeProviderDetail>)
+- [func sensitiveRequestValues\(certificate string, requestURL string, headers http.Header\) \[\]string](<#sensitiveRequestValues>)
 - [func sleepWithContext\(ctx context.Context, duration time.Duration\) error](<#sleepWithContext>)
 - [type APIError](<#APIError>)
   - [func \(e \*APIError\) Error\(\) string](<#APIError.Error>)
@@ -71,6 +75,7 @@ The package is intentionally organized around plain\-language service groups so 
 - [type Config](<#Config>)
   - [func \(c Config\) normalizedBaseURL\(\) \(string, error\)](<#Config.normalizedBaseURL>)
   - [func \(c Config\) normalizedHTTPClient\(\) \*http.Client](<#Config.normalizedHTTPClient>)
+  - [func \(c Config\) normalizedMaxResponseBytes\(\) int64](<#Config.normalizedMaxResponseBytes>)
   - [func \(c Config\) normalizedMaxRetries\(\) int](<#Config.normalizedMaxRetries>)
   - [func \(c Config\) normalizedRetryBackoff\(\) time.Duration](<#Config.normalizedRetryBackoff>)
   - [func \(c Config\) normalizedUserAgent\(\) string](<#Config.normalizedUserAgent>)
@@ -118,6 +123,8 @@ The package is intentionally organized around plain\-language service groups so 
 - [type ProgramsService](<#ProgramsService>)
   - [func \(s \*ProgramsService\) List\(ctx context.Context, req ProgramLookupRequest\) \(\[\]JSONDocument, error\)](<#ProgramsService.List>)
 - [type RequestOptions](<#RequestOptions>)
+- [type ResponseTooLargeError](<#ResponseTooLargeError>)
+  - [func \(e \*ResponseTooLargeError\) Error\(\) string](<#ResponseTooLargeError.Error>)
 - [type SchedulingService](<#SchedulingService>)
   - [func \(s \*SchedulingService\) CreateAlternateCourseRequest\(ctx context.Context, req CourseRequestCreateRequest\) \(JSONDocument, error\)](<#SchedulingService.CreateAlternateCourseRequest>)
   - [func \(s \*SchedulingService\) CreateSection\(ctx context.Context, req SectionCreateRequest\) \(JSONDocument, error\)](<#SchedulingService.CreateSection>)
@@ -240,11 +247,19 @@ The package is intentionally organized around plain\-language service groups so 
 
 ```go
 const (
-    defaultUserAgent    = "aeries-sis-sdk-golang/0.1.0"
-    defaultTimeout      = 30 * time.Second
-    defaultMaxRetries   = 2
-    defaultRetryBackoff = 300 * time.Millisecond
+    defaultUserAgent              = "aeries-sis-sdk-golang/0.1.0"
+    defaultTimeout                = 30 * time.Second
+    defaultMaxRetries             = 2
+    defaultRetryBackoff           = 300 * time.Millisecond
+    defaultMaxResponseBytes int64 = 32 << 20
+    maxResponseBytesLimit   int64 = 1 << 40
 )
+```
+
+<a name="maxProviderDetailBytes"></a>
+
+```go
+const maxProviderDetailBytes = 512
 ```
 
 ## Variables
@@ -286,7 +301,7 @@ cloneMap copies string keys and values so callers cannot mutate shared request s
 ## func decodeAPIError
 
 ```go
-func decodeAPIError(statusCode int, method string, path string, payload []byte) error
+func decodeAPIError(statusCode int, method string, path string, payload []byte, sensitiveValues []string) error
 ```
 
 decodeAPIError prefers the documented Aeries \{"Message": "..."\} error format when it is present.
@@ -318,6 +333,42 @@ func isRetriable(err error) bool
 
 isRetriable returns true for short\-lived transport and gateway failures that are worth retrying.
 
+<a name="normalizePortalRoot"></a>
+## func normalizePortalRoot
+
+```go
+func normalizePortalRoot(rawPath string) string
+```
+
+normalizePortalRoot preserves an explicit portal root and strips any trailing API suffix from it.
+
+<a name="readBoundedResponse"></a>
+## func readBoundedResponse
+
+```go
+func readBoundedResponse(reader io.Reader, limit int64) ([]byte, bool, error)
+```
+
+readBoundedResponse reads at most limit plus one bytes so a payload exactly at the configured limit remains valid.
+
+<a name="sanitizeProviderDetail"></a>
+## func sanitizeProviderDetail
+
+```go
+func sanitizeProviderDetail(detail string, sensitiveValues []string) string
+```
+
+sanitizeProviderDetail removes request values and control characters, normalizes whitespace, and enforces a small byte bound.
+
+<a name="sensitiveRequestValues"></a>
+## func sensitiveRequestValues
+
+```go
+func sensitiveRequestValues(certificate string, requestURL string, headers http.Header) []string
+```
+
+sensitiveRequestValues returns values that a provider might echo but that diagnostics must never retain.
+
 <a name="sleepWithContext"></a>
 ## func sleepWithContext
 
@@ -337,8 +388,8 @@ type APIError struct {
     StatusCode int
     Method     string
     Path       string
-    Message    string
-    Body       string
+    // Message contains at most a small, sanitized provider detail. It never contains the complete response body.
+    Message string
 }
 ```
 
@@ -666,6 +717,7 @@ type Client struct {
     userAgent           string
     maxRetries          int
     retryBackoff        time.Duration
+    maxResponseBytes    int64
     defaultDatabaseYear string
     manifest            *publiccontract.Manifest
     endpoints           map[string]publiccontract.Endpoint
@@ -824,13 +876,15 @@ Config describes how the SDK should connect to one district's Aeries instance.
 
 ```go
 type Config struct {
-    BaseURL             string
-    Certificate         string
-    HTTPClient          *http.Client
-    UserAgent           string
-    Timeout             time.Duration
-    MaxRetries          int
-    RetryBackoff        time.Duration
+    BaseURL      string
+    Certificate  string
+    HTTPClient   *http.Client
+    UserAgent    string
+    Timeout      time.Duration
+    MaxRetries   int
+    RetryBackoff time.Duration
+    // MaxResponseBytes limits every response body before error handling or JSON decoding. Zero uses the 32 MiB default.
+    MaxResponseBytes    int64
     DefaultDatabaseYear string
 }
 ```
@@ -852,6 +906,15 @@ func (c Config) normalizedHTTPClient() *http.Client
 ```
 
 normalizedHTTPClient fills in a safe default HTTP client when the caller does not provide one.
+
+<a name="Config.normalizedMaxResponseBytes"></a>
+### func \(Config\) normalizedMaxResponseBytes
+
+```go
+func (c Config) normalizedMaxResponseBytes() int64
+```
+
+normalizedMaxResponseBytes fills in the conservative response\-body limit when the caller does not provide one.
 
 <a name="Config.normalizedMaxRetries"></a>
 ### func \(Config\) normalizedMaxRetries
@@ -1337,6 +1400,30 @@ type RequestOptions struct {
     DatabaseYear string
 }
 ```
+
+<a name="ResponseTooLargeError"></a>
+## type ResponseTooLargeError
+
+ResponseTooLargeError reports that a response exceeded the configured safe read limit. It deliberately retains no response bytes, full URL, query values, or request headers.
+
+```go
+type ResponseTooLargeError struct {
+    StatusCode int
+    Method     string
+    Path       string
+    Limit      int64
+    Retryable  bool
+}
+```
+
+<a name="ResponseTooLargeError.Error"></a>
+### func \(\*ResponseTooLargeError\) Error
+
+```go
+func (e *ResponseTooLargeError) Error() string
+```
+
+Error returns bounded diagnostic metadata without including any response content.
 
 <a name="SchedulingService"></a>
 ## type SchedulingService
