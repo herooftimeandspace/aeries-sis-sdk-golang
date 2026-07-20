@@ -273,7 +273,7 @@ func sensitiveRequestValues(certificate string, requestURL string, contractPath 
 		values = append(values, parsed.RequestURI(), parsed.Path)
 		for _, queryValues := range parsed.Query() {
 			for _, value := range queryValues {
-				values = append(values, value, url.QueryEscape(value))
+				values = append(values, value, url.QueryEscape(value), url.PathEscape(value))
 			}
 		}
 		values = append(values, expandedPathParameterValues(contractPath, parsed)...)
@@ -308,11 +308,26 @@ func expandedPathParameterValues(contractPath string, requestURL *url.URL) []str
 	return values
 }
 
-// sanitizeProviderDetail removes request values and control characters, normalizes whitespace, and enforces a small byte bound.
+// normalizeProviderDetail removes controls and collapses whitespace so formatting cannot conceal a sensitive value.
+func normalizeProviderDetail(detail string) string {
+	detail = strings.Map(func(character rune) rune {
+		if unicode.IsControl(character) {
+			return -1
+		}
+		return character
+	}, detail)
+	return strings.Join(strings.Fields(detail), " ")
+}
+
+// sanitizeProviderDetail normalizes provider text before redacting request values and enforcing a small byte bound.
 func sanitizeProviderDetail(detail string, sensitiveValues []string) string {
+	detail = normalizeProviderDetail(detail)
 	// Replace longer values first so an overlapping short identifier cannot
 	// leave a revealing suffix behind when it appears inside a longer value.
 	sensitiveValues = append([]string(nil), sensitiveValues...)
+	for index, value := range sensitiveValues {
+		sensitiveValues[index] = normalizeProviderDetail(value)
+	}
 	sort.SliceStable(sensitiveValues, func(left int, right int) bool {
 		return len(sensitiveValues[left]) > len(sensitiveValues[right])
 	})
@@ -321,13 +336,6 @@ func sanitizeProviderDetail(detail string, sensitiveValues []string) string {
 			detail = strings.ReplaceAll(detail, value, "[redacted]")
 		}
 	}
-	detail = strings.Map(func(character rune) rune {
-		if unicode.IsControl(character) {
-			return -1
-		}
-		return character
-	}, detail)
-	detail = strings.Join(strings.Fields(detail), " ")
 	if len(detail) <= maxProviderDetailBytes {
 		return detail
 	}

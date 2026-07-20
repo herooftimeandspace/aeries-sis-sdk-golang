@@ -101,7 +101,7 @@ func TestClientDoSanitizesStructuredAPIError(t *testing.T) {
 		Certificate: testCertificate,
 		UserAgent:   userAgent,
 		HTTPClient: &http.Client{Transport: roundTripFunc(func(r *http.Request) (*http.Response, error) {
-			message := testCertificate + "\n" + url.QueryEscape(querySecret) + "\t" + headerSecret + " " + userAgent + " " + studentID + "\x1b[31m" + strings.Repeat("x", maxProviderDetailBytes)
+			message := testCertificate + "\n" + url.QueryEscape(querySecret) + " " + url.PathEscape(querySecret) + "\t" + headerSecret + " " + userAgent + " student \x1b12345 query    secret " + strings.Repeat("x", maxProviderDetailBytes)
 			return jsonResponse(http.StatusBadRequest, `{"Message":`+strconv.Quote(message)+`}`), nil
 		})},
 	})
@@ -121,7 +121,7 @@ func TestClientDoSanitizesStructuredAPIError(t *testing.T) {
 	if len(apiErr.Message) > maxProviderDetailBytes {
 		t.Fatalf("provider detail length = %d, want at most %d", len(apiErr.Message), maxProviderDetailBytes)
 	}
-	for _, forbidden := range []string{testCertificate, querySecret, url.QueryEscape(querySecret), headerSecret, userAgent, studentID, "\n", "\t", "\x1b"} {
+	for _, forbidden := range []string{testCertificate, querySecret, url.QueryEscape(querySecret), url.PathEscape(querySecret), headerSecret, userAgent, studentID, "\n", "\t", "\x1b"} {
 		if strings.Contains(apiErr.Message, forbidden) || strings.Contains(apiErr.Error(), forbidden) {
 			t.Fatalf("sanitized error retained forbidden value %q: %q", forbidden, apiErr.Error())
 		}
