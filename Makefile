@@ -4,7 +4,15 @@ README := README.md
 DOCS := docs
 GOMARKDOC ?= $(shell go env GOPATH)/bin/gomarkdoc
 
-.PHONY: docs docs-check docs-generate integration-test pages-help
+.PHONY: docs docs-check docs-generate generate generate-check integration-test pages-help
+
+generate:
+	@go run ./cmd/contractsync
+	@go run ./cmd/wrappergen
+
+generate-check:
+	@go run ./cmd/contractsync -check
+	@go run ./cmd/wrappergen -check
 
 docs:
 	@mkdir -p $(DOCS)
@@ -25,4 +33,4 @@ integration-test:
 	@go test -tags=integration ./...
 
 pages-help:
-	@printf '%s\n' "Use 'make docs' to mirror README.md, 'make docs-generate' for API docs, 'make integration-test' for live read-only smoke checks, and mkdocs build after installing MkDocs Material and gomarkdoc."
+	@printf '%s\n' "Use 'make generate' for contract and wrapper artifacts, 'make generate-check' to detect drift, 'make docs' to mirror README.md, 'make docs-generate' for API docs, 'make integration-test' for live read-only smoke checks, and mkdocs build after installing MkDocs Material and gomarkdoc."

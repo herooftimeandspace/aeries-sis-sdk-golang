@@ -14,7 +14,7 @@ This page explains the runtime settings the SDK will support.
 
 ## Environment variables
 
-The repository includes [`.env.example`](../.env.example) for local setup guidance.
+The repository includes [`.env.example`](https://github.com/herooftimeandspace/aeries-sis-sdk-golang/blob/main/.env.example) for local setup guidance.
 
 ## Base URL guidance
 
