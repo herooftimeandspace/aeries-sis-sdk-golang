@@ -151,6 +151,17 @@ func (s *StudentsService) ListContacts(ctx context.Context, req SchoolStudentLoo
 	})
 }
 
+// CreateContact inserts one contact for a student and returns the created contact record.
+func (s *StudentsService) CreateContact(ctx context.Context, req StudentMutationRequest) (JSONDocument, error) {
+	return s.client.doDocument(ctx, "students.create_contact", RequestOptions{
+		PathParams: map[string]string{
+			"StudentID": intString(req.StudentID),
+		},
+		JSONBody:     req.Values,
+		DatabaseYear: req.DatabaseYear,
+	})
+}
+
 // UpdateContact changes one student contact identified by sequence number.
 func (s *StudentsService) UpdateContact(ctx context.Context, req StudentSequenceMutationRequest) (JSONDocument, error) {
 	return s.client.doDocument(ctx, "students.update_contact", RequestOptions{
@@ -218,6 +229,21 @@ func (s *StudentsService) ListAssertiveDiscipline(ctx context.Context, req Schoo
 			"SchoolCode": req.SchoolCode,
 			"StudentID":  intString(req.StudentID),
 		},
+		DatabaseYear: req.DatabaseYear,
+	})
+}
+
+// ListDiscipline returns discipline rows for one student or many students.
+func (s *StudentsService) ListDiscipline(ctx context.Context, req SchoolStudentLookupRequest) ([]JSONDocument, error) {
+	query := map[string]string{}
+	addIntQueryValue(query, "StartingRecord", req.StartingRecord)
+	addIntQueryValue(query, "EndingRecord", req.EndingRecord)
+	return s.client.doDocuments(ctx, "students.list_discipline", RequestOptions{
+		PathParams: map[string]string{
+			"SchoolCode": req.SchoolCode,
+			"StudentID":  intString(req.StudentID),
+		},
+		Query:        query,
 		DatabaseYear: req.DatabaseYear,
 	})
 }

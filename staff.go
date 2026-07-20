@@ -21,6 +21,25 @@ func (s *StaffService) List(ctx context.Context, req StaffLookupRequest) ([]JSON
 	})
 }
 
+// Create inserts one staff record and returns the created record.
+func (s *StaffService) Create(ctx context.Context, req StaffCreateRequest) (JSONDocument, error) {
+	return s.client.doDocument(ctx, "staff.create", RequestOptions{
+		JSONBody:     req.Values,
+		DatabaseYear: req.DatabaseYear,
+	})
+}
+
+// Update updates one staff record identified by district staff ID.
+func (s *StaffService) Update(ctx context.Context, req StaffUpdateRequest) (JSONDocument, error) {
+	return s.client.doDocument(ctx, "staff.update", RequestOptions{
+		PathParams: map[string]string{
+			"StaffID": intString(req.StaffID),
+		},
+		JSONBody:     req.Values,
+		DatabaseYear: req.DatabaseYear,
+	})
+}
+
 // GetByHRID returns one staff row by HR ID.
 func (s *StaffService) GetByHRID(ctx context.Context, req StaffHRIDLookupRequest) (JSONDocument, error) {
 	return s.client.doDocument(ctx, "staff.get_by_hrid", RequestOptions{

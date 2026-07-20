@@ -8,6 +8,8 @@
 - Treat documentation as a first-class deliverable: combine the README, architecture guides, endpoint reference, and generated code reference into one GitHub Pages site written for a junior engineer who may be new to both Go and this codebase.
 
 ## Public Interfaces and Implementation Changes
+- Contract parity is checked against the committed Python SDK snapshot with a deterministic local command. Differences in upstream Aeries versions, paths, verbs, placeholder casing, or side-effect classification must be recorded in `docs/contract-parity.md` and the machine-readable dispute ledger before either SDK changes behavior. Confirmed operations missing from Go are added through `internal/contract/source/endpoints.json` and the wrapper generator so existing public methods remain source-compatible.
+- Retry eligibility is resolved from the manifest operation, not inferred from the HTTP verb alone. Contract operations marked as mutations or side effects, including command-style `GET` endpoints, receive one attempt; transient failures from safe read operations may use the configured retry budget. The raw `Client.Do` escape hatch also receives one attempt because it has no contract metadata proving that a request is safe to repeat.
 - Public entry points:
   - `aeries.Config`
   - `aeries.NewClient(Config) (*Client, error)`

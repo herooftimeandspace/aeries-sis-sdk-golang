@@ -56,6 +56,17 @@ func (s *SchedulingService) ListSections(ctx context.Context, req SectionLookupR
 	})
 }
 
+// GetSchedulingSection returns one section from the scheduling master schedule.
+func (s *SchedulingService) GetSchedulingSection(ctx context.Context, req SectionLookupRequest) (JSONDocument, error) {
+	return s.client.doDocument(ctx, "scheduling.get_scheduling_section", RequestOptions{
+		PathParams: map[string]string{
+			"SchoolCode":    req.SchoolCode,
+			"SectionNumber": intString(req.SectionNumber),
+		},
+		DatabaseYear: req.DatabaseYear,
+	})
+}
+
 // ListSectionDataChanges returns section numbers that changed since the caller's sync cursor.
 func (s *SchedulingService) ListSectionDataChanges(ctx context.Context, req TimestampRequest) ([]JSONDocument, error) {
 	return s.client.doDocuments(ctx, "scheduling.list_section_data_changes", RequestOptions{

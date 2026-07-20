@@ -37,6 +37,10 @@ The implementation plan requires:
 
 Public service methods are generated from the vendored endpoint inventory, a compact operation-to-request mapping, and the public request structs. Run `make generate` after changing any of those sources. Run `make generate-check` to verify that the checked-in contract and wrapper artifacts are current without rewriting them. See the [API Contract guide](docs/contract.md) for the canonical files, documented parameter aliases, and the fail-closed process for adding an unusual endpoint shape.
 
+## Comparing the Python contract
+
+Run `make parity-check PYTHON_CONTRACT_SNAPSHOT=/absolute/path/to/contract_snapshot.json` to compare this repository's committed endpoint inventory with a committed Python SDK snapshot. The deterministic command does not access the network or modify either checkout. It fails when a new operation or contract difference is not explicitly accounted for in the checked-in [contract parity ledger](docs/contract-parity.md).
+
 ## Aeries docs used as source material
 
 - [Full Documentation](https://support.aeries.com/support/solutions/articles/14000077926-aeries-api-full-documentation)

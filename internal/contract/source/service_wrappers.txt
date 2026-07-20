@@ -9,6 +9,7 @@ schools.get_bell_schedule_for_date SchoolDateRequest | returns bell schedule row
 schools.list_absence_codes AbsenceCodeLookupRequest | returns absence code rows for one school and can narrow to one code.
 codesets.list CodeSetLookupRequest | returns the code values documented for one table and field pair.
 preenroll.trigger PreEnrollRequest | asks Aeries to run the documented student pre-enrollment action for one student.
+preenroll.trigger_inactive PreEnrollInactiveRequest | creates a new pre-enrollment record from an inactive student at the requested destination school.
 students.list StudentLookupRequest | returns student rows and supports the documented StartingRecord and EndingRecord pagination filters.
 students.list_by_grade StudentGradeLookupRequest | returns student rows for one school and grade level.
 students.get_by_student_number StudentNumberLookupRequest | returns one student using the school-scoped student number path.
@@ -20,6 +21,7 @@ students.create StudentCreateRequest | inserts a new student record in the distr
 students.update StudentMutationRequest | changes one existing student record using the documented UpdateStudent endpoint.
 students.update_address StudentMutationRequest | changes a student's mailing and residence address fields.
 students.list_contacts SchoolStudentLookupRequest | returns contact rows for one student or all contacts when StudentID is zero.
+students.create_contact StudentMutationRequest | inserts one contact for a student and returns the created contact record.
 students.update_contact StudentSequenceMutationRequest | changes one student contact identified by sequence number.
 students.delete_contact StudentSequenceMutationRequest | removes one student contact identified by sequence number.
 programs.list ProgramLookupRequest | returns program rows for one student or all students when StudentID is zero.
@@ -28,6 +30,7 @@ students.list_available_tests SystemInfoRequest | returns the test definitions d
 students.update_test_scores TestScoresUpdateRequest | inserts or updates test score rows in bulk.
 students.list_college_test_scores SchoolStudentLookupRequest | returns college entrance test rows for one student or many students.
 students.list_assertive_discipline SchoolStudentLookupRequest | returns assertive discipline rows for one student or many students.
+students.list_discipline SchoolStudentLookupRequest | returns discipline rows for one student or many students.
 students.list_district_supplemental SchoolStudentLookupRequest | returns district supplemental rows for one student or many students.
 students.list_school_supplemental SchoolStudentLookupRequest | returns school supplemental rows for one student or many students.
 students.update_school_supplemental SchoolStudentNumberMutationRequest | changes school supplemental data using the school-scoped student number endpoint.
@@ -47,6 +50,7 @@ attendance.list_history_absence_codes SchoolLookupRequest | returns the absence 
 attendance.list_history_absence_codes_by_year SchoolStringLookupRequest | returns the attendance history absence code catalog for one academic year.
 student_grades.list_gpa SchoolStudentLookupRequest | returns GPA rows for one student or many students.
 student_grades.update_grades SchoolPayloadRequest | sends the bulk student grade update payload documented by Aeries.
+student_grades.list_grades SchoolLookupRequest | returns current student grade records for one school.
 student_grades.list_report_cards SchoolStudentLookupRequest | returns report card rows for one student or many students.
 student_grades.list_report_card_marking_periods SchoolLookupRequest | returns the marking period definitions used by report cards.
 student_grades.list_graduation_requirements SchoolLookupRequest | returns the graduation requirement catalog for one school.
@@ -55,6 +59,8 @@ student_grades.list_graduation_status_by_grade StudentGradeLookupRequest | retur
 student_grades.list_transcripts SchoolStudentLookupRequest | returns transcript rows for one student or many students.
 student_grades.list_valid_marks SchoolLookupRequest | returns the transcript mark codes that Aeries allows for one school.
 staff.list StaffLookupRequest | returns staff rows and can narrow to one staff ID.
+staff.create StaffCreateRequest | inserts one staff record and returns the created record.
+staff.update StaffUpdateRequest | updates one staff record identified by district staff ID.
 staff.get_by_hrid StaffHRIDLookupRequest | returns one staff row by HR ID.
 staff.list_classes StaffClassesRequest | returns the classes or sections assigned to one staff member.
 staff.list_data_changes TimestampRequest | returns staff IDs that changed since the caller's sync cursor.
@@ -64,6 +70,7 @@ scheduling.list_student_class_schedule SchoolStudentLookupRequest | returns clas
 scheduling.list_courses CourseLookupRequest | returns course rows and can narrow to one course ID.
 scheduling.list_course_data_changes TimestampRequest | returns course IDs that changed since the caller's sync cursor.
 scheduling.list_sections SectionLookupRequest | returns section rows and can narrow to one section number.
+scheduling.get_scheduling_section SectionLookupRequest | returns one section from the scheduling master schedule.
 scheduling.list_section_data_changes TimestampRequest | returns section numbers that changed since the caller's sync cursor.
 scheduling.create_section SectionCreateRequest | creates one scheduling master schedule section.
 scheduling.update_section SectionMutationRequest | updates one scheduling master schedule section.

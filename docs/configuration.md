@@ -10,7 +10,7 @@ This page explains the runtime settings accepted by `aeries.NewClient`. Configur
 - `UserAgent` optionally replaces the default SDK user agent.
 - `Timeout` controls the generated HTTP client's timeout. Zero uses 30 seconds. Negative durations are invalid.
 - `DefaultDatabaseYear` supplies `DatabaseYear` when an individual request does not set one. A request-specific value takes precedence.
-- `MaxRetries` controls retries for transient transport and API failures. Zero uses two retries, and negative values are invalid.
+- `MaxRetries` controls retries for transient transport and API failures on manifest-backed operations classified as safe reads. Zero uses two retries, and negative values are invalid. Mutations, side-effect commands, and raw `Client.Do` calls are never retried automatically.
 - `RetryBackoff` controls the base delay between retries. Zero uses 300 milliseconds, and negative durations are invalid.
 - `MaxResponseBytes` limits the bytes read from every API response before status handling or JSON decoding. Zero uses the conservative 32 MiB default, negative values and values above 1 TiB are invalid, and callers that intentionally accept larger photo batches must opt in explicitly.
 

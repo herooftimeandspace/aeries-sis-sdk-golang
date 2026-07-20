@@ -4,7 +4,7 @@ README := README.md
 DOCS := docs
 GOMARKDOC ?= $(shell go env GOPATH)/bin/gomarkdoc
 
-.PHONY: docs docs-check docs-generate generate generate-check integration-test pages-help
+.PHONY: docs docs-check docs-generate generate generate-check integration-test pages-help parity-check
 
 generate:
 	@go run ./cmd/contractsync
@@ -13,6 +13,10 @@ generate:
 generate-check:
 	@go run ./cmd/contractsync -check
 	@go run ./cmd/wrappergen -check
+
+parity-check:
+	@test -n "$(PYTHON_CONTRACT_SNAPSHOT)" || (printf '%s\n' "Set PYTHON_CONTRACT_SNAPSHOT to the committed Python contract_snapshot.json path." >&2; exit 2)
+	@go run ./cmd/contractparity -python "$(PYTHON_CONTRACT_SNAPSHOT)"
 
 docs:
 	@mkdir -p $(DOCS)
@@ -33,4 +37,4 @@ integration-test:
 	@go test -tags=integration ./...
 
 pages-help:
-	@printf '%s\n' "Use 'make generate' for contract and wrapper artifacts, 'make generate-check' to detect drift, 'make docs' to mirror README.md, 'make docs-generate' for API docs, 'make integration-test' for live read-only smoke checks, and mkdocs build after installing MkDocs Material and gomarkdoc."
+	@printf '%s\n' "Use 'make generate' for contract and wrapper artifacts, 'make generate-check' to detect drift, 'make parity-check PYTHON_CONTRACT_SNAPSHOT=/path/to/contract_snapshot.json' for cross-SDK parity, 'make docs' to mirror README.md, 'make docs-generate' for API docs, 'make integration-test' for live read-only smoke checks, and mkdocs build after installing MkDocs Material and gomarkdoc."

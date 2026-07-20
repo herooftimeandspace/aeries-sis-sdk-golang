@@ -61,9 +61,10 @@ The package is intentionally organized around plain\-language service groups so 
   - [func NewClient\(config Config\) \(\*Client, error\)](<#NewClient>)
   - [func \(c \*Client\) Do\(ctx context.Context, method string, path string, opts RequestOptions, out any\) error](<#Client.Do>)
   - [func \(c \*Client\) buildURL\(pathTemplate string, opts RequestOptions\) \(string, error\)](<#Client.buildURL>)
+  - [func \(c \*Client\) do\(ctx context.Context, method string, path string, opts RequestOptions, out any, retrySafe bool\) error](<#Client.do>)
   - [func \(c \*Client\) doDocument\(ctx context.Context, operationID string, opts RequestOptions\) \(JSONDocument, error\)](<#Client.doDocument>)
   - [func \(c \*Client\) doDocuments\(ctx context.Context, operationID string, opts RequestOptions\) \(\[\]JSONDocument, error\)](<#Client.doDocuments>)
-  - [func \(c \*Client\) doHTTPRequest\(ctx context.Context, method string, path string, requestURL string, body \[\]byte, headers map\[string\]string, out any\) error](<#Client.doHTTPRequest>)
+  - [func \(c \*Client\) doHTTPRequest\(ctx context.Context, method string, path string, requestURL string, body \[\]byte, headers map\[string\]string, out any, retrySafe bool\) error](<#Client.doHTTPRequest>)
   - [func \(c \*Client\) doList\(ctx context.Context, operationID string, opts RequestOptions\) \(JSONList, error\)](<#Client.doList>)
   - [func \(c \*Client\) doNoContent\(ctx context.Context, operationID string, opts RequestOptions\) error](<#Client.doNoContent>)
   - [func \(c \*Client\) doOperation\(ctx context.Context, operationID string, opts RequestOptions, out any\) error](<#Client.doOperation>)
@@ -116,9 +117,11 @@ The package is intentionally organized around plain\-language service groups so 
 - [type GraduationStatus](<#GraduationStatus>)
 - [type JSONDocument](<#JSONDocument>)
 - [type JSONList](<#JSONList>)
+- [type PreEnrollInactiveRequest](<#PreEnrollInactiveRequest>)
 - [type PreEnrollRequest](<#PreEnrollRequest>)
 - [type PreEnrollService](<#PreEnrollService>)
   - [func \(s \*PreEnrollService\) Trigger\(ctx context.Context, req PreEnrollRequest\) \(JSONDocument, error\)](<#PreEnrollService.Trigger>)
+  - [func \(s \*PreEnrollService\) TriggerInactive\(ctx context.Context, req PreEnrollInactiveRequest\) \(\[\]JSONDocument, error\)](<#PreEnrollService.TriggerInactive>)
 - [type ProgramLookupRequest](<#ProgramLookupRequest>)
 - [type ProgramRecord](<#ProgramRecord>)
 - [type ProgramsService](<#ProgramsService>)
@@ -133,6 +136,7 @@ The package is intentionally organized around plain\-language service groups so 
   - [func \(s \*SchedulingService\) DeleteAlternateCourseRequest\(ctx context.Context, req CourseRequestMutationRequest\) error](<#SchedulingService.DeleteAlternateCourseRequest>)
   - [func \(s \*SchedulingService\) DeleteSection\(ctx context.Context, req SectionLookupRequest\) error](<#SchedulingService.DeleteSection>)
   - [func \(s \*SchedulingService\) DeleteStudentCourseRequest\(ctx context.Context, req CourseRequestMutationRequest\) error](<#SchedulingService.DeleteStudentCourseRequest>)
+  - [func \(s \*SchedulingService\) GetSchedulingSection\(ctx context.Context, req SectionLookupRequest\) \(JSONDocument, error\)](<#SchedulingService.GetSchedulingSection>)
   - [func \(s \*SchedulingService\) ListAlternateCourseRequests\(ctx context.Context, req CourseRequestLookupRequest\) \(\[\]JSONDocument, error\)](<#SchedulingService.ListAlternateCourseRequests>)
   - [func \(s \*SchedulingService\) ListCourseDataChanges\(ctx context.Context, req TimestampRequest\) \(\[\]JSONDocument, error\)](<#SchedulingService.ListCourseDataChanges>)
   - [func \(s \*SchedulingService\) ListCourseRequests\(ctx context.Context, req SchoolLookupRequest\) \(\[\]JSONDocument, error\)](<#SchedulingService.ListCourseRequests>)
@@ -169,16 +173,20 @@ The package is intentionally organized around plain\-language service groups so 
 - [type SectionRecord](<#SectionRecord>)
 - [type StaffAssignmentRecord](<#StaffAssignmentRecord>)
 - [type StaffClassesRequest](<#StaffClassesRequest>)
+- [type StaffCreateRequest](<#StaffCreateRequest>)
 - [type StaffHRIDLookupRequest](<#StaffHRIDLookupRequest>)
 - [type StaffLookupRequest](<#StaffLookupRequest>)
 - [type StaffRecord](<#StaffRecord>)
 - [type StaffService](<#StaffService>)
+  - [func \(s \*StaffService\) Create\(ctx context.Context, req StaffCreateRequest\) \(JSONDocument, error\)](<#StaffService.Create>)
   - [func \(s \*StaffService\) GetByHRID\(ctx context.Context, req StaffHRIDLookupRequest\) \(JSONDocument, error\)](<#StaffService.GetByHRID>)
   - [func \(s \*StaffService\) List\(ctx context.Context, req StaffLookupRequest\) \(\[\]JSONDocument, error\)](<#StaffService.List>)
   - [func \(s \*StaffService\) ListClasses\(ctx context.Context, req StaffClassesRequest\) \(\[\]JSONDocument, error\)](<#StaffService.ListClasses>)
   - [func \(s \*StaffService\) ListDataChanges\(ctx context.Context, req TimestampRequest\) \(\[\]JSONDocument, error\)](<#StaffService.ListDataChanges>)
   - [func \(s \*StaffService\) ListTeacherBridge\(ctx context.Context, req StaffClassesRequest\) \(\[\]JSONDocument, error\)](<#StaffService.ListTeacherBridge>)
   - [func \(s \*StaffService\) ListTeachers\(ctx context.Context, req TeacherLookupRequest\) \(\[\]JSONDocument, error\)](<#StaffService.ListTeachers>)
+  - [func \(s \*StaffService\) Update\(ctx context.Context, req StaffUpdateRequest\) \(JSONDocument, error\)](<#StaffService.Update>)
+- [type StaffUpdateRequest](<#StaffUpdateRequest>)
 - [type Student](<#Student>)
 - [type StudentAcademicYearRequest](<#StudentAcademicYearRequest>)
 - [type StudentCreateRequest](<#StudentCreateRequest>)
@@ -188,6 +196,7 @@ The package is intentionally organized around plain\-language service groups so 
 - [type StudentGradeRecord](<#StudentGradeRecord>)
 - [type StudentGradesService](<#StudentGradesService>)
   - [func \(s \*StudentGradesService\) ListGPA\(ctx context.Context, req SchoolStudentLookupRequest\) \(\[\]JSONDocument, error\)](<#StudentGradesService.ListGPA>)
+  - [func \(s \*StudentGradesService\) ListGrades\(ctx context.Context, req SchoolLookupRequest\) \(\[\]JSONDocument, error\)](<#StudentGradesService.ListGrades>)
   - [func \(s \*StudentGradesService\) ListGraduationRequirements\(ctx context.Context, req SchoolLookupRequest\) \(\[\]JSONDocument, error\)](<#StudentGradesService.ListGraduationRequirements>)
   - [func \(s \*StudentGradesService\) ListGraduationStatus\(ctx context.Context, req SchoolStudentLookupRequest\) \(\[\]JSONDocument, error\)](<#StudentGradesService.ListGraduationStatus>)
   - [func \(s \*StudentGradesService\) ListGraduationStatusByGrade\(ctx context.Context, req StudentGradeLookupRequest\) \(\[\]JSONDocument, error\)](<#StudentGradesService.ListGraduationStatusByGrade>)
@@ -204,6 +213,7 @@ The package is intentionally organized around plain\-language service groups so 
 - [type StudentSequenceMutationRequest](<#StudentSequenceMutationRequest>)
 - [type StudentsService](<#StudentsService>)
   - [func \(s \*StudentsService\) Create\(ctx context.Context, req StudentCreateRequest\) \(JSONDocument, error\)](<#StudentsService.Create>)
+  - [func \(s \*StudentsService\) CreateContact\(ctx context.Context, req StudentMutationRequest\) \(JSONDocument, error\)](<#StudentsService.CreateContact>)
   - [func \(s \*StudentsService\) DeleteContact\(ctx context.Context, req StudentSequenceMutationRequest\) error](<#StudentsService.DeleteContact>)
   - [func \(s \*StudentsService\) GetByStudentNumber\(ctx context.Context, req StudentNumberLookupRequest\) \(JSONDocument, error\)](<#StudentsService.GetByStudentNumber>)
   - [func \(s \*StudentsService\) GetExtendedByStudentNumber\(ctx context.Context, req StudentNumberLookupRequest\) \(JSONDocument, error\)](<#StudentsService.GetExtendedByStudentNumber>)
@@ -214,6 +224,7 @@ The package is intentionally organized around plain\-language service groups so 
   - [func \(s \*StudentsService\) ListCollegeTestScores\(ctx context.Context, req SchoolStudentLookupRequest\) \(\[\]JSONDocument, error\)](<#StudentsService.ListCollegeTestScores>)
   - [func \(s \*StudentsService\) ListContacts\(ctx context.Context, req SchoolStudentLookupRequest\) \(\[\]JSONDocument, error\)](<#StudentsService.ListContacts>)
   - [func \(s \*StudentsService\) ListDataChanges\(ctx context.Context, req StudentDataChangesRequest\) \(\[\]JSONDocument, error\)](<#StudentsService.ListDataChanges>)
+  - [func \(s \*StudentsService\) ListDiscipline\(ctx context.Context, req SchoolStudentLookupRequest\) \(\[\]JSONDocument, error\)](<#StudentsService.ListDiscipline>)
   - [func \(s \*StudentsService\) ListDistrictSupplemental\(ctx context.Context, req SchoolStudentLookupRequest\) \(\[\]JSONDocument, error\)](<#StudentsService.ListDistrictSupplemental>)
   - [func \(s \*StudentsService\) ListExtended\(ctx context.Context, req StudentLookupRequest\) \(\[\]JSONDocument, error\)](<#StudentsService.ListExtended>)
   - [func \(s \*StudentsService\) ListExtendedByGrade\(ctx context.Context, req StudentGradeLookupRequest\) \(\[\]JSONDocument, error\)](<#StudentsService.ListExtendedByGrade>)
@@ -754,7 +765,7 @@ NewClient validates the configuration, loads the vendored contract, and wires up
 func (c *Client) Do(ctx context.Context, method string, path string, opts RequestOptions, out any) error
 ```
 
-Do performs one raw API request using the shared transport and error handling rules.
+Do performs one raw API request using the shared transport and error handling rules without automatic retries.
 
 <a name="Client.buildURL"></a>
 ### func \(\*Client\) buildURL
@@ -764,6 +775,15 @@ func (c *Client) buildURL(pathTemplate string, opts RequestOptions) (string, err
 ```
 
 buildURL expands path parameters, applies the base URL, and appends any supported query parameters.
+
+<a name="Client.do"></a>
+### func \(\*Client\) do
+
+```go
+func (c *Client) do(ctx context.Context, method string, path string, opts RequestOptions, out any, retrySafe bool) error
+```
+
+do prepares one request and enables retries only when trusted contract metadata has classified the operation as a safe read.
 
 <a name="Client.doDocument"></a>
 ### func \(\*Client\) doDocument
@@ -787,10 +807,10 @@ doDocuments calls one manifest\-backed operation and decodes the result into a s
 ### func \(\*Client\) doHTTPRequest
 
 ```go
-func (c *Client) doHTTPRequest(ctx context.Context, method string, path string, requestURL string, body []byte, headers map[string]string, out any) error
+func (c *Client) doHTTPRequest(ctx context.Context, method string, path string, requestURL string, body []byte, headers map[string]string, out any, retrySafe bool) error
 ```
 
-doHTTPRequest sends the HTTP request and retries short\-lived transport failures when configured.
+doHTTPRequest sends the HTTP request and retries short\-lived failures only when contract metadata approved replay.
 
 <a name="Client.doList"></a>
 ### func \(\*Client\) doList
@@ -1318,6 +1338,19 @@ JSONList represents a list of JSON objects returned by the Aeries API.
 type JSONList []JSONDocument
 ```
 
+<a name="PreEnrollInactiveRequest"></a>
+## type PreEnrollInactiveRequest
+
+PreEnrollInactiveRequest identifies an inactive student and the destination school for a state\-changing pre\-enrollment command.
+
+```go
+type PreEnrollInactiveRequest struct {
+    StudentID      int
+    NextSchoolCode int
+    DatabaseYear   string
+}
+```
+
 <a name="PreEnrollRequest"></a>
 ## type PreEnrollRequest
 
@@ -1350,6 +1383,15 @@ func (s *PreEnrollService) Trigger(ctx context.Context, req PreEnrollRequest) (J
 ```
 
 Trigger asks Aeries to run the documented student pre\-enrollment action for one student.
+
+<a name="PreEnrollService.TriggerInactive"></a>
+### func \(\*PreEnrollService\) TriggerInactive
+
+```go
+func (s *PreEnrollService) TriggerInactive(ctx context.Context, req PreEnrollInactiveRequest) ([]JSONDocument, error)
+```
+
+TriggerInactive creates a new pre\-enrollment record from an inactive student at the requested destination school.
 
 <a name="ProgramLookupRequest"></a>
 ## type ProgramLookupRequest
@@ -1499,6 +1541,15 @@ func (s *SchedulingService) DeleteStudentCourseRequest(ctx context.Context, req 
 ```
 
 DeleteStudentCourseRequest deletes one student course request row by sequence number.
+
+<a name="SchedulingService.GetSchedulingSection"></a>
+### func \(\*SchedulingService\) GetSchedulingSection
+
+```go
+func (s *SchedulingService) GetSchedulingSection(ctx context.Context, req SectionLookupRequest) (JSONDocument, error)
+```
+
+GetSchedulingSection returns one section from the scheduling master schedule.
 
 <a name="SchedulingService.ListAlternateCourseRequests"></a>
 ### func \(\*SchedulingService\) ListAlternateCourseRequests
@@ -1875,6 +1926,18 @@ type StaffClassesRequest struct {
 }
 ```
 
+<a name="StaffCreateRequest"></a>
+## type StaffCreateRequest
+
+StaffCreateRequest carries the values for one new staff record.
+
+```go
+type StaffCreateRequest struct {
+    Values       JSONDocument
+    DatabaseYear string
+}
+```
+
 <a name="StaffHRIDLookupRequest"></a>
 ## type StaffHRIDLookupRequest
 
@@ -1920,6 +1983,15 @@ type StaffService struct {
     client *Client
 }
 ```
+
+<a name="StaffService.Create"></a>
+### func \(\*StaffService\) Create
+
+```go
+func (s *StaffService) Create(ctx context.Context, req StaffCreateRequest) (JSONDocument, error)
+```
+
+Create inserts one staff record and returns the created record.
 
 <a name="StaffService.GetByHRID"></a>
 ### func \(\*StaffService\) GetByHRID
@@ -1974,6 +2046,28 @@ func (s *StaffService) ListTeachers(ctx context.Context, req TeacherLookupReques
 ```
 
 ListTeachers returns teacher rows for one school and optional teacher number.
+
+<a name="StaffService.Update"></a>
+### func \(\*StaffService\) Update
+
+```go
+func (s *StaffService) Update(ctx context.Context, req StaffUpdateRequest) (JSONDocument, error)
+```
+
+Update updates one staff record identified by district staff ID.
+
+<a name="StaffUpdateRequest"></a>
+## type StaffUpdateRequest
+
+StaffUpdateRequest identifies one staff record and carries its replacement values.
+
+```go
+type StaffUpdateRequest struct {
+    StaffID      int
+    Values       JSONDocument
+    DatabaseYear string
+}
+```
 
 <a name="Student"></a>
 ## type Student
@@ -2079,6 +2173,15 @@ func (s *StudentGradesService) ListGPA(ctx context.Context, req SchoolStudentLoo
 ```
 
 ListGPA returns GPA rows for one student or many students.
+
+<a name="StudentGradesService.ListGrades"></a>
+### func \(\*StudentGradesService\) ListGrades
+
+```go
+func (s *StudentGradesService) ListGrades(ctx context.Context, req SchoolLookupRequest) ([]JSONDocument, error)
+```
+
+ListGrades returns current student grade records for one school.
 
 <a name="StudentGradesService.ListGraduationRequirements"></a>
 ### func \(\*StudentGradesService\) ListGraduationRequirements
@@ -2245,6 +2348,15 @@ func (s *StudentsService) Create(ctx context.Context, req StudentCreateRequest) 
 
 Create inserts a new student record in the district.
 
+<a name="StudentsService.CreateContact"></a>
+### func \(\*StudentsService\) CreateContact
+
+```go
+func (s *StudentsService) CreateContact(ctx context.Context, req StudentMutationRequest) (JSONDocument, error)
+```
+
+CreateContact inserts one contact for a student and returns the created contact record.
+
 <a name="StudentsService.DeleteContact"></a>
 ### func \(\*StudentsService\) DeleteContact
 
@@ -2334,6 +2446,15 @@ func (s *StudentsService) ListDataChanges(ctx context.Context, req StudentDataCh
 ```
 
 ListDataChanges returns student IDs that changed since the caller's last sync cursor.
+
+<a name="StudentsService.ListDiscipline"></a>
+### func \(\*StudentsService\) ListDiscipline
+
+```go
+func (s *StudentsService) ListDiscipline(ctx context.Context, req SchoolStudentLookupRequest) ([]JSONDocument, error)
+```
+
+ListDiscipline returns discipline rows for one student or many students.
 
 <a name="StudentsService.ListDistrictSupplemental"></a>
 ### func \(\*StudentsService\) ListDistrictSupplemental
