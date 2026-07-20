@@ -16,7 +16,7 @@ The default suite must stay at or above 95% statement coverage.
 
 ## Generation drift
 
-Run `make generate-check` before review whenever endpoint metadata, public request types, or generated service files change. This command regenerates the expected content in memory and fails when either the contract artifacts or service wrappers differ from their checked-in form. Use `make generate` to intentionally refresh those artifacts, then review the resulting diff before committing it.
+Run `make generate-check` before review whenever endpoint metadata, public request types, wrapper body metadata, or generated service files change. This command regenerates the expected content in memory and fails when contract artifacts or service wrappers differ from their checked-in form, including when an obsolete generated service file remains after its endpoints are removed. Use `make generate` to intentionally refresh those artifacts, then review the resulting additions, changes, and removals before committing them.
 
 ## Integration smoke tests
 

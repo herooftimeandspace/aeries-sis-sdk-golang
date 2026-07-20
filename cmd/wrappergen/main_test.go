@@ -103,6 +103,19 @@ func TestRunWritesAndChecksTemporaryCheckout(t *testing.T) {
 	if err := run([]string{"-check"}); err != nil {
 		t.Fatalf("check wrappers: %v", err)
 	}
+	stalePath := filepath.Join(temporary, "stale.go")
+	if err := os.WriteFile(stalePath, []byte(generatedWrapperHeader+"\npackage aeries\n"), 0o644); err != nil {
+		t.Fatalf("write stale wrapper: %v", err)
+	}
+	if err := run([]string{"-check"}); err == nil || !strings.Contains(err.Error(), "stale generated wrapper") {
+		t.Fatalf("stale wrapper check error = %v", err)
+	}
+	if err := run(nil); err != nil {
+		t.Fatalf("remove stale wrapper: %v", err)
+	}
+	if _, err := os.Stat(stalePath); !os.IsNotExist(err) {
+		t.Fatalf("stale wrapper still exists: %v", err)
+	}
 	if err := os.WriteFile(filepath.Join(temporary, "alerts.go"), []byte("drift\n"), 0o644); err != nil {
 		t.Fatalf("introduce drift: %v", err)
 	}
@@ -173,6 +186,26 @@ func TestRunReportsSourceAndOutputFailures(t *testing.T) {
 			t.Fatalf("run error = %v", err)
 		}
 	})
+
+	t.Run("invalid generation metadata", func(t *testing.T) {
+		temporary := t.TempDir()
+		for _, name := range []string{"internal/contract/source/endpoints.json", "requests.go"} {
+			writeFixture(t, filepath.Join(repository, name), filepath.Join(temporary, name))
+		}
+		metadataPath := filepath.Join(temporary, "internal/contract/source/service_wrappers.txt")
+		if err := os.MkdirAll(filepath.Dir(metadataPath), 0o755); err != nil {
+			t.Fatalf("create metadata directory: %v", err)
+		}
+		if err := os.WriteFile(metadataPath, []byte("missing.operation SystemInfoRequest | missing operation\n"), 0o644); err != nil {
+			t.Fatalf("write invalid generation metadata: %v", err)
+		}
+		if err := os.Chdir(temporary); err != nil {
+			t.Fatalf("enter temporary checkout: %v", err)
+		}
+		if err := run(nil); err == nil || !strings.Contains(err.Error(), "has no wrapper request mapping") {
+			t.Fatalf("run error = %v", err)
+		}
+	})
 }
 
 // TestGenerateRejectsMetadataDrift covers missing, extra, and invalid source-of-truth mappings.
@@ -213,7 +246,8 @@ func TestRenderMethodRejectsInvalidShapes(t *testing.T) {
 	}
 	for _, test := range cases {
 		t.Run(test.name, func(t *testing.T) {
-			_, err := renderMethod("SampleService", test.operation, "SampleRequest", "runs the sample operation.", test.fields)
+			spec := requestSpec{Request: "SampleRequest", Comment: "runs the sample operation."}
+			_, err := renderMethod("SampleService", test.operation, spec, test.fields)
 			if err == nil || !strings.Contains(err.Error(), test.want) {
 				t.Fatalf("renderMethod error = %v, want text %q", err, test.want)
 			}
@@ -262,6 +296,9 @@ func TestLoadSpecsRejectsMalformedMetadata(t *testing.T) {
 	}{
 		{name: "malformed", text: "one two three\n", want: "must contain"},
 		{name: "missing comment", text: "one Request\n", want: "public method comment"},
+		{name: "invalid body", text: "one Request payload | comment\n", want: "invalid body field"},
+		{name: "empty body", text: "one Request body= | comment\n", want: "invalid body field"},
+		{name: "too many fields", text: "one Request body=Values extra | comment\n", want: "optional body field"},
 		{name: "duplicate", text: "one Request | comment\none Request | comment\n", want: "duplicate"},
 	} {
 		t.Run(test.name, func(t *testing.T) {
@@ -332,4 +369,51 @@ func TestRenderServiceReportsFormattingFailure(t *testing.T) {
 	if err == nil || !strings.Contains(err.Error(), "format generated") {
 		t.Fatalf("renderService error = %v", err)
 	}
+}
+
+// TestRenderMethodUsesOnlyExplicitBodyMetadata verifies request structs do not accidentally add DELETE payloads.
+func TestRenderMethodUsesOnlyExplicitBodyMetadata(t *testing.T) {
+	operation := endpoint{ID: "sample.delete", MethodName: "Delete", ResponseShape: "empty", Mutation: true}
+	fields := map[string]fieldInfo{"Values": {}}
+	withoutBody, err := renderMethod("SampleService", operation, requestSpec{Request: "SampleRequest", Comment: "deletes the sample."}, fields)
+	if err != nil {
+		t.Fatalf("render body-free method: %v", err)
+	}
+	if strings.Contains(withoutBody, "JSONBody") {
+		t.Fatalf("body-free operation generated a payload:\n%s", withoutBody)
+	}
+	withBody, err := renderMethod("SampleService", operation, requestSpec{Request: "SampleRequest", Body: "Values", Comment: "deletes the sample."}, fields)
+	if err != nil {
+		t.Fatalf("render explicit body method: %v", err)
+	}
+	if !strings.Contains(withBody, "JSONBody: req.Values") {
+		t.Fatalf("explicit body operation omitted its payload:\n%s", withBody)
+	}
+	_, err = renderMethod("SampleService", operation, requestSpec{Request: "SampleRequest", Body: "Missing", Comment: "deletes the sample."}, fields)
+	if err == nil || !strings.Contains(err.Error(), "body field Missing") {
+		t.Fatalf("missing body field error = %v", err)
+	}
+}
+
+// TestFindGeneratedWrappersReportsIOFailures verifies filesystem diagnostics identify discovery and read failures.
+func TestFindGeneratedWrappersReportsIOFailures(t *testing.T) {
+	t.Run("root is not a directory", func(t *testing.T) {
+		rootFile := filepath.Join(t.TempDir(), "root-file")
+		if err := os.WriteFile(rootFile, []byte("not a directory"), 0o644); err != nil {
+			t.Fatalf("write root fixture: %v", err)
+		}
+		if _, err := findGeneratedWrappers(rootFile); err == nil || !strings.Contains(err.Error(), "list generated wrappers") {
+			t.Fatalf("root discovery error = %v", err)
+		}
+	})
+
+	t.Run("generated candidate cannot be read", func(t *testing.T) {
+		root := t.TempDir()
+		if err := os.Symlink(filepath.Join(root, "missing-target"), filepath.Join(root, "broken.go")); err != nil {
+			t.Fatalf("create broken generated candidate: %v", err)
+		}
+		if _, err := findGeneratedWrappers(root); err == nil || !strings.Contains(err.Error(), "read possible generated wrapper") {
+			t.Fatalf("candidate read error = %v", err)
+		}
+	})
 }

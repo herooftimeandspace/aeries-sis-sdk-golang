@@ -8,7 +8,7 @@ schools.list_bell_schedule SchoolLookupRequest | returns all bell schedule rows 
 schools.get_bell_schedule_for_date SchoolDateRequest | returns bell schedule rows that apply to one specific school day.
 schools.list_absence_codes AbsenceCodeLookupRequest | returns absence code rows for one school and can narrow to one code.
 codesets.list CodeSetLookupRequest | returns the code values documented for one table and field pair.
-preenroll.trigger PreEnrollRequest | asks Aeries to run the documented student pre-enrollment action for one student.
+preenroll.trigger PreEnrollRequest body=Values | asks Aeries to run the documented student pre-enrollment action for one student.
 students.list StudentLookupRequest | returns student rows and supports the documented StartingRecord and EndingRecord pagination filters.
 students.list_by_grade StudentGradeLookupRequest | returns student rows for one school and grade level.
 students.get_by_student_number StudentNumberLookupRequest | returns one student using the school-scoped student number path.
@@ -16,21 +16,21 @@ students.list_extended StudentLookupRequest | returns the extended student rows 
 students.list_extended_by_grade StudentGradeLookupRequest | returns the extended student rows for one grade level.
 students.get_extended_by_student_number StudentNumberLookupRequest | returns one extended student record by school-scoped student number.
 students.list_data_changes StudentDataChangesRequest | returns student IDs that changed since the caller's last sync cursor.
-students.create StudentCreateRequest | inserts a new student record in the district.
-students.update StudentMutationRequest | changes one existing student record using the documented UpdateStudent endpoint.
-students.update_address StudentMutationRequest | changes a student's mailing and residence address fields.
+students.create StudentCreateRequest body=Values | inserts a new student record in the district.
+students.update StudentMutationRequest body=Values | changes one existing student record using the documented UpdateStudent endpoint.
+students.update_address StudentMutationRequest body=Values | changes a student's mailing and residence address fields.
 students.list_contacts SchoolStudentLookupRequest | returns contact rows for one student or all contacts when StudentID is zero.
-students.update_contact StudentSequenceMutationRequest | changes one student contact identified by sequence number.
+students.update_contact StudentSequenceMutationRequest body=Values | changes one student contact identified by sequence number.
 students.delete_contact StudentSequenceMutationRequest | removes one student contact identified by sequence number.
 programs.list ProgramLookupRequest | returns program rows for one student or all students when StudentID is zero.
 students.list_test_scores StudentMutationRequest | returns test score rows for one student.
 students.list_available_tests SystemInfoRequest | returns the test definitions documented by the testing API.
-students.update_test_scores TestScoresUpdateRequest | inserts or updates test score rows in bulk.
+students.update_test_scores TestScoresUpdateRequest body=Items | inserts or updates test score rows in bulk.
 students.list_college_test_scores SchoolStudentLookupRequest | returns college entrance test rows for one student or many students.
 students.list_assertive_discipline SchoolStudentLookupRequest | returns assertive discipline rows for one student or many students.
 students.list_district_supplemental SchoolStudentLookupRequest | returns district supplemental rows for one student or many students.
 students.list_school_supplemental SchoolStudentLookupRequest | returns school supplemental rows for one student or many students.
-students.update_school_supplemental SchoolStudentNumberMutationRequest | changes school supplemental data using the school-scoped student number endpoint.
+students.update_school_supplemental SchoolStudentNumberMutationRequest body=Values | changes school supplemental data using the school-scoped student number endpoint.
 students.list_fees SchoolStudentLookupRequest | returns fee and fine rows for one student or many students.
 students.list_pictures SchoolStudentLookupRequest | returns student picture rows and supports the documented pagination filters.
 students.list_groups SchoolLookupRequest | returns student group rows for one school or all schools.
@@ -46,7 +46,7 @@ attendance.list_history_detail_by_year SchoolStringLookupRequest | returns atten
 attendance.list_history_absence_codes SchoolLookupRequest | returns the absence code catalog used by attendance history.
 attendance.list_history_absence_codes_by_year SchoolStringLookupRequest | returns the attendance history absence code catalog for one academic year.
 student_grades.list_gpa SchoolStudentLookupRequest | returns GPA rows for one student or many students.
-student_grades.update_grades SchoolPayloadRequest | sends the bulk student grade update payload documented by Aeries.
+student_grades.update_grades SchoolPayloadRequest body=Values | sends the bulk student grade update payload documented by Aeries.
 student_grades.list_report_cards SchoolStudentLookupRequest | returns report card rows for one student or many students.
 student_grades.list_report_card_marking_periods SchoolLookupRequest | returns the marking period definitions used by report cards.
 student_grades.list_graduation_requirements SchoolLookupRequest | returns the graduation requirement catalog for one school.
@@ -65,32 +65,32 @@ scheduling.list_courses CourseLookupRequest | returns course rows and can narrow
 scheduling.list_course_data_changes TimestampRequest | returns course IDs that changed since the caller's sync cursor.
 scheduling.list_sections SectionLookupRequest | returns section rows and can narrow to one section number.
 scheduling.list_section_data_changes TimestampRequest | returns section numbers that changed since the caller's sync cursor.
-scheduling.create_section SectionCreateRequest | creates one scheduling master schedule section.
-scheduling.update_section SectionMutationRequest | updates one scheduling master schedule section.
+scheduling.create_section SectionCreateRequest body=Values | creates one scheduling master schedule section.
+scheduling.update_section SectionMutationRequest body=Values | updates one scheduling master schedule section.
 scheduling.delete_section SectionLookupRequest | removes one scheduling master schedule section.
 scheduling.list_section_roster SectionLookupRequest | returns the students assigned to one section.
 scheduling.list_section_roster_data_changes TimestampRequest | returns section roster changes since the caller's sync cursor.
 scheduling.list_course_requests SchoolLookupRequest | returns course request rows for one school.
 scheduling.list_student_course_requests CourseRequestLookupRequest | returns course request rows for one student and optional sequence number.
-scheduling.create_student_course_request CourseRequestCreateRequest | creates one student course request row.
-scheduling.update_student_course_request CourseRequestMutationRequest | updates one student course request row by sequence number.
+scheduling.create_student_course_request CourseRequestCreateRequest body=Values | creates one student course request row.
+scheduling.update_student_course_request CourseRequestMutationRequest body=Values | updates one student course request row by sequence number.
 scheduling.delete_student_course_request CourseRequestMutationRequest | deletes one student course request row by sequence number.
 scheduling.list_alternate_course_requests CourseRequestLookupRequest | returns alternate course request rows for one student.
-scheduling.create_alternate_course_request CourseRequestCreateRequest | creates one alternate course request row.
-scheduling.update_alternate_course_request CourseRequestMutationRequest | updates one alternate course request row by sequence number.
+scheduling.create_alternate_course_request CourseRequestCreateRequest body=Values | creates one alternate course request row.
+scheduling.update_alternate_course_request CourseRequestMutationRequest body=Values | updates one alternate course request row by sequence number.
 scheduling.delete_alternate_course_request CourseRequestMutationRequest | deletes one alternate course request row by sequence number.
 gradebook.list_by_staff GradebookByStaffRequest | returns the gradebooks assigned to one staff member.
 gradebook.list_by_section GradebookBySectionRequest | returns the gradebooks assigned to one section.
 gradebook.get GradebookLookupRequest | returns one gradebook by gradebook number.
 gradebook.list_assignments AssignmentLookupRequest | returns assignments for one gradebook and can narrow to one assignment number.
 gradebook.get_assignment_by_unique_id AssignmentLookupRequest | returns one assignment by its district-wide assignment unique ID.
-gradebook.update_assignment AssignmentMutationRequest | updates one assignment addressed by gradebook and assignment number.
-gradebook.update_assignment_by_unique_id AssignmentMutationRequest | updates one assignment addressed by assignment unique ID.
-gradebook.create_assignment AssignmentMutationRequest | inserts one new assignment into a gradebook.
+gradebook.update_assignment AssignmentMutationRequest body=Values | updates one assignment addressed by gradebook and assignment number.
+gradebook.update_assignment_by_unique_id AssignmentMutationRequest body=Values | updates one assignment addressed by assignment unique ID.
+gradebook.create_assignment AssignmentMutationRequest body=Values | inserts one new assignment into a gradebook.
 gradebook.list_final_mark_ranges GradebookLookupRequest | returns the final mark range configuration for one gradebook.
 gradebook.list_students GradebookStudentsRequest | returns the students enrolled in one gradebook term.
 gradebook.list_assignment_scores AssignmentScoresLookupRequest | returns assignment scores addressed by gradebook and assignment number.
 gradebook.list_assignment_scores_by_unique_id AssignmentScoresLookupRequest | returns assignment scores addressed by assignment unique ID.
-gradebook.update_assignment_scores AssignmentScoresUpdateRequest | updates assignment score rows addressed by gradebook and assignment number.
-gradebook.update_assignment_scores_by_unique_id AssignmentScoresUpdateRequest | updates assignment score rows addressed by assignment unique ID.
-alerts.send AlertSendRequest | triggers one alert or action alert by alert name.
+gradebook.update_assignment_scores AssignmentScoresUpdateRequest body=Items | updates assignment score rows addressed by gradebook and assignment number.
+gradebook.update_assignment_scores_by_unique_id AssignmentScoresUpdateRequest body=Items | updates assignment score rows addressed by assignment unique ID.
+alerts.send AlertSendRequest body=Values | triggers one alert or action alert by alert name.
