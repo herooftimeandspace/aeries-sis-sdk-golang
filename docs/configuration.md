@@ -20,7 +20,9 @@ The response limit applies to successful and unsuccessful responses through the 
 
 An oversized response returns `*aeries.ResponseTooLargeError`. The typed error contains only the HTTP method, contract path template, status code, configured limit, and retry classification. It does not retain response bytes, the full request URL, query values, request headers, or the Aeries certificate. A response that is already known to be oversized is not retried, including when its status code would ordinarily qualify for a safe transient retry.
 
-Non-success responses within the configured limit return `*aeries.APIError`. The SDK does not retain the raw provider body. When the body uses the documented `{"Message":"..."}` shape, `APIError.Message` contains only a whitespace-normalized provider detail capped at 512 bytes after known credential, custom-header, and query values are redacted.
+`MaxResponseBytes` intentionally extends `Config` before the SDK's first tagged release so every client has one explicit response-safety policy. Applications should use keyed `Config` literals, which remain source-compatible when new optional settings are added; positional literals couple callers to the exact field count and are not a supported compatibility boundary.
+
+Non-success responses within the configured limit return `*aeries.APIError`. The SDK does not retain the raw provider body. The deprecated `APIError.Body` field remains available for source compatibility but is always empty. For body-free requests using the documented `{"Message":"..."}` shape, `APIError.Message` contains only a control-character-free, whitespace-normalized provider detail capped at 512 bytes after known credential, custom-header, encoded and decoded query, and expanded path values are redacted. Provider detail is omitted entirely when the request had a JSON body because that body can contain student or staff data that cannot be safely identified field by field.
 
 Applications should use `errors.As` rather than matching error text:
 
@@ -35,7 +37,7 @@ Do not add the original request URL, headers, query parameters, or provider resp
 
 ## Environment variables
 
-The repository includes [`.env.example`](../.env.example) for local setup guidance.
+The repository root includes `.env.example` for local setup guidance.
 
 ## Base URL guidance
 

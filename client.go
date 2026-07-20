@@ -10,8 +10,10 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"sort"
 	"strings"
 	"time"
+	"unicode"
 	"unicode/utf8"
 
 	publiccontract "github.com/herooftimeandspace/aeries-sis-sdk-golang/contract"
@@ -203,7 +205,7 @@ func (c *Client) sendOnce(ctx context.Context, method string, path string, reque
 		}
 	}
 	if response.StatusCode < http.StatusOK || response.StatusCode >= http.StatusMultipleChoices {
-		return decodeAPIError(response.StatusCode, method, path, payload, sensitiveRequestValues(c.certificate, requestURL, request.Header))
+		return decodeAPIError(response.StatusCode, method, path, payload, sensitiveRequestValues(c.certificate, requestURL, path, request.Header), len(body) == 0)
 	}
 	if len(bytes.TrimSpace(payload)) == 0 || out == nil {
 		return nil
@@ -239,7 +241,7 @@ func encodeBody(body any) ([]byte, error) {
 }
 
 // decodeAPIError prefers the documented Aeries {"Message": "..."} error format when it is present.
-func decodeAPIError(statusCode int, method string, path string, payload []byte, sensitiveValues []string) error {
+func decodeAPIError(statusCode int, method string, path string, payload []byte, sensitiveValues []string, retainProviderDetail bool) error {
 	apiErr := &APIError{
 		StatusCode: statusCode,
 		Method:     method,
@@ -248,8 +250,13 @@ func decodeAPIError(statusCode int, method string, path string, payload []byte, 
 	var structured struct {
 		Message string `json:"Message"`
 	}
-	if err := json.Unmarshal(payload, &structured); err == nil && structured.Message != "" {
-		apiErr.Message = sanitizeProviderDetail(structured.Message, sensitiveValues)
+	// Requests with bodies can contain student or staff data that cannot be
+	// exhaustively identified by field name. Dropping provider detail for those
+	// calls is safer than retaining an echo of a partial JSON payload.
+	if retainProviderDetail {
+		if err := json.Unmarshal(payload, &structured); err == nil && structured.Message != "" {
+			apiErr.Message = sanitizeProviderDetail(structured.Message, sensitiveValues)
+		}
 	}
 	return apiErr
 }
@@ -257,7 +264,7 @@ func decodeAPIError(statusCode int, method string, path string, payload []byte, 
 const maxProviderDetailBytes = 512
 
 // sensitiveRequestValues returns values that a provider might echo but that diagnostics must never retain.
-func sensitiveRequestValues(certificate string, requestURL string, headers http.Header) []string {
+func sensitiveRequestValues(certificate string, requestURL string, contractPath string, headers http.Header) []string {
 	values := []string{certificate, requestURL}
 	for _, headerValues := range headers {
 		values = append(values, headerValues...)
@@ -265,7 +272,37 @@ func sensitiveRequestValues(certificate string, requestURL string, headers http.
 	if parsed, err := url.Parse(requestURL); err == nil {
 		values = append(values, parsed.RequestURI(), parsed.Path)
 		for _, queryValues := range parsed.Query() {
-			values = append(values, queryValues...)
+			for _, value := range queryValues {
+				values = append(values, value, url.QueryEscape(value))
+			}
+		}
+		values = append(values, expandedPathParameterValues(contractPath, parsed)...)
+	}
+	return values
+}
+
+// expandedPathParameterValues extracts only expanded placeholder segments, avoiding broad redaction of fixed API path words.
+func expandedPathParameterValues(contractPath string, requestURL *url.URL) []string {
+	templateSegments := strings.Split(strings.Trim(contractPath, "/"), "/")
+	escapedSegments := strings.Split(strings.Trim(requestURL.EscapedPath(), "/"), "/")
+	if len(templateSegments) == 0 || len(escapedSegments) < len(templateSegments) {
+		return nil
+	}
+	escapedSegments = escapedSegments[len(escapedSegments)-len(templateSegments):]
+	values := []string{}
+	for index, templateSegment := range templateSegments {
+		if !strings.HasPrefix(templateSegment, "{") || !strings.HasSuffix(templateSegment, "}") {
+			continue
+		}
+		escaped := escapedSegments[index]
+		values = append(values, escaped)
+		for attempt := 0; attempt < 3; attempt++ {
+			decoded, err := url.PathUnescape(escaped)
+			if err != nil || decoded == escaped {
+				break
+			}
+			values = append(values, decoded)
+			escaped = decoded
 		}
 	}
 	return values
@@ -273,11 +310,23 @@ func sensitiveRequestValues(certificate string, requestURL string, headers http.
 
 // sanitizeProviderDetail removes request values and control characters, normalizes whitespace, and enforces a small byte bound.
 func sanitizeProviderDetail(detail string, sensitiveValues []string) string {
+	// Replace longer values first so an overlapping short identifier cannot
+	// leave a revealing suffix behind when it appears inside a longer value.
+	sensitiveValues = append([]string(nil), sensitiveValues...)
+	sort.SliceStable(sensitiveValues, func(left int, right int) bool {
+		return len(sensitiveValues[left]) > len(sensitiveValues[right])
+	})
 	for _, value := range sensitiveValues {
 		if value != "" {
 			detail = strings.ReplaceAll(detail, value, "[redacted]")
 		}
 	}
+	detail = strings.Map(func(character rune) rune {
+		if unicode.IsControl(character) {
+			return -1
+		}
+		return character
+	}, detail)
 	detail = strings.Join(strings.Fields(detail), " ")
 	if len(detail) <= maxProviderDetailBytes {
 		return detail

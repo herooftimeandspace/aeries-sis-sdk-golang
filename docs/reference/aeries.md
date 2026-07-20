@@ -17,14 +17,15 @@ The package is intentionally organized around plain\-language service groups so 
 - [func addIntQueryValue\(target map\[string\]string, key string, value int\)](<#addIntQueryValue>)
 - [func addQueryValue\(target map\[string\]string, key string, value string\)](<#addQueryValue>)
 - [func cloneMap\(source map\[string\]string\) map\[string\]string](<#cloneMap>)
-- [func decodeAPIError\(statusCode int, method string, path string, payload \[\]byte, sensitiveValues \[\]string\) error](<#decodeAPIError>)
+- [func decodeAPIError\(statusCode int, method string, path string, payload \[\]byte, sensitiveValues \[\]string, retainProviderDetail bool\) error](<#decodeAPIError>)
 - [func encodeBody\(body any\) \(\[\]byte, error\)](<#encodeBody>)
+- [func expandedPathParameterValues\(contractPath string, requestURL \*url.URL\) \[\]string](<#expandedPathParameterValues>)
 - [func intString\(value int\) string](<#intString>)
 - [func isRetriable\(err error\) bool](<#isRetriable>)
 - [func normalizePortalRoot\(rawPath string\) string](<#normalizePortalRoot>)
 - [func readBoundedResponse\(reader io.Reader, limit int64\) \(\[\]byte, bool, error\)](<#readBoundedResponse>)
 - [func sanitizeProviderDetail\(detail string, sensitiveValues \[\]string\) string](<#sanitizeProviderDetail>)
-- [func sensitiveRequestValues\(certificate string, requestURL string, headers http.Header\) \[\]string](<#sensitiveRequestValues>)
+- [func sensitiveRequestValues\(certificate string, requestURL string, contractPath string, headers http.Header\) \[\]string](<#sensitiveRequestValues>)
 - [func sleepWithContext\(ctx context.Context, duration time.Duration\) error](<#sleepWithContext>)
 - [type APIError](<#APIError>)
   - [func \(e \*APIError\) Error\(\) string](<#APIError.Error>)
@@ -301,7 +302,7 @@ cloneMap copies string keys and values so callers cannot mutate shared request s
 ## func decodeAPIError
 
 ```go
-func decodeAPIError(statusCode int, method string, path string, payload []byte, sensitiveValues []string) error
+func decodeAPIError(statusCode int, method string, path string, payload []byte, sensitiveValues []string, retainProviderDetail bool) error
 ```
 
 decodeAPIError prefers the documented Aeries \{"Message": "..."\} error format when it is present.
@@ -314,6 +315,15 @@ func encodeBody(body any) ([]byte, error)
 ```
 
 encodeBody converts any request body into JSON before the request is sent.
+
+<a name="expandedPathParameterValues"></a>
+## func expandedPathParameterValues
+
+```go
+func expandedPathParameterValues(contractPath string, requestURL *url.URL) []string
+```
+
+expandedPathParameterValues extracts only expanded placeholder segments, avoiding broad redaction of fixed API path words.
 
 <a name="intString"></a>
 ## func intString
@@ -364,7 +374,7 @@ sanitizeProviderDetail removes request values and control characters, normalizes
 ## func sensitiveRequestValues
 
 ```go
-func sensitiveRequestValues(certificate string, requestURL string, headers http.Header) []string
+func sensitiveRequestValues(certificate string, requestURL string, contractPath string, headers http.Header) []string
 ```
 
 sensitiveRequestValues returns values that a provider might echo but that diagnostics must never retain.
@@ -390,6 +400,9 @@ type APIError struct {
     Path       string
     // Message contains at most a small, sanitized provider detail. It never contains the complete response body.
     Message string
+    // Body is retained for source compatibility and is always empty so raw provider payloads cannot escape through errors.
+    // Deprecated: use Message for the optional bounded, sanitized provider detail.
+    Body string
 }
 ```
 
