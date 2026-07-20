@@ -62,6 +62,16 @@ func TestConfigValidateRejectsBadValues(t *testing.T) {
 			config:     Config{BaseURL: "https://demo.aeries.net", Certificate: testCertificate, MaxRetries: -1},
 			wantSubstr: "MaxRetries",
 		},
+		{
+			name:       "negative response limit",
+			config:     Config{BaseURL: "https://demo.aeries.net", Certificate: testCertificate, MaxResponseBytes: -1},
+			wantSubstr: "MaxResponseBytes",
+		},
+		{
+			name:       "unreasonably large response limit",
+			config:     Config{BaseURL: "https://demo.aeries.net", Certificate: testCertificate, MaxResponseBytes: maxResponseBytesLimit + 1},
+			wantSubstr: "MaxResponseBytes",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -88,13 +98,17 @@ func TestConfigNormalizedDefaults(t *testing.T) {
 	if config.normalizedRetryBackoff() != defaultRetryBackoff {
 		t.Fatalf("normalizedRetryBackoff = %v, want %v", config.normalizedRetryBackoff(), defaultRetryBackoff)
 	}
+	if config.normalizedMaxResponseBytes() != defaultMaxResponseBytes {
+		t.Fatalf("normalizedMaxResponseBytes = %d, want %d", config.normalizedMaxResponseBytes(), defaultMaxResponseBytes)
+	}
 
 	custom := Config{
-		BaseURL:      "https://demo.aeries.net",
-		Certificate:  testCertificate,
-		UserAgent:    "custom-agent",
-		MaxRetries:   4,
-		RetryBackoff: 2 * time.Second,
+		BaseURL:          "https://demo.aeries.net",
+		Certificate:      testCertificate,
+		UserAgent:        "custom-agent",
+		MaxRetries:       4,
+		RetryBackoff:     2 * time.Second,
+		MaxResponseBytes: 64 << 20,
 	}
 	if custom.normalizedUserAgent() != "custom-agent" {
 		t.Fatalf("normalizedUserAgent did not preserve caller value")
@@ -104,5 +118,8 @@ func TestConfigNormalizedDefaults(t *testing.T) {
 	}
 	if custom.normalizedRetryBackoff() != 2*time.Second {
 		t.Fatalf("normalizedRetryBackoff did not preserve caller value")
+	}
+	if custom.normalizedMaxResponseBytes() != 64<<20 {
+		t.Fatalf("normalizedMaxResponseBytes did not preserve caller value")
 	}
 }

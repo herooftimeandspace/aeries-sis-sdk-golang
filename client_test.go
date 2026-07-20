@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"strconv"
 	"strings"
 	"sync/atomic"
 	"testing"
@@ -82,6 +83,42 @@ func TestClientDoParsesStructuredAPIError(t *testing.T) {
 	}
 	if apiErr.Message != "bad certificate" {
 		t.Fatalf("apiErr.Message = %q", apiErr.Message)
+	}
+}
+
+// TestClientDoSanitizesStructuredAPIError verifies that provider detail cannot echo request secrets or grow without bound.
+func TestClientDoSanitizesStructuredAPIError(t *testing.T) {
+	const querySecret = "query-secret"
+	const headerSecret = "header-secret"
+	const userAgent = "private-user-agent"
+	client, err := NewClient(Config{
+		BaseURL:     "https://district.example.test",
+		Certificate: testCertificate,
+		UserAgent:   userAgent,
+		HTTPClient: &http.Client{Transport: roundTripFunc(func(r *http.Request) (*http.Response, error) {
+			message := testCertificate + "\n" + querySecret + "\t" + headerSecret + " " + userAgent + " " + r.URL.String() + strings.Repeat("x", maxProviderDetailBytes)
+			return jsonResponse(http.StatusBadRequest, `{"Message":`+strconv.Quote(message)+`}`), nil
+		})},
+	})
+	if err != nil {
+		t.Fatalf("NewClient: %v", err)
+	}
+
+	err = client.Do(context.Background(), http.MethodGet, "/api/v5/systeminfo", RequestOptions{
+		Query:   map[string]string{"filter": querySecret},
+		Headers: map[string]string{"X-Request-Token": headerSecret},
+	}, &JSONDocument{})
+	var apiErr *APIError
+	if !errors.As(err, &apiErr) {
+		t.Fatalf("expected APIError, got %T", err)
+	}
+	if len(apiErr.Message) > maxProviderDetailBytes {
+		t.Fatalf("provider detail length = %d, want at most %d", len(apiErr.Message), maxProviderDetailBytes)
+	}
+	for _, forbidden := range []string{testCertificate, querySecret, headerSecret, userAgent, "district.example.test", "\n", "\t"} {
+		if strings.Contains(apiErr.Message, forbidden) || strings.Contains(apiErr.Error(), forbidden) {
+			t.Fatalf("sanitized error retained forbidden value %q: %q", forbidden, apiErr.Error())
+		}
 	}
 }
 

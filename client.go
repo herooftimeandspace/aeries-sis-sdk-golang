@@ -12,6 +12,7 @@ import (
 	"net/url"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	publiccontract "github.com/herooftimeandspace/aeries-sis-sdk-golang/contract"
 )
@@ -24,6 +25,7 @@ type Client struct {
 	userAgent           string
 	maxRetries          int
 	retryBackoff        time.Duration
+	maxResponseBytes    int64
 	defaultDatabaseYear string
 	manifest            *publiccontract.Manifest
 	endpoints           map[string]publiccontract.Endpoint
@@ -62,6 +64,7 @@ func NewClient(config Config) (*Client, error) {
 		userAgent:           config.normalizedUserAgent(),
 		maxRetries:          config.normalizedMaxRetries(),
 		retryBackoff:        config.normalizedRetryBackoff(),
+		maxResponseBytes:    config.normalizedMaxResponseBytes(),
 		defaultDatabaseYear: config.DefaultDatabaseYear,
 		manifest:            manifest,
 		endpoints:           make(map[string]publiccontract.Endpoint, len(manifest.Endpoints)),
@@ -186,12 +189,21 @@ func (c *Client) sendOnce(ctx context.Context, method string, path string, reque
 		return err
 	}
 	defer response.Body.Close()
-	payload, err := io.ReadAll(response.Body)
+	payload, oversized, err := readBoundedResponse(response.Body, c.maxResponseBytes)
 	if err != nil {
 		return err
 	}
+	if oversized {
+		return &ResponseTooLargeError{
+			StatusCode: response.StatusCode,
+			Method:     method,
+			Path:       path,
+			Limit:      c.maxResponseBytes,
+			Retryable:  false,
+		}
+	}
 	if response.StatusCode < http.StatusOK || response.StatusCode >= http.StatusMultipleChoices {
-		return decodeAPIError(response.StatusCode, method, path, payload)
+		return decodeAPIError(response.StatusCode, method, path, payload, sensitiveRequestValues(c.certificate, requestURL, request.Header))
 	}
 	if len(bytes.TrimSpace(payload)) == 0 || out == nil {
 		return nil
@@ -200,6 +212,18 @@ func (c *Client) sendOnce(ctx context.Context, method string, path string, reque
 		return &ValidationError{Message: fmt.Sprintf("response for %s %s was not valid JSON: %v", method, path, err)}
 	}
 	return nil
+}
+
+// readBoundedResponse reads at most limit plus one bytes so a payload exactly at the configured limit remains valid.
+func readBoundedResponse(reader io.Reader, limit int64) ([]byte, bool, error) {
+	payload, err := io.ReadAll(io.LimitReader(reader, limit+1))
+	if err != nil {
+		return nil, false, err
+	}
+	if int64(len(payload)) > limit {
+		return nil, true, nil
+	}
+	return payload, false, nil
 }
 
 // encodeBody converts any request body into JSON before the request is sent.
@@ -215,24 +239,62 @@ func encodeBody(body any) ([]byte, error) {
 }
 
 // decodeAPIError prefers the documented Aeries {"Message": "..."} error format when it is present.
-func decodeAPIError(statusCode int, method string, path string, payload []byte) error {
+func decodeAPIError(statusCode int, method string, path string, payload []byte, sensitiveValues []string) error {
 	apiErr := &APIError{
 		StatusCode: statusCode,
 		Method:     method,
 		Path:       path,
-		Body:       string(bytes.TrimSpace(payload)),
 	}
 	var structured struct {
 		Message string `json:"Message"`
 	}
 	if err := json.Unmarshal(payload, &structured); err == nil && structured.Message != "" {
-		apiErr.Message = structured.Message
+		apiErr.Message = sanitizeProviderDetail(structured.Message, sensitiveValues)
 	}
 	return apiErr
 }
 
+const maxProviderDetailBytes = 512
+
+// sensitiveRequestValues returns values that a provider might echo but that diagnostics must never retain.
+func sensitiveRequestValues(certificate string, requestURL string, headers http.Header) []string {
+	values := []string{certificate, requestURL}
+	for _, headerValues := range headers {
+		values = append(values, headerValues...)
+	}
+	if parsed, err := url.Parse(requestURL); err == nil {
+		values = append(values, parsed.RequestURI(), parsed.Path)
+		for _, queryValues := range parsed.Query() {
+			values = append(values, queryValues...)
+		}
+	}
+	return values
+}
+
+// sanitizeProviderDetail removes request values and control characters, normalizes whitespace, and enforces a small byte bound.
+func sanitizeProviderDetail(detail string, sensitiveValues []string) string {
+	for _, value := range sensitiveValues {
+		if value != "" {
+			detail = strings.ReplaceAll(detail, value, "[redacted]")
+		}
+	}
+	detail = strings.Join(strings.Fields(detail), " ")
+	if len(detail) <= maxProviderDetailBytes {
+		return detail
+	}
+	truncated := []byte(detail[:maxProviderDetailBytes])
+	for len(truncated) > 0 && !utf8.Valid(truncated) {
+		truncated = truncated[:len(truncated)-1]
+	}
+	return string(truncated)
+}
+
 // isRetriable returns true for short-lived transport and gateway failures that are worth retrying.
 func isRetriable(err error) bool {
+	var tooLargeErr *ResponseTooLargeError
+	if errors.As(err, &tooLargeErr) {
+		return tooLargeErr.Retryable
+	}
 	var apiErr *APIError
 	if errors.As(err, &apiErr) {
 		switch apiErr.StatusCode {
