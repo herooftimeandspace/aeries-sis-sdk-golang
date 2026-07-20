@@ -27,6 +27,7 @@ type endpoint struct {
 	Service         string   `json:"service"`
 	MethodName      string   `json:"method_name"`
 	Summary         string   `json:"summary"`
+	HTTPMethod      string   `json:"http_method"`
 	ResponseShape   string   `json:"response_shape"`
 	PathParameters  []string `json:"path_parameters"`
 	QueryParameters []string `json:"query_parameters"`
@@ -102,6 +103,18 @@ func run(args []string) error {
 	existing, err := findGeneratedWrappers(root)
 	if err != nil {
 		return err
+	}
+	// Preflight every write target before removing stale files so a malformed
+	// inventory cannot leave the checkout partially modified.
+	for name := range outputs {
+		path := filepath.Join(root, name)
+		if actual, readErr := os.ReadFile(path); readErr == nil {
+			if !bytes.HasPrefix(actual, []byte(generatedWrapperHeader)) {
+				return fmt.Errorf("refuse to overwrite non-generated file %s", name)
+			}
+		} else if !os.IsNotExist(readErr) {
+			return fmt.Errorf("inspect generated wrapper %s: %w", name, readErr)
+		}
 	}
 	for _, name := range existing {
 		if _, expected := outputs[name]; expected {
@@ -247,6 +260,9 @@ func loadRequestFields(path string) (map[string]map[string]fieldInfo, error) {
 
 // generate validates complete endpoint coverage and renders one deterministic file per service.
 func generate(endpoints []endpoint, specs []requestSpec, requestFields map[string]map[string]fieldInfo) (map[string][]byte, error) {
+	if len(endpoints) == 0 || len(specs) == 0 {
+		return nil, fmt.Errorf("endpoint and wrapper inventories must not be empty")
+	}
 	byID := map[string]requestSpec{}
 	for _, spec := range specs {
 		byID[spec.ID] = spec
@@ -267,7 +283,14 @@ func generate(endpoints []endpoint, specs []requestSpec, requestFields map[strin
 		if err != nil {
 			return nil, err
 		}
-		outputs[serviceFilename(service)] = content
+		name, err := serviceFilename(service)
+		if err != nil {
+			return nil, err
+		}
+		if _, exists := outputs[name]; exists {
+			return nil, fmt.Errorf("services normalize to duplicate generated filename %s", name)
+		}
+		outputs[name] = content
 	}
 	return outputs, nil
 }
@@ -347,6 +370,20 @@ func renderMethod(serviceType string, operation endpoint, spec requestSpec, fiel
 	} else if hasFilters {
 		out.WriteString("\t\tQuery: cloneMap(req.Filters),\n")
 	}
+	payloadField := ""
+	for _, candidate := range []string{"Values", "Items"} {
+		if _, ok := fields[candidate]; ok {
+			payloadField = candidate
+			break
+		}
+	}
+	allowsBody := operation.HTTPMethod == "POST" || operation.HTTPMethod == "PUT"
+	if spec.Body != "" && (!allowsBody || (spec.Body != "Values" && spec.Body != "Items")) {
+		return "", fmt.Errorf("endpoint %s has invalid body field %s for %s", operation.ID, spec.Body, operation.HTTPMethod)
+	}
+	if allowsBody && payloadField != "" && spec.Body != payloadField {
+		return "", fmt.Errorf("endpoint %s must declare body=%s for %s", operation.ID, payloadField, operation.HTTPMethod)
+	}
 	if spec.Body != "" {
 		if _, ok := fields[spec.Body]; !ok {
 			return "", fmt.Errorf("endpoint %s body field %s is missing from %s", operation.ID, spec.Body, spec.Request)
@@ -399,12 +436,15 @@ func withoutDatabaseYear(parameters []string) []string {
 	return result
 }
 
-// serviceFilename converts service names to the stable root filenames already used by the package.
-func serviceFilename(service string) string {
+// serviceFilename converts known service names to safe root-level generated filenames.
+func serviceFilename(service string) (string, error) {
+	if _, known := serviceComments[service]; !known {
+		return "", fmt.Errorf("unknown wrapper service %q", service)
+	}
 	switch service {
 	case "StudentGrades":
-		return "student_grades.go"
+		return "student_grades.go", nil
 	default:
-		return strings.ToLower(service) + ".go"
+		return strings.ToLower(service) + ".go", nil
 	}
 }

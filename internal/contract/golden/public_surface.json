@@ -3,564 +3,752 @@
     "id": "alerts.send",
     "service": "Alerts",
     "method_name": "Send",
+    "request_type": "AlertSendRequest",
+    "return_type": "(JSONDocument, error)",
     "response_shape": "object"
   },
   {
     "id": "attendance.list_enrollment_history",
     "service": "Attendance",
     "method_name": "ListEnrollmentHistory",
+    "request_type": "StudentMutationRequest",
+    "return_type": "([]JSONDocument, error)",
     "response_shape": "list"
   },
   {
     "id": "attendance.list_enrollment_history_by_year",
     "service": "Attendance",
     "method_name": "ListEnrollmentHistoryByYear",
+    "request_type": "StudentAcademicYearRequest",
+    "return_type": "([]JSONDocument, error)",
     "response_shape": "list"
   },
   {
     "id": "attendance.list_history_absence_codes",
     "service": "Attendance",
     "method_name": "ListHistoryAbsenceCodes",
+    "request_type": "SchoolLookupRequest",
+    "return_type": "([]JSONDocument, error)",
     "response_shape": "list"
   },
   {
     "id": "attendance.list_history_absence_codes_by_year",
     "service": "Attendance",
     "method_name": "ListHistoryAbsenceCodesByYear",
+    "request_type": "SchoolStringLookupRequest",
+    "return_type": "([]JSONDocument, error)",
     "response_shape": "list"
   },
   {
     "id": "attendance.list_history_detail",
     "service": "Attendance",
     "method_name": "ListHistoryDetail",
+    "request_type": "SchoolStudentLookupRequest",
+    "return_type": "([]JSONDocument, error)",
     "response_shape": "list"
   },
   {
     "id": "attendance.list_history_detail_by_year",
     "service": "Attendance",
     "method_name": "ListHistoryDetailByYear",
+    "request_type": "SchoolStringLookupRequest",
+    "return_type": "([]JSONDocument, error)",
     "response_shape": "list"
   },
   {
     "id": "attendance.list_history_summary",
     "service": "Attendance",
     "method_name": "ListHistorySummary",
+    "request_type": "SchoolStudentLookupRequest",
+    "return_type": "([]JSONDocument, error)",
     "response_shape": "list"
   },
   {
     "id": "attendance.list_history_summary_by_year",
     "service": "Attendance",
     "method_name": "ListHistorySummaryByYear",
+    "request_type": "SchoolStringLookupRequest",
+    "return_type": "([]JSONDocument, error)",
     "response_shape": "list"
   },
   {
     "id": "attendance.list_school_enrollment_history",
     "service": "Attendance",
     "method_name": "ListSchoolEnrollmentHistory",
+    "request_type": "SchoolStudentLookupRequest",
+    "return_type": "([]JSONDocument, error)",
     "response_shape": "list"
   },
   {
     "id": "attendance.list_school_enrollment_history_by_year",
     "service": "Attendance",
     "method_name": "ListSchoolEnrollmentHistoryByYear",
+    "request_type": "SchoolStudentAcademicYearRequest",
+    "return_type": "([]JSONDocument, error)",
     "response_shape": "list"
   },
   {
     "id": "attendance.list_student_attendance",
     "service": "Attendance",
     "method_name": "ListStudentAttendance",
+    "request_type": "AttendanceWindowRequest",
+    "return_type": "([]JSONDocument, error)",
     "response_shape": "list"
   },
   {
     "id": "codesets.list",
     "service": "CodeSets",
     "method_name": "List",
+    "request_type": "CodeSetLookupRequest",
+    "return_type": "([]JSONDocument, error)",
     "response_shape": "list"
   },
   {
     "id": "gradebook.create_assignment",
     "service": "Gradebook",
     "method_name": "CreateAssignment",
+    "request_type": "AssignmentMutationRequest",
+    "return_type": "([]JSONDocument, error)",
     "response_shape": "list"
   },
   {
     "id": "gradebook.get",
     "service": "Gradebook",
     "method_name": "Get",
+    "request_type": "GradebookLookupRequest",
+    "return_type": "(JSONDocument, error)",
     "response_shape": "object"
   },
   {
     "id": "gradebook.get_assignment_by_unique_id",
     "service": "Gradebook",
     "method_name": "GetAssignmentByUniqueID",
+    "request_type": "AssignmentLookupRequest",
+    "return_type": "(JSONDocument, error)",
     "response_shape": "object"
   },
   {
     "id": "gradebook.list_assignment_scores",
     "service": "Gradebook",
     "method_name": "ListAssignmentScores",
+    "request_type": "AssignmentScoresLookupRequest",
+    "return_type": "([]JSONDocument, error)",
     "response_shape": "list"
   },
   {
     "id": "gradebook.list_assignment_scores_by_unique_id",
     "service": "Gradebook",
     "method_name": "ListAssignmentScoresByUniqueID",
+    "request_type": "AssignmentScoresLookupRequest",
+    "return_type": "([]JSONDocument, error)",
     "response_shape": "list"
   },
   {
     "id": "gradebook.list_assignments",
     "service": "Gradebook",
     "method_name": "ListAssignments",
+    "request_type": "AssignmentLookupRequest",
+    "return_type": "([]JSONDocument, error)",
     "response_shape": "list"
   },
   {
     "id": "gradebook.list_by_section",
     "service": "Gradebook",
     "method_name": "ListBySection",
+    "request_type": "GradebookBySectionRequest",
+    "return_type": "([]JSONDocument, error)",
     "response_shape": "list"
   },
   {
     "id": "gradebook.list_by_staff",
     "service": "Gradebook",
     "method_name": "ListByStaff",
+    "request_type": "GradebookByStaffRequest",
+    "return_type": "([]JSONDocument, error)",
     "response_shape": "list"
   },
   {
     "id": "gradebook.list_final_mark_ranges",
     "service": "Gradebook",
     "method_name": "ListFinalMarkRanges",
+    "request_type": "GradebookLookupRequest",
+    "return_type": "([]JSONDocument, error)",
     "response_shape": "list"
   },
   {
     "id": "gradebook.list_students",
     "service": "Gradebook",
     "method_name": "ListStudents",
+    "request_type": "GradebookStudentsRequest",
+    "return_type": "([]JSONDocument, error)",
     "response_shape": "list"
   },
   {
     "id": "gradebook.update_assignment",
     "service": "Gradebook",
     "method_name": "UpdateAssignment",
+    "request_type": "AssignmentMutationRequest",
+    "return_type": "([]JSONDocument, error)",
     "response_shape": "list"
   },
   {
     "id": "gradebook.update_assignment_by_unique_id",
     "service": "Gradebook",
     "method_name": "UpdateAssignmentByUniqueID",
+    "request_type": "AssignmentMutationRequest",
+    "return_type": "([]JSONDocument, error)",
     "response_shape": "list"
   },
   {
     "id": "gradebook.update_assignment_scores",
     "service": "Gradebook",
     "method_name": "UpdateAssignmentScores",
+    "request_type": "AssignmentScoresUpdateRequest",
+    "return_type": "([]JSONDocument, error)",
     "response_shape": "list"
   },
   {
     "id": "gradebook.update_assignment_scores_by_unique_id",
     "service": "Gradebook",
     "method_name": "UpdateAssignmentScoresByUniqueID",
+    "request_type": "AssignmentScoresUpdateRequest",
+    "return_type": "([]JSONDocument, error)",
     "response_shape": "list"
   },
   {
     "id": "preenroll.trigger",
     "service": "PreEnroll",
     "method_name": "Trigger",
+    "request_type": "PreEnrollRequest",
+    "return_type": "(JSONDocument, error)",
     "response_shape": "object"
   },
   {
     "id": "programs.list",
     "service": "Programs",
     "method_name": "List",
+    "request_type": "ProgramLookupRequest",
+    "return_type": "([]JSONDocument, error)",
     "response_shape": "list"
   },
   {
     "id": "scheduling.create_alternate_course_request",
     "service": "Scheduling",
     "method_name": "CreateAlternateCourseRequest",
+    "request_type": "CourseRequestCreateRequest",
+    "return_type": "(JSONDocument, error)",
     "response_shape": "object"
   },
   {
     "id": "scheduling.create_section",
     "service": "Scheduling",
     "method_name": "CreateSection",
+    "request_type": "SectionCreateRequest",
+    "return_type": "(JSONDocument, error)",
     "response_shape": "object"
   },
   {
     "id": "scheduling.create_student_course_request",
     "service": "Scheduling",
     "method_name": "CreateStudentCourseRequest",
+    "request_type": "CourseRequestCreateRequest",
+    "return_type": "(JSONDocument, error)",
     "response_shape": "object"
   },
   {
     "id": "scheduling.delete_alternate_course_request",
     "service": "Scheduling",
     "method_name": "DeleteAlternateCourseRequest",
+    "request_type": "CourseRequestMutationRequest",
+    "return_type": "error",
     "response_shape": "empty"
   },
   {
     "id": "scheduling.delete_section",
     "service": "Scheduling",
     "method_name": "DeleteSection",
+    "request_type": "SectionLookupRequest",
+    "return_type": "error",
     "response_shape": "empty"
   },
   {
     "id": "scheduling.delete_student_course_request",
     "service": "Scheduling",
     "method_name": "DeleteStudentCourseRequest",
+    "request_type": "CourseRequestMutationRequest",
+    "return_type": "error",
     "response_shape": "empty"
   },
   {
     "id": "scheduling.list_alternate_course_requests",
     "service": "Scheduling",
     "method_name": "ListAlternateCourseRequests",
+    "request_type": "CourseRequestLookupRequest",
+    "return_type": "([]JSONDocument, error)",
     "response_shape": "list"
   },
   {
     "id": "scheduling.list_course_data_changes",
     "service": "Scheduling",
     "method_name": "ListCourseDataChanges",
+    "request_type": "TimestampRequest",
+    "return_type": "([]JSONDocument, error)",
     "response_shape": "list"
   },
   {
     "id": "scheduling.list_course_requests",
     "service": "Scheduling",
     "method_name": "ListCourseRequests",
+    "request_type": "SchoolLookupRequest",
+    "return_type": "([]JSONDocument, error)",
     "response_shape": "list"
   },
   {
     "id": "scheduling.list_courses",
     "service": "Scheduling",
     "method_name": "ListCourses",
+    "request_type": "CourseLookupRequest",
+    "return_type": "([]JSONDocument, error)",
     "response_shape": "list"
   },
   {
     "id": "scheduling.list_section_data_changes",
     "service": "Scheduling",
     "method_name": "ListSectionDataChanges",
+    "request_type": "TimestampRequest",
+    "return_type": "([]JSONDocument, error)",
     "response_shape": "list"
   },
   {
     "id": "scheduling.list_section_roster",
     "service": "Scheduling",
     "method_name": "ListSectionRoster",
+    "request_type": "SectionLookupRequest",
+    "return_type": "([]JSONDocument, error)",
     "response_shape": "list"
   },
   {
     "id": "scheduling.list_section_roster_data_changes",
     "service": "Scheduling",
     "method_name": "ListSectionRosterDataChanges",
+    "request_type": "TimestampRequest",
+    "return_type": "([]JSONDocument, error)",
     "response_shape": "list"
   },
   {
     "id": "scheduling.list_sections",
     "service": "Scheduling",
     "method_name": "ListSections",
+    "request_type": "SectionLookupRequest",
+    "return_type": "([]JSONDocument, error)",
     "response_shape": "list"
   },
   {
     "id": "scheduling.list_student_class_schedule",
     "service": "Scheduling",
     "method_name": "ListStudentClassSchedule",
+    "request_type": "SchoolStudentLookupRequest",
+    "return_type": "([]JSONDocument, error)",
     "response_shape": "list"
   },
   {
     "id": "scheduling.list_student_course_requests",
     "service": "Scheduling",
     "method_name": "ListStudentCourseRequests",
+    "request_type": "CourseRequestLookupRequest",
+    "return_type": "([]JSONDocument, error)",
     "response_shape": "list"
   },
   {
     "id": "scheduling.update_alternate_course_request",
     "service": "Scheduling",
     "method_name": "UpdateAlternateCourseRequest",
+    "request_type": "CourseRequestMutationRequest",
+    "return_type": "(JSONDocument, error)",
     "response_shape": "object"
   },
   {
     "id": "scheduling.update_section",
     "service": "Scheduling",
     "method_name": "UpdateSection",
+    "request_type": "SectionMutationRequest",
+    "return_type": "(JSONDocument, error)",
     "response_shape": "object"
   },
   {
     "id": "scheduling.update_student_course_request",
     "service": "Scheduling",
     "method_name": "UpdateStudentCourseRequest",
+    "request_type": "CourseRequestMutationRequest",
+    "return_type": "(JSONDocument, error)",
     "response_shape": "object"
   },
   {
     "id": "schools.get_bell_schedule_for_date",
     "service": "Schools",
     "method_name": "GetBellScheduleForDate",
+    "request_type": "SchoolDateRequest",
+    "return_type": "([]JSONDocument, error)",
     "response_shape": "list"
   },
   {
     "id": "schools.list",
     "service": "Schools",
     "method_name": "List",
+    "request_type": "SchoolLookupRequest",
+    "return_type": "([]JSONDocument, error)",
     "response_shape": "list"
   },
   {
     "id": "schools.list_absence_codes",
     "service": "Schools",
     "method_name": "ListAbsenceCodes",
+    "request_type": "AbsenceCodeLookupRequest",
+    "return_type": "([]JSONDocument, error)",
     "response_shape": "list"
   },
   {
     "id": "schools.list_bell_schedule",
     "service": "Schools",
     "method_name": "ListBellSchedule",
+    "request_type": "SchoolLookupRequest",
+    "return_type": "([]JSONDocument, error)",
     "response_shape": "list"
   },
   {
     "id": "schools.list_calendar",
     "service": "Schools",
     "method_name": "ListCalendar",
+    "request_type": "SchoolLookupRequest",
+    "return_type": "([]JSONDocument, error)",
     "response_shape": "list"
   },
   {
     "id": "schools.list_terms",
     "service": "Schools",
     "method_name": "ListTerms",
+    "request_type": "SchoolLookupRequest",
+    "return_type": "([]JSONDocument, error)",
     "response_shape": "list"
   },
   {
     "id": "staff.get_by_hrid",
     "service": "Staff",
     "method_name": "GetByHRID",
+    "request_type": "StaffHRIDLookupRequest",
+    "return_type": "(JSONDocument, error)",
     "response_shape": "object"
   },
   {
     "id": "staff.list",
     "service": "Staff",
     "method_name": "List",
+    "request_type": "StaffLookupRequest",
+    "return_type": "([]JSONDocument, error)",
     "response_shape": "list"
   },
   {
     "id": "staff.list_classes",
     "service": "Staff",
     "method_name": "ListClasses",
+    "request_type": "StaffClassesRequest",
+    "return_type": "([]JSONDocument, error)",
     "response_shape": "list"
   },
   {
     "id": "staff.list_data_changes",
     "service": "Staff",
     "method_name": "ListDataChanges",
+    "request_type": "TimestampRequest",
+    "return_type": "([]JSONDocument, error)",
     "response_shape": "list"
   },
   {
     "id": "staff.list_teacher_bridge",
     "service": "Staff",
     "method_name": "ListTeacherBridge",
+    "request_type": "StaffClassesRequest",
+    "return_type": "([]JSONDocument, error)",
     "response_shape": "list"
   },
   {
     "id": "staff.list_teachers",
     "service": "Staff",
     "method_name": "ListTeachers",
+    "request_type": "TeacherLookupRequest",
+    "return_type": "([]JSONDocument, error)",
     "response_shape": "list"
   },
   {
     "id": "student_grades.list_gpa",
     "service": "StudentGrades",
     "method_name": "ListGPA",
+    "request_type": "SchoolStudentLookupRequest",
+    "return_type": "([]JSONDocument, error)",
     "response_shape": "list"
   },
   {
     "id": "student_grades.list_graduation_requirements",
     "service": "StudentGrades",
     "method_name": "ListGraduationRequirements",
+    "request_type": "SchoolLookupRequest",
+    "return_type": "([]JSONDocument, error)",
     "response_shape": "list"
   },
   {
     "id": "student_grades.list_graduation_status",
     "service": "StudentGrades",
     "method_name": "ListGraduationStatus",
+    "request_type": "SchoolStudentLookupRequest",
+    "return_type": "([]JSONDocument, error)",
     "response_shape": "list"
   },
   {
     "id": "student_grades.list_graduation_status_by_grade",
     "service": "StudentGrades",
     "method_name": "ListGraduationStatusByGrade",
+    "request_type": "StudentGradeLookupRequest",
+    "return_type": "([]JSONDocument, error)",
     "response_shape": "list"
   },
   {
     "id": "student_grades.list_report_card_marking_periods",
     "service": "StudentGrades",
     "method_name": "ListReportCardMarkingPeriods",
+    "request_type": "SchoolLookupRequest",
+    "return_type": "([]JSONDocument, error)",
     "response_shape": "list"
   },
   {
     "id": "student_grades.list_report_cards",
     "service": "StudentGrades",
     "method_name": "ListReportCards",
+    "request_type": "SchoolStudentLookupRequest",
+    "return_type": "([]JSONDocument, error)",
     "response_shape": "list"
   },
   {
     "id": "student_grades.list_transcripts",
     "service": "StudentGrades",
     "method_name": "ListTranscripts",
+    "request_type": "SchoolStudentLookupRequest",
+    "return_type": "([]JSONDocument, error)",
     "response_shape": "list"
   },
   {
     "id": "student_grades.list_valid_marks",
     "service": "StudentGrades",
     "method_name": "ListValidMarks",
+    "request_type": "SchoolLookupRequest",
+    "return_type": "([]JSONDocument, error)",
     "response_shape": "list"
   },
   {
     "id": "student_grades.update_grades",
     "service": "StudentGrades",
     "method_name": "UpdateGrades",
+    "request_type": "SchoolPayloadRequest",
+    "return_type": "([]JSONDocument, error)",
     "response_shape": "list"
   },
   {
     "id": "students.create",
     "service": "Students",
     "method_name": "Create",
+    "request_type": "StudentCreateRequest",
+    "return_type": "(JSONDocument, error)",
     "response_shape": "object"
   },
   {
     "id": "students.delete_contact",
     "service": "Students",
     "method_name": "DeleteContact",
+    "request_type": "StudentSequenceMutationRequest",
+    "return_type": "error",
     "response_shape": "empty"
   },
   {
     "id": "students.get_by_student_number",
     "service": "Students",
     "method_name": "GetByStudentNumber",
+    "request_type": "StudentNumberLookupRequest",
+    "return_type": "(JSONDocument, error)",
     "response_shape": "object"
   },
   {
     "id": "students.get_extended_by_student_number",
     "service": "Students",
     "method_name": "GetExtendedByStudentNumber",
+    "request_type": "StudentNumberLookupRequest",
+    "return_type": "(JSONDocument, error)",
     "response_shape": "object"
   },
   {
     "id": "students.list",
     "service": "Students",
     "method_name": "List",
+    "request_type": "StudentLookupRequest",
+    "return_type": "([]JSONDocument, error)",
     "response_shape": "list"
   },
   {
     "id": "students.list_assertive_discipline",
     "service": "Students",
     "method_name": "ListAssertiveDiscipline",
+    "request_type": "SchoolStudentLookupRequest",
+    "return_type": "([]JSONDocument, error)",
     "response_shape": "list"
   },
   {
     "id": "students.list_available_tests",
     "service": "Students",
     "method_name": "ListAvailableTests",
+    "request_type": "SystemInfoRequest",
+    "return_type": "([]JSONDocument, error)",
     "response_shape": "list"
   },
   {
     "id": "students.list_by_grade",
     "service": "Students",
     "method_name": "ListByGrade",
+    "request_type": "StudentGradeLookupRequest",
+    "return_type": "([]JSONDocument, error)",
     "response_shape": "list"
   },
   {
     "id": "students.list_college_test_scores",
     "service": "Students",
     "method_name": "ListCollegeTestScores",
+    "request_type": "SchoolStudentLookupRequest",
+    "return_type": "([]JSONDocument, error)",
     "response_shape": "list"
   },
   {
     "id": "students.list_contacts",
     "service": "Students",
     "method_name": "ListContacts",
+    "request_type": "SchoolStudentLookupRequest",
+    "return_type": "([]JSONDocument, error)",
     "response_shape": "list"
   },
   {
     "id": "students.list_data_changes",
     "service": "Students",
     "method_name": "ListDataChanges",
+    "request_type": "StudentDataChangesRequest",
+    "return_type": "([]JSONDocument, error)",
     "response_shape": "list"
   },
   {
     "id": "students.list_district_supplemental",
     "service": "Students",
     "method_name": "ListDistrictSupplemental",
+    "request_type": "SchoolStudentLookupRequest",
+    "return_type": "([]JSONDocument, error)",
     "response_shape": "list"
   },
   {
     "id": "students.list_extended",
     "service": "Students",
     "method_name": "ListExtended",
+    "request_type": "StudentLookupRequest",
+    "return_type": "([]JSONDocument, error)",
     "response_shape": "list"
   },
   {
     "id": "students.list_extended_by_grade",
     "service": "Students",
     "method_name": "ListExtendedByGrade",
+    "request_type": "StudentGradeLookupRequest",
+    "return_type": "([]JSONDocument, error)",
     "response_shape": "list"
   },
   {
     "id": "students.list_fees",
     "service": "Students",
     "method_name": "ListFees",
+    "request_type": "SchoolStudentLookupRequest",
+    "return_type": "([]JSONDocument, error)",
     "response_shape": "list"
   },
   {
     "id": "students.list_groups",
     "service": "Students",
     "method_name": "ListGroups",
+    "request_type": "SchoolLookupRequest",
+    "return_type": "([]JSONDocument, error)",
     "response_shape": "list"
   },
   {
     "id": "students.list_pictures",
     "service": "Students",
     "method_name": "ListPictures",
+    "request_type": "SchoolStudentLookupRequest",
+    "return_type": "([]JSONDocument, error)",
     "response_shape": "list"
   },
   {
     "id": "students.list_school_supplemental",
     "service": "Students",
     "method_name": "ListSchoolSupplemental",
+    "request_type": "SchoolStudentLookupRequest",
+    "return_type": "([]JSONDocument, error)",
     "response_shape": "list"
   },
   {
     "id": "students.list_test_scores",
     "service": "Students",
     "method_name": "ListTestScores",
+    "request_type": "StudentMutationRequest",
+    "return_type": "([]JSONDocument, error)",
     "response_shape": "list"
   },
   {
     "id": "students.update",
     "service": "Students",
     "method_name": "Update",
+    "request_type": "StudentMutationRequest",
+    "return_type": "([]JSONDocument, error)",
     "response_shape": "list"
   },
   {
     "id": "students.update_address",
     "service": "Students",
     "method_name": "UpdateAddress",
+    "request_type": "StudentMutationRequest",
+    "return_type": "([]JSONDocument, error)",
     "response_shape": "list"
   },
   {
     "id": "students.update_contact",
     "service": "Students",
     "method_name": "UpdateContact",
+    "request_type": "StudentSequenceMutationRequest",
+    "return_type": "(JSONDocument, error)",
     "response_shape": "object"
   },
   {
     "id": "students.update_school_supplemental",
     "service": "Students",
     "method_name": "UpdateSchoolSupplemental",
+    "request_type": "SchoolStudentNumberMutationRequest",
+    "return_type": "(JSONDocument, error)",
     "response_shape": "object"
   },
   {
     "id": "students.update_test_scores",
     "service": "Students",
     "method_name": "UpdateTestScores",
+    "request_type": "TestScoresUpdateRequest",
+    "return_type": "([]JSONDocument, error)",
     "response_shape": "list"
   },
   {
     "id": "system.get_info",
     "service": "System",
     "method_name": "GetInfo",
+    "request_type": "SystemInfoRequest",
+    "return_type": "(SystemInfo, error)",
     "response_shape": "object"
   }
 ]

@@ -119,8 +119,18 @@ func TestRunWritesAndChecksTemporaryCheckout(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(temporary, "alerts.go"), []byte("drift\n"), 0o644); err != nil {
 		t.Fatalf("introduce drift: %v", err)
 	}
-	if err := run([]string{"-check"}); err == nil || !strings.Contains(err.Error(), "drift detected") {
-		t.Fatalf("drift check error = %v", err)
+	blockedStalePath := filepath.Join(temporary, "blocked-stale.go")
+	if err := os.WriteFile(blockedStalePath, []byte(generatedWrapperHeader+"\npackage aeries\n"), 0o644); err != nil {
+		t.Fatalf("write blocked stale wrapper: %v", err)
+	}
+	if err := run([]string{"-check"}); err == nil || !strings.Contains(err.Error(), "non-generated file") {
+		t.Fatalf("non-generated target error = %v", err)
+	}
+	if err := run(nil); err == nil || !strings.Contains(err.Error(), "non-generated file") {
+		t.Fatalf("write preflight error = %v", err)
+	}
+	if _, err := os.Stat(blockedStalePath); err != nil {
+		t.Fatalf("write preflight removed stale file before failing: %v", err)
 	}
 	if err := run([]string{"-unknown"}); err == nil {
 		t.Fatal("unknown flag unexpectedly succeeded")
@@ -206,6 +216,22 @@ func TestRunReportsSourceAndOutputFailures(t *testing.T) {
 			t.Fatalf("run error = %v", err)
 		}
 	})
+
+	t.Run("unreadable output target", func(t *testing.T) {
+		temporary := t.TempDir()
+		for _, name := range []string{"internal/contract/source/endpoints.json", "internal/contract/source/service_wrappers.txt", "requests.go"} {
+			writeFixture(t, filepath.Join(repository, name), filepath.Join(temporary, name))
+		}
+		if err := os.Mkdir(filepath.Join(temporary, "alerts.go"), 0o755); err != nil {
+			t.Fatalf("create unreadable output target: %v", err)
+		}
+		if err := os.Chdir(temporary); err != nil {
+			t.Fatalf("enter temporary checkout: %v", err)
+		}
+		if err := run(nil); err == nil || !strings.Contains(err.Error(), "inspect generated wrapper") {
+			t.Fatalf("run error = %v", err)
+		}
+	})
 }
 
 // TestGenerateRejectsMetadataDrift covers missing, extra, and invalid source-of-truth mappings.
@@ -220,6 +246,7 @@ func TestGenerateRejectsMetadataDrift(t *testing.T) {
 		{name: "missing mapping", endpoints: endpoints, specs: specs[1:], want: "has no wrapper request mapping"},
 		{name: "extra mapping", endpoints: endpoints[:1], specs: specs, want: "entries but contract has"},
 		{name: "unknown request", endpoints: endpoints[:1], specs: []requestSpec{{ID: endpoints[0].ID, Request: "MissingRequest"}}, want: "unknown request type"},
+		{name: "empty inventories", endpoints: nil, specs: nil, want: "must not be empty"},
 	}
 	for _, test := range cases {
 		t.Run(test.name, func(t *testing.T) {
@@ -269,11 +296,14 @@ func TestSmallMetadataHelpers(t *testing.T) {
 	if got := withoutDatabaseYear([]string{"StartingRecord", "DatabaseYear"}); len(got) != 1 || got[0] != "StartingRecord" {
 		t.Fatalf("filtered query parameters = %#v", got)
 	}
-	if got := serviceFilename("StudentGrades"); got != "student_grades.go" {
-		t.Fatalf("student grades filename = %q", got)
+	if got, err := serviceFilename("StudentGrades"); err != nil || got != "student_grades.go" {
+		t.Fatalf("student grades filename = %q, %v", got, err)
 	}
-	if got := serviceFilename("Schools"); got != "schools.go" {
-		t.Fatalf("schools filename = %q", got)
+	if got, err := serviceFilename("Schools"); err != nil || got != "schools.go" {
+		t.Fatalf("schools filename = %q, %v", got, err)
+	}
+	if _, err := serviceFilename("../outside"); err == nil || !strings.Contains(err.Error(), "unknown wrapper service") {
+		t.Fatalf("unsafe service error = %v", err)
 	}
 	for _, shape := range []string{"object", "list", "empty"} {
 		if _, _, err := responseBinding(endpoint{ID: "sample", ResponseShape: shape}); err != nil {
@@ -373,7 +403,7 @@ func TestRenderServiceReportsFormattingFailure(t *testing.T) {
 
 // TestRenderMethodUsesOnlyExplicitBodyMetadata verifies request structs do not accidentally add DELETE payloads.
 func TestRenderMethodUsesOnlyExplicitBodyMetadata(t *testing.T) {
-	operation := endpoint{ID: "sample.delete", MethodName: "Delete", ResponseShape: "empty", Mutation: true}
+	operation := endpoint{ID: "sample.delete", MethodName: "Delete", HTTPMethod: "DELETE", ResponseShape: "empty", Mutation: true}
 	fields := map[string]fieldInfo{"Values": {}}
 	withoutBody, err := renderMethod("SampleService", operation, requestSpec{Request: "SampleRequest", Comment: "deletes the sample."}, fields)
 	if err != nil {
@@ -382,16 +412,46 @@ func TestRenderMethodUsesOnlyExplicitBodyMetadata(t *testing.T) {
 	if strings.Contains(withoutBody, "JSONBody") {
 		t.Fatalf("body-free operation generated a payload:\n%s", withoutBody)
 	}
-	withBody, err := renderMethod("SampleService", operation, requestSpec{Request: "SampleRequest", Body: "Values", Comment: "deletes the sample."}, fields)
+	withBodyOperation := operation
+	withBodyOperation.ID = "sample.update"
+	withBodyOperation.MethodName = "Update"
+	withBodyOperation.HTTPMethod = "PUT"
+	withBody, err := renderMethod("SampleService", withBodyOperation, requestSpec{Request: "SampleRequest", Body: "Values", Comment: "updates the sample."}, fields)
 	if err != nil {
 		t.Fatalf("render explicit body method: %v", err)
 	}
 	if !strings.Contains(withBody, "JSONBody: req.Values") {
 		t.Fatalf("explicit body operation omitted its payload:\n%s", withBody)
 	}
-	_, err = renderMethod("SampleService", operation, requestSpec{Request: "SampleRequest", Body: "Missing", Comment: "deletes the sample."}, fields)
-	if err == nil || !strings.Contains(err.Error(), "body field Missing") {
-		t.Fatalf("missing body field error = %v", err)
+	_, err = renderMethod("SampleService", withBodyOperation, requestSpec{Request: "SampleRequest", Comment: "updates the sample."}, fields)
+	if err == nil || !strings.Contains(err.Error(), "must declare body=Values") {
+		t.Fatalf("missing body metadata error = %v", err)
+	}
+	_, err = renderMethod("SampleService", operation, requestSpec{Request: "SampleRequest", Body: "Values", Comment: "deletes the sample."}, fields)
+	if err == nil || !strings.Contains(err.Error(), "invalid body field") {
+		t.Fatalf("delete body metadata error = %v", err)
+	}
+	_, err = renderMethod("SampleService", withBodyOperation, requestSpec{Request: "SampleRequest", Body: "DatabaseYear", Comment: "updates the sample."}, map[string]fieldInfo{"DatabaseYear": {}})
+	if err == nil || !strings.Contains(err.Error(), "invalid body field") {
+		t.Fatalf("non-payload body metadata error = %v", err)
+	}
+}
+
+// TestGenerateRejectsFilenameCollisions verifies two services cannot silently replace one generated output.
+func TestGenerateRejectsFilenameCollisions(t *testing.T) {
+	serviceComments["schools"] = "collision fixture"
+	t.Cleanup(func() { delete(serviceComments, "schools") })
+	endpoints := []endpoint{
+		{ID: "one", Service: "Schools", MethodName: "One", HTTPMethod: "GET", ResponseShape: "object"},
+		{ID: "two", Service: "schools", MethodName: "Two", HTTPMethod: "GET", ResponseShape: "object"},
+	}
+	specs := []requestSpec{
+		{ID: "one", Request: "Request", Comment: "gets one."},
+		{ID: "two", Request: "Request", Comment: "gets two."},
+	}
+	_, err := generate(endpoints, specs, map[string]map[string]fieldInfo{"Request": {}})
+	if err == nil || !strings.Contains(err.Error(), "duplicate generated filename") {
+		t.Fatalf("collision error = %v", err)
 	}
 }
 
