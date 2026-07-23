@@ -1,8 +1,13 @@
 package aeries
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
+	"go/ast"
+	"go/parser"
+	"go/printer"
+	"go/token"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -20,6 +25,11 @@ type surfaceEntry struct {
 	RequestType   string `json:"request_type"`
 	ReturnType    string `json:"return_type"`
 	ResponseShape string `json:"response_shape"`
+}
+
+type declaredSignature struct {
+	RequestType string
+	ReturnType  string
 }
 
 // loadSurfaceEntries loads the generated public method inventory used by the drift tests.
@@ -64,6 +74,7 @@ func TestPublicSurfaceMethodsExist(t *testing.T) {
 		t.Fatalf("NewClient: %v", err)
 	}
 	clientValue := reflect.ValueOf(client).Elem()
+	declared := loadDeclaredMethodSignatures(t)
 	for _, entry := range loadSurfaceEntries(t) {
 		service := clientValue.FieldByName(entry.Service)
 		if !service.IsValid() || service.IsNil() {
@@ -73,26 +84,63 @@ func TestPublicSurfaceMethodsExist(t *testing.T) {
 		if !method.IsValid() {
 			t.Fatalf("%s missing method %s", entry.Service, entry.MethodName)
 		}
-		if got := method.Type().In(1).Name(); got != entry.RequestType {
-			t.Fatalf("%s.%s request type = %s, want %s", entry.Service, entry.MethodName, got, entry.RequestType)
+		signature, ok := declared[entry.Service+"."+entry.MethodName]
+		if !ok {
+			t.Fatalf("missing declared signature for %s.%s", entry.Service, entry.MethodName)
 		}
-		if got := reflectedReturnType(method.Type()); got != entry.ReturnType {
-			t.Fatalf("%s.%s return type = %s, want %s", entry.Service, entry.MethodName, got, entry.ReturnType)
+		if signature.RequestType != entry.RequestType || signature.ReturnType != entry.ReturnType {
+			t.Fatalf("%s.%s signature = (%s, %s), want (%s, %s)", entry.Service, entry.MethodName, signature.RequestType, signature.ReturnType, entry.RequestType, entry.ReturnType)
 		}
 	}
 }
 
-// reflectedReturnType formats the generated methods' supported result shapes like the public-surface golden.
-func reflectedReturnType(method reflect.Type) string {
-	if method.NumOut() == 1 {
-		return method.Out(0).Name()
+// loadDeclaredMethodSignatures reads source-level type names so public aliases remain distinguishable in drift tests.
+func loadDeclaredMethodSignatures(t *testing.T) map[string]declaredSignature {
+	t.Helper()
+	files, err := parser.ParseDir(token.NewFileSet(), projectRoot(t), func(info os.FileInfo) bool {
+		return strings.HasSuffix(info.Name(), ".go") && !strings.HasSuffix(info.Name(), "_test.go")
+	}, 0)
+	if err != nil {
+		t.Fatalf("parse public package source: %v", err)
 	}
-	result := method.Out(0)
-	name := result.Name()
-	if result.Kind() == reflect.Slice {
-		name = "[]" + result.Elem().Name()
+	result := map[string]declaredSignature{}
+	for _, file := range files["aeries"].Files {
+		for _, declaration := range file.Decls {
+			function, ok := declaration.(*ast.FuncDecl)
+			if !ok || function.Recv == nil || len(function.Recv.List) != 1 || len(function.Type.Params.List) < 2 {
+				continue
+			}
+			receiverPointer, ok := function.Recv.List[0].Type.(*ast.StarExpr)
+			if !ok {
+				continue
+			}
+			receiver, ok := receiverPointer.X.(*ast.Ident)
+			if !ok || !strings.HasSuffix(receiver.Name, "Service") || function.Type.Results == nil {
+				continue
+			}
+			returns := make([]string, 0, len(function.Type.Results.List))
+			for _, field := range function.Type.Results.List {
+				returns = append(returns, formatSourceType(t, field.Type))
+			}
+			returnType := strings.Join(returns, ", ")
+			if len(returns) > 1 {
+				returnType = "(" + returnType + ")"
+			}
+			key := strings.TrimSuffix(receiver.Name, "Service") + "." + function.Name.Name
+			result[key] = declaredSignature{RequestType: formatSourceType(t, function.Type.Params.List[1].Type), ReturnType: returnType}
+		}
 	}
-	return "(" + name + ", " + method.Out(1).Name() + ")"
+	return result
+}
+
+// formatSourceType renders one parsed Go type expression exactly as callers see it in a declaration.
+func formatSourceType(t *testing.T, expression ast.Expr) string {
+	t.Helper()
+	var output bytes.Buffer
+	if err := printer.Fprint(&output, token.NewFileSet(), expression); err != nil {
+		t.Fatalf("format declared type: %v", err)
+	}
+	return output.String()
 }
 
 // TestPublicSurfaceMethodsInvokeThroughTransport exercises every documented wrapper against a local test server.

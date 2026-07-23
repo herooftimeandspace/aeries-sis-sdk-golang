@@ -10,8 +10,8 @@ type JSONDocument map[string]any
 // JSONList represents a list of JSON objects returned by the Aeries API.
 type JSONList []JSONDocument
 
-// SystemInfo is the distinct documented JSON object returned by the system information endpoint.
-type SystemInfo map[string]any
+// SystemInfo is the documented JSON object returned by the system information endpoint.
+type SystemInfo = JSONDocument
 
 // School is the documented JSON object returned by school-related endpoints.
 type School = JSONDocument

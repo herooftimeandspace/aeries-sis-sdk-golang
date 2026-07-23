@@ -98,6 +98,12 @@ func TestRunWritesAndChecksTemporaryCheckout(t *testing.T) {
 			t.Errorf("restore working directory: %v", err)
 		}
 	})
+	if err := run([]string{"-validate"}); err != nil {
+		t.Fatalf("validate wrappers: %v", err)
+	}
+	if _, err := os.Stat(filepath.Join(temporary, "alerts.go")); !os.IsNotExist(err) {
+		t.Fatalf("validate mode wrote wrapper: %v", err)
+	}
 	if err := run(nil); err != nil {
 		t.Fatalf("write wrappers: %v", err)
 	}
@@ -500,11 +506,23 @@ func TestFindGeneratedWrappersReportsIOFailures(t *testing.T) {
 		}
 	})
 
-	t.Run("generated candidate cannot be read", func(t *testing.T) {
+	t.Run("symlinked candidate is rejected without reading", func(t *testing.T) {
 		root := t.TempDir()
 		if err := os.Symlink(filepath.Join(root, "missing-target"), filepath.Join(root, "broken.go")); err != nil {
 			t.Fatalf("create broken generated candidate: %v", err)
 		}
+		if _, err := findGeneratedWrappers(root); err == nil || !strings.Contains(err.Error(), "symlinked wrapper candidate") {
+			t.Fatalf("candidate read error = %v", err)
+		}
+	})
+
+	t.Run("regular candidate read failure", func(t *testing.T) {
+		root := t.TempDir()
+		path := filepath.Join(root, "blocked.go")
+		if err := os.WriteFile(path, []byte("package blocked\n"), 0o000); err != nil {
+			t.Fatalf("write blocked candidate: %v", err)
+		}
+		t.Cleanup(func() { _ = os.Chmod(path, 0o600) })
 		if _, err := findGeneratedWrappers(root); err == nil || !strings.Contains(err.Error(), "read possible generated wrapper") {
 			t.Fatalf("candidate read error = %v", err)
 		}

@@ -77,6 +77,7 @@ func main() {
 func run(args []string) error {
 	flags := flag.NewFlagSet("wrappergen", flag.ContinueOnError)
 	check := flags.Bool("check", false, "verify generated service wrappers without rewriting files")
+	validate := flags.Bool("validate", false, "validate generation inputs without reading or writing generated wrappers")
 	if err := flags.Parse(args); err != nil {
 		return err
 	}
@@ -99,6 +100,9 @@ func run(args []string) error {
 	outputs, err := generate(endpoints, specs, fields)
 	if err != nil {
 		return err
+	}
+	if *validate {
+		return nil
 	}
 	// Preflight every write target before removing stale files so a malformed
 	// inventory cannot leave the checkout partially modified.
@@ -166,6 +170,9 @@ func findGeneratedWrappers(root string) ([]string, error) {
 	for _, entry := range entries {
 		if entry.IsDir() || !strings.HasSuffix(entry.Name(), ".go") {
 			continue
+		}
+		if entry.Type()&os.ModeSymlink != 0 {
+			return nil, fmt.Errorf("refuse to inspect symlinked wrapper candidate %s", entry.Name())
 		}
 		content, err := os.ReadFile(filepath.Join(root, entry.Name()))
 		if err != nil {

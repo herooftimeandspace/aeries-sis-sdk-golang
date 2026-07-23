@@ -86,6 +86,7 @@ func main() {
 func run(args []string) error {
 	flagSet := flag.NewFlagSet("contractsync", flag.ContinueOnError)
 	checkOnly := flagSet.Bool("check", false, "verify generated artifacts without rewriting them")
+	validateOnly := flagSet.Bool("validate", false, "validate generation inputs without reading or writing generated artifacts")
 	if err := flagSet.Parse(args); err != nil {
 		return err
 	}
@@ -100,6 +101,9 @@ func run(args []string) error {
 	manifestValue, publicSurfaceValue, err := generateArtifacts(sourceDir)
 	if err != nil {
 		return fmt.Errorf("failed to generate contract artifacts: %w", err)
+	}
+	if *validateOnly {
+		return nil
 	}
 	if *checkOnly {
 		if err := checkFile(manifestPath, manifestValue); err != nil {
@@ -147,6 +151,9 @@ func generateArtifacts(sourceDir string) ([]byte, []byte, error) {
 	requestTypes, err := loadWrapperRequestTypes(filepath.Join(sourceDir, "service_wrappers.txt"))
 	if err != nil {
 		return nil, nil, err
+	}
+	if len(requestTypes) != len(endpoints.Endpoints) {
+		return nil, nil, fmt.Errorf("wrapper metadata has %d entries but contract has %d endpoints", len(requestTypes), len(endpoints.Endpoints))
 	}
 
 	sort.SliceStable(sources.Sources, func(i, j int) bool {

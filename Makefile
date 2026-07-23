@@ -7,6 +7,8 @@ GOMARKDOC ?= $(shell go env GOPATH)/bin/gomarkdoc
 .PHONY: docs docs-check docs-generate generate generate-check integration-test pages-help
 
 generate:
+	@go run ./cmd/contractsync -validate
+	@go run ./cmd/wrappergen -validate
 	@go run ./cmd/contractsync
 	@go run ./cmd/wrappergen
 

@@ -178,6 +178,27 @@ func TestGenerateArtifactsRejectsSignatureDrift(t *testing.T) {
 			t.Fatal("unsupported return type unexpectedly succeeded")
 		}
 	})
+
+	t.Run("stale wrapper mapping", func(t *testing.T) {
+		root := t.TempDir()
+		copySourceFixtures(t, root)
+		sourceDir := filepath.Join(root, "internal", "contract", "source")
+		path := filepath.Join(sourceDir, "service_wrappers.txt")
+		file, err := os.OpenFile(path, os.O_APPEND|os.O_WRONLY, 0o644)
+		if err != nil {
+			t.Fatalf("open wrapper metadata: %v", err)
+		}
+		if _, err := file.WriteString("stale.operation SystemInfoRequest | stale mapping\n"); err != nil {
+			_ = file.Close()
+			t.Fatalf("append stale mapping: %v", err)
+		}
+		if err := file.Close(); err != nil {
+			t.Fatalf("close wrapper metadata: %v", err)
+		}
+		if _, _, err := generateArtifacts(sourceDir); err == nil {
+			t.Fatal("stale wrapper mapping unexpectedly succeeded")
+		}
+	})
 }
 
 // TestCheckFile verifies that generated drift detection passes and fails in the expected cases.
@@ -212,6 +233,12 @@ func TestRunWritesArtifacts(t *testing.T) {
 
 	if err := os.Chdir(tempRoot); err != nil {
 		t.Fatalf("chdir: %v", err)
+	}
+	if err := run([]string{"-validate"}); err != nil {
+		t.Fatalf("validate: %v", err)
+	}
+	if _, err := os.Stat(filepath.Join(tempRoot, "internal", "contract", "manifest.json")); !os.IsNotExist(err) {
+		t.Fatalf("validate mode wrote manifest: %v", err)
 	}
 	if err := run(nil); err != nil {
 		t.Fatalf("run: %v", err)
@@ -314,6 +341,12 @@ func TestRunCheckMode(t *testing.T) {
 	}
 	if err := run([]string{"-check"}); err != nil {
 		t.Fatalf("run -check: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(tempRoot, "internal", "contract", "golden", "public_surface.json"), []byte("[]\n"), 0o644); err != nil {
+		t.Fatalf("write public surface drift: %v", err)
+	}
+	if err := run([]string{"-check"}); err == nil {
+		t.Fatal("check mode missed public surface drift")
 	}
 }
 
