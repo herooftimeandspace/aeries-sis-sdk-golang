@@ -16,11 +16,21 @@ The package is intentionally organized around plain\-language service groups so 
 - [Variables](<#variables>)
 - [func addIntQueryValue\(target map\[string\]string, key string, value int\)](<#addIntQueryValue>)
 - [func addQueryValue\(target map\[string\]string, key string, value string\)](<#addQueryValue>)
+- [func canonicalizePercentEscapes\(value string\) string](<#canonicalizePercentEscapes>)
 - [func cloneMap\(source map\[string\]string\) map\[string\]string](<#cloneMap>)
-- [func decodeAPIError\(statusCode int, method string, path string, payload \[\]byte\) error](<#decodeAPIError>)
+- [func credentialHeaderComponents\(name string, value string\) \[\]string](<#credentialHeaderComponents>)
+- [func decodeAPIError\(statusCode int, method string, path string, payload \[\]byte, sensitiveValues \[\]string, retainProviderDetail bool\) error](<#decodeAPIError>)
 - [func encodeBody\(body any\) \(\[\]byte, error\)](<#encodeBody>)
+- [func expandedPathParameterValues\(contractPath string, requestURL \*url.URL\) \[\]string](<#expandedPathParameterValues>)
 - [func intString\(value int\) string](<#intString>)
+- [func isHexDigit\(value byte\) bool](<#isHexDigit>)
 - [func isRetriable\(err error\) bool](<#isRetriable>)
+- [func normalizePortalRoot\(rawPath string\) string](<#normalizePortalRoot>)
+- [func normalizeProviderDetail\(detail string\) string](<#normalizeProviderDetail>)
+- [func readBoundedResponse\(reader io.Reader, limit int64\) \(\[\]byte, bool, error\)](<#readBoundedResponse>)
+- [func redactWhitespaceInsensitive\(detail string, value string\) string](<#redactWhitespaceInsensitive>)
+- [func sanitizeProviderDetail\(detail string, sensitiveValues \[\]string\) string](<#sanitizeProviderDetail>)
+- [func sensitiveRequestValues\(certificate string, requestURL string, contractPath string, headers http.Header\) \[\]string](<#sensitiveRequestValues>)
 - [func sleepWithContext\(ctx context.Context, duration time.Duration\) error](<#sleepWithContext>)
 - [type APIError](<#APIError>)
   - [func \(e \*APIError\) Error\(\) string](<#APIError.Error>)
@@ -57,13 +67,14 @@ The package is intentionally organized around plain\-language service groups so 
   - [func NewClient\(config Config\) \(\*Client, error\)](<#NewClient>)
   - [func \(c \*Client\) Do\(ctx context.Context, method string, path string, opts RequestOptions, out any\) error](<#Client.Do>)
   - [func \(c \*Client\) buildURL\(pathTemplate string, opts RequestOptions\) \(string, error\)](<#Client.buildURL>)
+  - [func \(c \*Client\) do\(ctx context.Context, method string, path string, diagnosticPath string, opts RequestOptions, out any\) error](<#Client.do>)
   - [func \(c \*Client\) doDocument\(ctx context.Context, operationID string, opts RequestOptions\) \(JSONDocument, error\)](<#Client.doDocument>)
   - [func \(c \*Client\) doDocuments\(ctx context.Context, operationID string, opts RequestOptions\) \(\[\]JSONDocument, error\)](<#Client.doDocuments>)
-  - [func \(c \*Client\) doHTTPRequest\(ctx context.Context, method string, path string, requestURL string, body \[\]byte, headers map\[string\]string, out any\) error](<#Client.doHTTPRequest>)
+  - [func \(c \*Client\) doHTTPRequest\(ctx context.Context, method string, contractPath string, diagnosticPath string, requestURL string, body \[\]byte, headers map\[string\]string, out any\) error](<#Client.doHTTPRequest>)
   - [func \(c \*Client\) doList\(ctx context.Context, operationID string, opts RequestOptions\) \(JSONList, error\)](<#Client.doList>)
   - [func \(c \*Client\) doNoContent\(ctx context.Context, operationID string, opts RequestOptions\) error](<#Client.doNoContent>)
   - [func \(c \*Client\) doOperation\(ctx context.Context, operationID string, opts RequestOptions, out any\) error](<#Client.doOperation>)
-  - [func \(c \*Client\) sendOnce\(ctx context.Context, method string, path string, requestURL string, body \[\]byte, headers map\[string\]string, out any\) error](<#Client.sendOnce>)
+  - [func \(c \*Client\) sendOnce\(ctx context.Context, method string, contractPath string, diagnosticPath string, requestURL string, body \[\]byte, headers map\[string\]string, out any\) error](<#Client.sendOnce>)
 - [type CodeSetLookupRequest](<#CodeSetLookupRequest>)
 - [type CodeSetValue](<#CodeSetValue>)
 - [type CodeSetsService](<#CodeSetsService>)
@@ -71,6 +82,7 @@ The package is intentionally organized around plain\-language service groups so 
 - [type Config](<#Config>)
   - [func \(c Config\) normalizedBaseURL\(\) \(string, error\)](<#Config.normalizedBaseURL>)
   - [func \(c Config\) normalizedHTTPClient\(\) \*http.Client](<#Config.normalizedHTTPClient>)
+  - [func \(c Config\) normalizedMaxResponseBytes\(\) int64](<#Config.normalizedMaxResponseBytes>)
   - [func \(c Config\) normalizedMaxRetries\(\) int](<#Config.normalizedMaxRetries>)
   - [func \(c Config\) normalizedRetryBackoff\(\) time.Duration](<#Config.normalizedRetryBackoff>)
   - [func \(c Config\) normalizedUserAgent\(\) string](<#Config.normalizedUserAgent>)
@@ -118,6 +130,8 @@ The package is intentionally organized around plain\-language service groups so 
 - [type ProgramsService](<#ProgramsService>)
   - [func \(s \*ProgramsService\) List\(ctx context.Context, req ProgramLookupRequest\) \(\[\]JSONDocument, error\)](<#ProgramsService.List>)
 - [type RequestOptions](<#RequestOptions>)
+- [type ResponseTooLargeError](<#ResponseTooLargeError>)
+  - [func \(e \*ResponseTooLargeError\) Error\(\) string](<#ResponseTooLargeError.Error>)
 - [type SchedulingService](<#SchedulingService>)
   - [func \(s \*SchedulingService\) CreateAlternateCourseRequest\(ctx context.Context, req CourseRequestCreateRequest\) \(JSONDocument, error\)](<#SchedulingService.CreateAlternateCourseRequest>)
   - [func \(s \*SchedulingService\) CreateSection\(ctx context.Context, req SectionCreateRequest\) \(JSONDocument, error\)](<#SchedulingService.CreateSection>)
@@ -240,11 +254,19 @@ The package is intentionally organized around plain\-language service groups so 
 
 ```go
 const (
-    defaultUserAgent    = "aeries-sis-sdk-golang/0.1.0"
-    defaultTimeout      = 30 * time.Second
-    defaultMaxRetries   = 2
-    defaultRetryBackoff = 300 * time.Millisecond
+    defaultUserAgent              = "aeries-sis-sdk-golang/0.1.0"
+    defaultTimeout                = 30 * time.Second
+    defaultMaxRetries             = 2
+    defaultRetryBackoff           = 300 * time.Millisecond
+    defaultMaxResponseBytes int64 = 32 << 20
+    maxResponseBytesLimit   int64 = 1 << 40
 )
+```
+
+<a name="maxProviderDetailBytes"></a>
+
+```go
+const maxProviderDetailBytes = 512
 ```
 
 ## Variables
@@ -273,6 +295,15 @@ func addQueryValue(target map[string]string, key string, value string)
 
 addQueryValue records a query parameter only when the caller supplied a meaningful value.
 
+<a name="canonicalizePercentEscapes"></a>
+## func canonicalizePercentEscapes
+
+```go
+func canonicalizePercentEscapes(value string) string
+```
+
+canonicalizePercentEscapes normalizes hexadecimal triplets without changing literal character case.
+
 <a name="cloneMap"></a>
 ## func cloneMap
 
@@ -282,11 +313,20 @@ func cloneMap(source map[string]string) map[string]string
 
 cloneMap copies string keys and values so callers cannot mutate shared request state by accident.
 
+<a name="credentialHeaderComponents"></a>
+## func credentialHeaderComponents
+
+```go
+func credentialHeaderComponents(name string, value string) []string
+```
+
+credentialHeaderComponents extracts tokens that providers may echo without their surrounding header scheme or key.
+
 <a name="decodeAPIError"></a>
 ## func decodeAPIError
 
 ```go
-func decodeAPIError(statusCode int, method string, path string, payload []byte) error
+func decodeAPIError(statusCode int, method string, path string, payload []byte, sensitiveValues []string, retainProviderDetail bool) error
 ```
 
 decodeAPIError prefers the documented Aeries \{"Message": "..."\} error format when it is present.
@@ -300,6 +340,15 @@ func encodeBody(body any) ([]byte, error)
 
 encodeBody converts any request body into JSON before the request is sent.
 
+<a name="expandedPathParameterValues"></a>
+## func expandedPathParameterValues
+
+```go
+func expandedPathParameterValues(contractPath string, requestURL *url.URL) []string
+```
+
+expandedPathParameterValues extracts only expanded placeholder segments, avoiding broad redaction of fixed API path words.
+
 <a name="intString"></a>
 ## func intString
 
@@ -309,6 +358,15 @@ func intString(value int) string
 
 intString converts an integer to a decimal string for a path parameter or query string.
 
+<a name="isHexDigit"></a>
+## func isHexDigit
+
+```go
+func isHexDigit(value byte) bool
+```
+
+isHexDigit reports whether a byte can participate in a percent\-encoded triplet.
+
 <a name="isRetriable"></a>
 ## func isRetriable
 
@@ -317,6 +375,60 @@ func isRetriable(err error) bool
 ```
 
 isRetriable returns true for short\-lived transport and gateway failures that are worth retrying.
+
+<a name="normalizePortalRoot"></a>
+## func normalizePortalRoot
+
+```go
+func normalizePortalRoot(rawPath string) string
+```
+
+normalizePortalRoot preserves an explicit portal root and strips any trailing API suffix from it.
+
+<a name="normalizeProviderDetail"></a>
+## func normalizeProviderDetail
+
+```go
+func normalizeProviderDetail(detail string) string
+```
+
+normalizeProviderDetail removes controls and collapses whitespace so formatting cannot conceal a sensitive value.
+
+<a name="readBoundedResponse"></a>
+## func readBoundedResponse
+
+```go
+func readBoundedResponse(reader io.Reader, limit int64) ([]byte, bool, error)
+```
+
+readBoundedResponse reads at most limit plus one bytes so a payload exactly at the configured limit remains valid.
+
+<a name="redactWhitespaceInsensitive"></a>
+## func redactWhitespaceInsensitive
+
+```go
+func redactWhitespaceInsensitive(detail string, value string) string
+```
+
+redactWhitespaceInsensitive removes a sensitive value even when a provider inserts formatting whitespace inside it.
+
+<a name="sanitizeProviderDetail"></a>
+## func sanitizeProviderDetail
+
+```go
+func sanitizeProviderDetail(detail string, sensitiveValues []string) string
+```
+
+sanitizeProviderDetail normalizes provider text before redacting request values and enforcing a small byte bound.
+
+<a name="sensitiveRequestValues"></a>
+## func sensitiveRequestValues
+
+```go
+func sensitiveRequestValues(certificate string, requestURL string, contractPath string, headers http.Header) []string
+```
+
+sensitiveRequestValues returns values that a provider might echo but that diagnostics must never retain.
 
 <a name="sleepWithContext"></a>
 ## func sleepWithContext
@@ -337,8 +449,11 @@ type APIError struct {
     StatusCode int
     Method     string
     Path       string
-    Message    string
-    Body       string
+    // Message contains at most a small, sanitized provider detail. It never contains the complete response body.
+    Message string
+    // Body is retained for source compatibility and is always empty so raw provider payloads cannot escape through errors.
+    // Deprecated: use Message for the optional bounded, sanitized provider detail.
+    Body string
 }
 ```
 
@@ -666,6 +781,7 @@ type Client struct {
     userAgent           string
     maxRetries          int
     retryBackoff        time.Duration
+    maxResponseBytes    int64
     defaultDatabaseYear string
     manifest            *publiccontract.Manifest
     endpoints           map[string]publiccontract.Endpoint
@@ -712,6 +828,15 @@ func (c *Client) buildURL(pathTemplate string, opts RequestOptions) (string, err
 
 buildURL expands path parameters, applies the base URL, and appends any supported query parameters.
 
+<a name="Client.do"></a>
+### func \(\*Client\) do
+
+```go
+func (c *Client) do(ctx context.Context, method string, path string, diagnosticPath string, opts RequestOptions, out any) error
+```
+
+do performs a request while keeping raw caller paths out of retained diagnostic metadata.
+
 <a name="Client.doDocument"></a>
 ### func \(\*Client\) doDocument
 
@@ -734,7 +859,7 @@ doDocuments calls one manifest\-backed operation and decodes the result into a s
 ### func \(\*Client\) doHTTPRequest
 
 ```go
-func (c *Client) doHTTPRequest(ctx context.Context, method string, path string, requestURL string, body []byte, headers map[string]string, out any) error
+func (c *Client) doHTTPRequest(ctx context.Context, method string, contractPath string, diagnosticPath string, requestURL string, body []byte, headers map[string]string, out any) error
 ```
 
 doHTTPRequest sends the HTTP request and retries short\-lived transport failures when configured.
@@ -770,7 +895,7 @@ doOperation resolves one endpoint from the vendored manifest and then sends the 
 ### func \(\*Client\) sendOnce
 
 ```go
-func (c *Client) sendOnce(ctx context.Context, method string, path string, requestURL string, body []byte, headers map[string]string, out any) error
+func (c *Client) sendOnce(ctx context.Context, method string, contractPath string, diagnosticPath string, requestURL string, body []byte, headers map[string]string, out any) error
 ```
 
 sendOnce performs a single HTTP attempt and decodes the JSON response when one is present.
@@ -824,13 +949,15 @@ Config describes how the SDK should connect to one district's Aeries instance.
 
 ```go
 type Config struct {
-    BaseURL             string
-    Certificate         string
-    HTTPClient          *http.Client
-    UserAgent           string
-    Timeout             time.Duration
-    MaxRetries          int
-    RetryBackoff        time.Duration
+    BaseURL      string
+    Certificate  string
+    HTTPClient   *http.Client
+    UserAgent    string
+    Timeout      time.Duration
+    MaxRetries   int
+    RetryBackoff time.Duration
+    // MaxResponseBytes limits every response body before error handling or JSON decoding. Zero uses the 32 MiB default.
+    MaxResponseBytes    int64
     DefaultDatabaseYear string
 }
 ```
@@ -852,6 +979,15 @@ func (c Config) normalizedHTTPClient() *http.Client
 ```
 
 normalizedHTTPClient fills in a safe default HTTP client when the caller does not provide one.
+
+<a name="Config.normalizedMaxResponseBytes"></a>
+### func \(Config\) normalizedMaxResponseBytes
+
+```go
+func (c Config) normalizedMaxResponseBytes() int64
+```
+
+normalizedMaxResponseBytes fills in the conservative response\-body limit when the caller does not provide one.
 
 <a name="Config.normalizedMaxRetries"></a>
 ### func \(Config\) normalizedMaxRetries
@@ -1337,6 +1473,30 @@ type RequestOptions struct {
     DatabaseYear string
 }
 ```
+
+<a name="ResponseTooLargeError"></a>
+## type ResponseTooLargeError
+
+ResponseTooLargeError reports that a response exceeded the configured safe read limit. It deliberately retains no response bytes, full URL, query values, or request headers.
+
+```go
+type ResponseTooLargeError struct {
+    StatusCode int
+    Method     string
+    Path       string
+    Limit      int64
+    Retryable  bool
+}
+```
+
+<a name="ResponseTooLargeError.Error"></a>
+### func \(\*ResponseTooLargeError\) Error
+
+```go
+func (e *ResponseTooLargeError) Error() string
+```
+
+Error returns bounded diagnostic metadata without including any response content.
 
 <a name="SchedulingService"></a>
 ## type SchedulingService
