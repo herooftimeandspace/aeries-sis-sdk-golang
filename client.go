@@ -10,7 +10,9 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 	"unicode"
@@ -91,6 +93,11 @@ func NewClient(config Config) (*Client, error) {
 
 // Do performs one raw API request using the shared transport and error handling rules.
 func (c *Client) Do(ctx context.Context, method string, path string, opts RequestOptions, out any) error {
+	return c.do(ctx, method, path, "", opts, out)
+}
+
+// do performs a request while keeping raw caller paths out of retained diagnostic metadata.
+func (c *Client) do(ctx context.Context, method string, path string, diagnosticPath string, opts RequestOptions, out any) error {
 	if strings.TrimSpace(path) == "" {
 		return &ValidationError{Message: "path is required"}
 	}
@@ -106,7 +113,7 @@ func (c *Client) Do(ctx context.Context, method string, path string, opts Reques
 	if method == "" {
 		return &ValidationError{Message: "method is required"}
 	}
-	return c.doHTTPRequest(ctx, method, path, requestURL, bodyReader, opts.Headers, out)
+	return c.doHTTPRequest(ctx, method, path, diagnosticPath, requestURL, bodyReader, opts.Headers, out)
 }
 
 // doOperation resolves one endpoint from the vendored manifest and then sends the request.
@@ -115,7 +122,7 @@ func (c *Client) doOperation(ctx context.Context, operationID string, opts Reque
 	if !ok {
 		return &ValidationError{Message: fmt.Sprintf("unknown contract operation %q", operationID)}
 	}
-	return c.Do(ctx, endpoint.HTTPMethod, endpoint.PathTemplate, opts, out)
+	return c.do(ctx, endpoint.HTTPMethod, endpoint.PathTemplate, endpoint.PathTemplate, opts, out)
 }
 
 // buildURL expands path parameters, applies the base URL, and appends any supported query parameters.
@@ -151,7 +158,7 @@ func (c *Client) buildURL(pathTemplate string, opts RequestOptions) (string, err
 }
 
 // doHTTPRequest sends the HTTP request and retries short-lived transport failures when configured.
-func (c *Client) doHTTPRequest(ctx context.Context, method string, path string, requestURL string, body []byte, headers map[string]string, out any) error {
+func (c *Client) doHTTPRequest(ctx context.Context, method string, contractPath string, diagnosticPath string, requestURL string, body []byte, headers map[string]string, out any) error {
 	var lastErr error
 	for attempt := 0; attempt <= c.maxRetries; attempt++ {
 		if attempt > 0 {
@@ -159,7 +166,7 @@ func (c *Client) doHTTPRequest(ctx context.Context, method string, path string, 
 				return err
 			}
 		}
-		err := c.sendOnce(ctx, method, path, requestURL, body, headers, out)
+		err := c.sendOnce(ctx, method, contractPath, diagnosticPath, requestURL, body, headers, out)
 		if err == nil {
 			return nil
 		}
@@ -172,7 +179,7 @@ func (c *Client) doHTTPRequest(ctx context.Context, method string, path string, 
 }
 
 // sendOnce performs a single HTTP attempt and decodes the JSON response when one is present.
-func (c *Client) sendOnce(ctx context.Context, method string, path string, requestURL string, body []byte, headers map[string]string, out any) error {
+func (c *Client) sendOnce(ctx context.Context, method string, contractPath string, diagnosticPath string, requestURL string, body []byte, headers map[string]string, out any) error {
 	request, err := http.NewRequestWithContext(ctx, method, requestURL, bytes.NewReader(body))
 	if err != nil {
 		return err
@@ -199,19 +206,19 @@ func (c *Client) sendOnce(ctx context.Context, method string, path string, reque
 		return &ResponseTooLargeError{
 			StatusCode: response.StatusCode,
 			Method:     method,
-			Path:       path,
+			Path:       diagnosticPath,
 			Limit:      c.maxResponseBytes,
 			Retryable:  false,
 		}
 	}
 	if response.StatusCode < http.StatusOK || response.StatusCode >= http.StatusMultipleChoices {
-		return decodeAPIError(response.StatusCode, method, path, payload, sensitiveRequestValues(c.certificate, requestURL, path, request.Header), len(body) == 0)
+		return decodeAPIError(response.StatusCode, method, diagnosticPath, payload, sensitiveRequestValues(c.certificate, requestURL, contractPath, request.Header), len(body) == 0)
 	}
 	if len(bytes.TrimSpace(payload)) == 0 || out == nil {
 		return nil
 	}
 	if err := json.Unmarshal(payload, out); err != nil {
-		return &ValidationError{Message: fmt.Sprintf("response for %s %s was not valid JSON: %v", method, path, err)}
+		return &ValidationError{Message: fmt.Sprintf("response for %s %s was not valid JSON: %v", method, diagnosticPath, err)}
 	}
 	return nil
 }
@@ -276,9 +283,7 @@ func sensitiveRequestValues(certificate string, requestURL string, contractPath 
 		values = append(values, parsed.RequestURI(), parsed.Path)
 		for _, queryValues := range parsed.Query() {
 			for _, value := range queryValues {
-				queryEscaped := url.QueryEscape(value)
-				pathEscaped := url.PathEscape(value)
-				values = append(values, value, queryEscaped, lowercasePercentEscapes(queryEscaped), pathEscaped, lowercasePercentEscapes(pathEscaped))
+				values = append(values, value, url.QueryEscape(value), url.PathEscape(value))
 			}
 		}
 		values = append(values, expandedPathParameterValues(contractPath, parsed)...)
@@ -298,7 +303,11 @@ func credentialHeaderComponents(name string, value string) []string {
 		var components []string
 		for _, cookie := range strings.Split(value, ";") {
 			if _, token, ok := strings.Cut(cookie, "="); ok && strings.TrimSpace(token) != "" {
-				components = append(components, strings.TrimSpace(token))
+				token = strings.TrimSpace(token)
+				if unquoted, err := strconv.Unquote(token); err == nil {
+					token = unquoted
+				}
+				components = append(components, token)
 			}
 		}
 		return components
@@ -306,17 +315,22 @@ func credentialHeaderComponents(name string, value string) []string {
 	return nil
 }
 
-// lowercasePercentEscapes preserves literal character case while accepting lowercase hexadecimal escape digits.
-func lowercasePercentEscapes(value string) string {
+// canonicalizePercentEscapes normalizes hexadecimal triplets without changing literal character case.
+func canonicalizePercentEscapes(value string) string {
 	encoded := []byte(value)
 	for index := 0; index+2 < len(encoded); index++ {
-		if encoded[index] == '%' {
-			encoded[index+1] = byte(unicode.ToLower(rune(encoded[index+1])))
-			encoded[index+2] = byte(unicode.ToLower(rune(encoded[index+2])))
+		if encoded[index] == '%' && isHexDigit(encoded[index+1]) && isHexDigit(encoded[index+2]) {
+			encoded[index+1] = byte(unicode.ToUpper(rune(encoded[index+1])))
+			encoded[index+2] = byte(unicode.ToUpper(rune(encoded[index+2])))
 			index += 2
 		}
 	}
 	return string(encoded)
+}
+
+// isHexDigit reports whether a byte can participate in a percent-encoded triplet.
+func isHexDigit(value byte) bool {
+	return value >= '0' && value <= '9' || value >= 'a' && value <= 'f' || value >= 'A' && value <= 'F'
 }
 
 // expandedPathParameterValues extracts only expanded placeholder segments, avoiding broad redaction of fixed API path words.
@@ -357,7 +371,32 @@ func normalizeProviderDetail(detail string) string {
 		}
 		return character
 	}, detail)
-	return strings.Join(strings.Fields(detail), " ")
+	return canonicalizePercentEscapes(strings.Join(strings.Fields(detail), " "))
+}
+
+// redactWhitespaceInsensitive removes a sensitive value even when a provider inserts formatting whitespace inside it.
+func redactWhitespaceInsensitive(detail string, value string) string {
+	compact := strings.Map(func(character rune) rune {
+		if unicode.IsSpace(character) {
+			return -1
+		}
+		return character
+	}, value)
+	if utf8.RuneCountInString(compact) < 4 {
+		return detail
+	}
+	var pattern strings.Builder
+	for index, character := range []rune(compact) {
+		if index > 0 {
+			pattern.WriteString(`\s*`)
+		}
+		pattern.WriteString(regexp.QuoteMeta(string(character)))
+	}
+	compiled, err := regexp.Compile(pattern.String())
+	if err != nil {
+		return detail
+	}
+	return compiled.ReplaceAllString(detail, "[redacted]")
 }
 
 // sanitizeProviderDetail normalizes provider text before redacting request values and enforcing a small byte bound.
@@ -375,6 +414,7 @@ func sanitizeProviderDetail(detail string, sensitiveValues []string) string {
 	for _, value := range sensitiveValues {
 		if value != "" {
 			detail = strings.ReplaceAll(detail, value, "[redacted]")
+			detail = redactWhitespaceInsensitive(detail, value)
 		}
 	}
 	if len(detail) <= maxProviderDetailBytes {

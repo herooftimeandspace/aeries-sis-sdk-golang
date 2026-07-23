@@ -16,14 +16,19 @@ The package is intentionally organized around plain\-language service groups so 
 - [Variables](<#variables>)
 - [func addIntQueryValue\(target map\[string\]string, key string, value int\)](<#addIntQueryValue>)
 - [func addQueryValue\(target map\[string\]string, key string, value string\)](<#addQueryValue>)
+- [func canonicalizePercentEscapes\(value string\) string](<#canonicalizePercentEscapes>)
 - [func cloneMap\(source map\[string\]string\) map\[string\]string](<#cloneMap>)
+- [func credentialHeaderComponents\(name string, value string\) \[\]string](<#credentialHeaderComponents>)
 - [func decodeAPIError\(statusCode int, method string, path string, payload \[\]byte, sensitiveValues \[\]string, retainProviderDetail bool\) error](<#decodeAPIError>)
 - [func encodeBody\(body any\) \(\[\]byte, error\)](<#encodeBody>)
 - [func expandedPathParameterValues\(contractPath string, requestURL \*url.URL\) \[\]string](<#expandedPathParameterValues>)
 - [func intString\(value int\) string](<#intString>)
+- [func isHexDigit\(value byte\) bool](<#isHexDigit>)
 - [func isRetriable\(err error\) bool](<#isRetriable>)
 - [func normalizePortalRoot\(rawPath string\) string](<#normalizePortalRoot>)
+- [func normalizeProviderDetail\(detail string\) string](<#normalizeProviderDetail>)
 - [func readBoundedResponse\(reader io.Reader, limit int64\) \(\[\]byte, bool, error\)](<#readBoundedResponse>)
+- [func redactWhitespaceInsensitive\(detail string, value string\) string](<#redactWhitespaceInsensitive>)
 - [func sanitizeProviderDetail\(detail string, sensitiveValues \[\]string\) string](<#sanitizeProviderDetail>)
 - [func sensitiveRequestValues\(certificate string, requestURL string, contractPath string, headers http.Header\) \[\]string](<#sensitiveRequestValues>)
 - [func sleepWithContext\(ctx context.Context, duration time.Duration\) error](<#sleepWithContext>)
@@ -62,13 +67,14 @@ The package is intentionally organized around plain\-language service groups so 
   - [func NewClient\(config Config\) \(\*Client, error\)](<#NewClient>)
   - [func \(c \*Client\) Do\(ctx context.Context, method string, path string, opts RequestOptions, out any\) error](<#Client.Do>)
   - [func \(c \*Client\) buildURL\(pathTemplate string, opts RequestOptions\) \(string, error\)](<#Client.buildURL>)
+  - [func \(c \*Client\) do\(ctx context.Context, method string, path string, diagnosticPath string, opts RequestOptions, out any\) error](<#Client.do>)
   - [func \(c \*Client\) doDocument\(ctx context.Context, operationID string, opts RequestOptions\) \(JSONDocument, error\)](<#Client.doDocument>)
   - [func \(c \*Client\) doDocuments\(ctx context.Context, operationID string, opts RequestOptions\) \(\[\]JSONDocument, error\)](<#Client.doDocuments>)
-  - [func \(c \*Client\) doHTTPRequest\(ctx context.Context, method string, path string, requestURL string, body \[\]byte, headers map\[string\]string, out any\) error](<#Client.doHTTPRequest>)
+  - [func \(c \*Client\) doHTTPRequest\(ctx context.Context, method string, contractPath string, diagnosticPath string, requestURL string, body \[\]byte, headers map\[string\]string, out any\) error](<#Client.doHTTPRequest>)
   - [func \(c \*Client\) doList\(ctx context.Context, operationID string, opts RequestOptions\) \(JSONList, error\)](<#Client.doList>)
   - [func \(c \*Client\) doNoContent\(ctx context.Context, operationID string, opts RequestOptions\) error](<#Client.doNoContent>)
   - [func \(c \*Client\) doOperation\(ctx context.Context, operationID string, opts RequestOptions, out any\) error](<#Client.doOperation>)
-  - [func \(c \*Client\) sendOnce\(ctx context.Context, method string, path string, requestURL string, body \[\]byte, headers map\[string\]string, out any\) error](<#Client.sendOnce>)
+  - [func \(c \*Client\) sendOnce\(ctx context.Context, method string, contractPath string, diagnosticPath string, requestURL string, body \[\]byte, headers map\[string\]string, out any\) error](<#Client.sendOnce>)
 - [type CodeSetLookupRequest](<#CodeSetLookupRequest>)
 - [type CodeSetValue](<#CodeSetValue>)
 - [type CodeSetsService](<#CodeSetsService>)
@@ -289,6 +295,15 @@ func addQueryValue(target map[string]string, key string, value string)
 
 addQueryValue records a query parameter only when the caller supplied a meaningful value.
 
+<a name="canonicalizePercentEscapes"></a>
+## func canonicalizePercentEscapes
+
+```go
+func canonicalizePercentEscapes(value string) string
+```
+
+canonicalizePercentEscapes normalizes hexadecimal triplets without changing literal character case.
+
 <a name="cloneMap"></a>
 ## func cloneMap
 
@@ -297,6 +312,15 @@ func cloneMap(source map[string]string) map[string]string
 ```
 
 cloneMap copies string keys and values so callers cannot mutate shared request state by accident.
+
+<a name="credentialHeaderComponents"></a>
+## func credentialHeaderComponents
+
+```go
+func credentialHeaderComponents(name string, value string) []string
+```
+
+credentialHeaderComponents extracts tokens that providers may echo without their surrounding header scheme or key.
 
 <a name="decodeAPIError"></a>
 ## func decodeAPIError
@@ -334,6 +358,15 @@ func intString(value int) string
 
 intString converts an integer to a decimal string for a path parameter or query string.
 
+<a name="isHexDigit"></a>
+## func isHexDigit
+
+```go
+func isHexDigit(value byte) bool
+```
+
+isHexDigit reports whether a byte can participate in a percent\-encoded triplet.
+
 <a name="isRetriable"></a>
 ## func isRetriable
 
@@ -352,6 +385,15 @@ func normalizePortalRoot(rawPath string) string
 
 normalizePortalRoot preserves an explicit portal root and strips any trailing API suffix from it.
 
+<a name="normalizeProviderDetail"></a>
+## func normalizeProviderDetail
+
+```go
+func normalizeProviderDetail(detail string) string
+```
+
+normalizeProviderDetail removes controls and collapses whitespace so formatting cannot conceal a sensitive value.
+
 <a name="readBoundedResponse"></a>
 ## func readBoundedResponse
 
@@ -361,6 +403,15 @@ func readBoundedResponse(reader io.Reader, limit int64) ([]byte, bool, error)
 
 readBoundedResponse reads at most limit plus one bytes so a payload exactly at the configured limit remains valid.
 
+<a name="redactWhitespaceInsensitive"></a>
+## func redactWhitespaceInsensitive
+
+```go
+func redactWhitespaceInsensitive(detail string, value string) string
+```
+
+redactWhitespaceInsensitive removes a sensitive value even when a provider inserts formatting whitespace inside it.
+
 <a name="sanitizeProviderDetail"></a>
 ## func sanitizeProviderDetail
 
@@ -368,7 +419,7 @@ readBoundedResponse reads at most limit plus one bytes so a payload exactly at t
 func sanitizeProviderDetail(detail string, sensitiveValues []string) string
 ```
 
-sanitizeProviderDetail removes request values and control characters, normalizes whitespace, and enforces a small byte bound.
+sanitizeProviderDetail normalizes provider text before redacting request values and enforcing a small byte bound.
 
 <a name="sensitiveRequestValues"></a>
 ## func sensitiveRequestValues
@@ -777,6 +828,15 @@ func (c *Client) buildURL(pathTemplate string, opts RequestOptions) (string, err
 
 buildURL expands path parameters, applies the base URL, and appends any supported query parameters.
 
+<a name="Client.do"></a>
+### func \(\*Client\) do
+
+```go
+func (c *Client) do(ctx context.Context, method string, path string, diagnosticPath string, opts RequestOptions, out any) error
+```
+
+do performs a request while keeping raw caller paths out of retained diagnostic metadata.
+
 <a name="Client.doDocument"></a>
 ### func \(\*Client\) doDocument
 
@@ -799,7 +859,7 @@ doDocuments calls one manifest\-backed operation and decodes the result into a s
 ### func \(\*Client\) doHTTPRequest
 
 ```go
-func (c *Client) doHTTPRequest(ctx context.Context, method string, path string, requestURL string, body []byte, headers map[string]string, out any) error
+func (c *Client) doHTTPRequest(ctx context.Context, method string, contractPath string, diagnosticPath string, requestURL string, body []byte, headers map[string]string, out any) error
 ```
 
 doHTTPRequest sends the HTTP request and retries short\-lived transport failures when configured.
@@ -835,7 +895,7 @@ doOperation resolves one endpoint from the vendored manifest and then sends the 
 ### func \(\*Client\) sendOnce
 
 ```go
-func (c *Client) sendOnce(ctx context.Context, method string, path string, requestURL string, body []byte, headers map[string]string, out any) error
+func (c *Client) sendOnce(ctx context.Context, method string, contractPath string, diagnosticPath string, requestURL string, body []byte, headers map[string]string, out any) error
 ```
 
 sendOnce performs a single HTTP attempt and decodes the JSON response when one is present.

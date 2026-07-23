@@ -93,7 +93,7 @@ func TestClientDoParsesStructuredAPIError(t *testing.T) {
 // TestClientDoSanitizesStructuredAPIError verifies that provider detail cannot echo request secrets or grow without bound.
 func TestClientDoSanitizesStructuredAPIError(t *testing.T) {
 	const querySecret = "query secret"
-	const encodedQuerySecret = "abc/def"
+	const encodedQuerySecret = "café"
 	const headerSecret = "header-secret"
 	const bearerSecret = "abc123"
 	const cookieSecret = "cookie456"
@@ -104,7 +104,7 @@ func TestClientDoSanitizesStructuredAPIError(t *testing.T) {
 		Certificate: testCertificate,
 		UserAgent:   userAgent,
 		HTTPClient: &http.Client{Transport: roundTripFunc(func(r *http.Request) (*http.Response, error) {
-			message := testCertificate + "\n" + url.QueryEscape(querySecret) + " " + url.PathEscape(querySecret) + " abc%2fdef\t" + headerSecret + " " + bearerSecret + " " + cookieSecret + " " + userAgent + " student\t12345 query    secret " + strings.Repeat("x", maxProviderDetailBytes)
+			message := strings.Replace(testCertificate, "-", "-\n", 1) + " " + url.QueryEscape(querySecret) + " " + url.PathEscape(querySecret) + " caf%c3%A9 abc%2fdef\t" + strings.Replace(headerSecret, "-", "-\n", 1) + " " + bearerSecret + " " + cookieSecret + " " + userAgent + " student\t12345 query    secret " + strings.Repeat("x", maxProviderDetailBytes)
 			return jsonResponse(http.StatusBadRequest, `{"Message":`+strconv.Quote(message)+`}`), nil
 		})},
 	})
@@ -112,10 +112,10 @@ func TestClientDoSanitizesStructuredAPIError(t *testing.T) {
 		t.Fatalf("NewClient: %v", err)
 	}
 
-	err = client.Do(context.Background(), http.MethodGet, "/api/v5/students/{StudentID}", RequestOptions{
-		PathParams: map[string]string{"StudentID": studentID},
+	err = client.Do(context.Background(), http.MethodGet, "/api/v5/students/{StudentID}/{SequenceNumber}", RequestOptions{
+		PathParams: map[string]string{"StudentID": studentID, "SequenceNumber": "abc/def"},
 		Query:      map[string]string{"filter": querySecret, "encoded": encodedQuerySecret},
-		Headers:    map[string]string{"X-Request-Token": headerSecret, "Authorization": "Bearer " + bearerSecret, "Cookie": "session=" + cookieSecret},
+		Headers:    map[string]string{"X-Request-Token": headerSecret, "Authorization": "Bearer " + bearerSecret, "Cookie": `session="` + cookieSecret + `"`},
 	}, &JSONDocument{})
 	var apiErr *APIError
 	if !errors.As(err, &apiErr) {
@@ -124,10 +124,34 @@ func TestClientDoSanitizesStructuredAPIError(t *testing.T) {
 	if len(apiErr.Message) > maxProviderDetailBytes {
 		t.Fatalf("provider detail length = %d, want at most %d", len(apiErr.Message), maxProviderDetailBytes)
 	}
-	for _, forbidden := range []string{testCertificate, querySecret, url.QueryEscape(querySecret), url.PathEscape(querySecret), "abc%2fdef", headerSecret, bearerSecret, cookieSecret, userAgent, studentID, "\n", "\t", "\x1b"} {
+	for _, forbidden := range []string{testCertificate, querySecret, url.QueryEscape(querySecret), url.PathEscape(querySecret), "caf%C3%A9", "caf%c3%A9", "abc%2fdef", headerSecret, bearerSecret, cookieSecret, userAgent, studentID, "\n", "\t", "\x1b"} {
 		if strings.Contains(apiErr.Message, forbidden) || strings.Contains(apiErr.Error(), forbidden) {
 			t.Fatalf("sanitized error retained forbidden value %q: %q", forbidden, apiErr.Error())
 		}
+	}
+}
+
+// TestClientDoOmitsRawPathFromOversizedErrors verifies the escape hatch cannot retain concrete identifiers.
+func TestClientDoOmitsRawPathFromOversizedErrors(t *testing.T) {
+	const privatePath = "/api/v5/students/12345/private"
+	client, err := NewClient(Config{
+		BaseURL:          "https://district.example.test",
+		Certificate:      testCertificate,
+		MaxResponseBytes: 4,
+		HTTPClient: &http.Client{Transport: roundTripFunc(func(r *http.Request) (*http.Response, error) {
+			return jsonResponse(http.StatusOK, `{"value":true}`), nil
+		})},
+	})
+	if err != nil {
+		t.Fatalf("NewClient: %v", err)
+	}
+	err = client.Do(context.Background(), http.MethodGet, privatePath, RequestOptions{}, &JSONDocument{})
+	var tooLarge *ResponseTooLargeError
+	if !errors.As(err, &tooLarge) {
+		t.Fatalf("expected ResponseTooLargeError, got %T: %v", err, err)
+	}
+	if tooLarge.Path != "" || strings.Contains(tooLarge.Error(), "12345") {
+		t.Fatalf("oversized raw request retained private path: %#v", tooLarge)
 	}
 }
 
