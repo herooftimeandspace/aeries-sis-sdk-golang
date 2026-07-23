@@ -93,7 +93,10 @@ func TestClientDoParsesStructuredAPIError(t *testing.T) {
 // TestClientDoSanitizesStructuredAPIError verifies that provider detail cannot echo request secrets or grow without bound.
 func TestClientDoSanitizesStructuredAPIError(t *testing.T) {
 	const querySecret = "query secret"
+	const encodedQuerySecret = "abc/def"
 	const headerSecret = "header-secret"
+	const bearerSecret = "abc123"
+	const cookieSecret = "cookie456"
 	const userAgent = "private-user-agent"
 	const studentID = "student 12345"
 	client, err := NewClient(Config{
@@ -101,7 +104,7 @@ func TestClientDoSanitizesStructuredAPIError(t *testing.T) {
 		Certificate: testCertificate,
 		UserAgent:   userAgent,
 		HTTPClient: &http.Client{Transport: roundTripFunc(func(r *http.Request) (*http.Response, error) {
-			message := testCertificate + "\n" + url.QueryEscape(querySecret) + " " + url.PathEscape(querySecret) + "\t" + headerSecret + " " + userAgent + " student \x1b12345 query    secret " + strings.Repeat("x", maxProviderDetailBytes)
+			message := testCertificate + "\n" + url.QueryEscape(querySecret) + " " + url.PathEscape(querySecret) + " abc%2fdef\t" + headerSecret + " " + bearerSecret + " " + cookieSecret + " " + userAgent + " student\t12345 query    secret " + strings.Repeat("x", maxProviderDetailBytes)
 			return jsonResponse(http.StatusBadRequest, `{"Message":`+strconv.Quote(message)+`}`), nil
 		})},
 	})
@@ -111,8 +114,8 @@ func TestClientDoSanitizesStructuredAPIError(t *testing.T) {
 
 	err = client.Do(context.Background(), http.MethodGet, "/api/v5/students/{StudentID}", RequestOptions{
 		PathParams: map[string]string{"StudentID": studentID},
-		Query:      map[string]string{"filter": querySecret},
-		Headers:    map[string]string{"X-Request-Token": headerSecret},
+		Query:      map[string]string{"filter": querySecret, "encoded": encodedQuerySecret},
+		Headers:    map[string]string{"X-Request-Token": headerSecret, "Authorization": "Bearer " + bearerSecret, "Cookie": "session=" + cookieSecret},
 	}, &JSONDocument{})
 	var apiErr *APIError
 	if !errors.As(err, &apiErr) {
@@ -121,7 +124,7 @@ func TestClientDoSanitizesStructuredAPIError(t *testing.T) {
 	if len(apiErr.Message) > maxProviderDetailBytes {
 		t.Fatalf("provider detail length = %d, want at most %d", len(apiErr.Message), maxProviderDetailBytes)
 	}
-	for _, forbidden := range []string{testCertificate, querySecret, url.QueryEscape(querySecret), url.PathEscape(querySecret), headerSecret, userAgent, studentID, "\n", "\t", "\x1b"} {
+	for _, forbidden := range []string{testCertificate, querySecret, url.QueryEscape(querySecret), url.PathEscape(querySecret), "abc%2fdef", headerSecret, bearerSecret, cookieSecret, userAgent, studentID, "\n", "\t", "\x1b"} {
 		if strings.Contains(apiErr.Message, forbidden) || strings.Contains(apiErr.Error(), forbidden) {
 			t.Fatalf("sanitized error retained forbidden value %q: %q", forbidden, apiErr.Error())
 		}

@@ -266,19 +266,57 @@ const maxProviderDetailBytes = 512
 // sensitiveRequestValues returns values that a provider might echo but that diagnostics must never retain.
 func sensitiveRequestValues(certificate string, requestURL string, contractPath string, headers http.Header) []string {
 	values := []string{certificate, requestURL}
-	for _, headerValues := range headers {
-		values = append(values, headerValues...)
+	for name, headerValues := range headers {
+		for _, value := range headerValues {
+			values = append(values, value)
+			values = append(values, credentialHeaderComponents(name, value)...)
+		}
 	}
 	if parsed, err := url.Parse(requestURL); err == nil {
 		values = append(values, parsed.RequestURI(), parsed.Path)
 		for _, queryValues := range parsed.Query() {
 			for _, value := range queryValues {
-				values = append(values, value, url.QueryEscape(value), url.PathEscape(value))
+				queryEscaped := url.QueryEscape(value)
+				pathEscaped := url.PathEscape(value)
+				values = append(values, value, queryEscaped, lowercasePercentEscapes(queryEscaped), pathEscaped, lowercasePercentEscapes(pathEscaped))
 			}
 		}
 		values = append(values, expandedPathParameterValues(contractPath, parsed)...)
 	}
 	return values
+}
+
+// credentialHeaderComponents extracts tokens that providers may echo without their surrounding header scheme or key.
+func credentialHeaderComponents(name string, value string) []string {
+	switch strings.ToLower(name) {
+	case "authorization", "proxy-authorization":
+		parts := strings.Fields(value)
+		if len(parts) > 1 {
+			return []string{strings.Join(parts[1:], " ")}
+		}
+	case "cookie":
+		var components []string
+		for _, cookie := range strings.Split(value, ";") {
+			if _, token, ok := strings.Cut(cookie, "="); ok && strings.TrimSpace(token) != "" {
+				components = append(components, strings.TrimSpace(token))
+			}
+		}
+		return components
+	}
+	return nil
+}
+
+// lowercasePercentEscapes preserves literal character case while accepting lowercase hexadecimal escape digits.
+func lowercasePercentEscapes(value string) string {
+	encoded := []byte(value)
+	for index := 0; index+2 < len(encoded); index++ {
+		if encoded[index] == '%' {
+			encoded[index+1] = byte(unicode.ToLower(rune(encoded[index+1])))
+			encoded[index+2] = byte(unicode.ToLower(rune(encoded[index+2])))
+			index += 2
+		}
+	}
+	return string(encoded)
 }
 
 // expandedPathParameterValues extracts only expanded placeholder segments, avoiding broad redaction of fixed API path words.
@@ -312,6 +350,9 @@ func expandedPathParameterValues(contractPath string, requestURL *url.URL) []str
 func normalizeProviderDetail(detail string) string {
 	detail = strings.Map(func(character rune) rune {
 		if unicode.IsControl(character) {
+			if unicode.IsSpace(character) {
+				return ' '
+			}
 			return -1
 		}
 		return character
