@@ -23,6 +23,15 @@ func (c *Client) doDocument(ctx context.Context, operationID string, opts Reques
 	return out, nil
 }
 
+// doSystemInfo calls the installation-information operation and preserves its typed public response contract.
+func (c *Client) doSystemInfo(ctx context.Context, operationID string, opts RequestOptions) (SystemInfo, error) {
+	var out SystemInfo
+	if err := c.doOperation(ctx, operationID, opts, &out); err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // doDocuments calls one manifest-backed operation and decodes the result into a slice of JSON objects.
 func (c *Client) doDocuments(ctx context.Context, operationID string, opts RequestOptions) ([]JSONDocument, error) {
 	list, err := c.doList(ctx, operationID, opts)

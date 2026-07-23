@@ -21,6 +21,7 @@ The package is intentionally organized around plain\-language service groups so 
 - [func encodeBody\(body any\) \(\[\]byte, error\)](<#encodeBody>)
 - [func intString\(value int\) string](<#intString>)
 - [func isRetriable\(err error\) bool](<#isRetriable>)
+- [func normalizePortalRoot\(rawPath string\) string](<#normalizePortalRoot>)
 - [func sleepWithContext\(ctx context.Context, duration time.Duration\) error](<#sleepWithContext>)
 - [type APIError](<#APIError>)
   - [func \(e \*APIError\) Error\(\) string](<#APIError.Error>)
@@ -63,6 +64,7 @@ The package is intentionally organized around plain\-language service groups so 
   - [func \(c \*Client\) doList\(ctx context.Context, operationID string, opts RequestOptions\) \(JSONList, error\)](<#Client.doList>)
   - [func \(c \*Client\) doNoContent\(ctx context.Context, operationID string, opts RequestOptions\) error](<#Client.doNoContent>)
   - [func \(c \*Client\) doOperation\(ctx context.Context, operationID string, opts RequestOptions, out any\) error](<#Client.doOperation>)
+  - [func \(c \*Client\) doSystemInfo\(ctx context.Context, operationID string, opts RequestOptions\) \(SystemInfo, error\)](<#Client.doSystemInfo>)
   - [func \(c \*Client\) sendOnce\(ctx context.Context, method string, path string, requestURL string, body \[\]byte, headers map\[string\]string, out any\) error](<#Client.sendOnce>)
 - [type CodeSetLookupRequest](<#CodeSetLookupRequest>)
 - [type CodeSetValue](<#CodeSetValue>)
@@ -317,6 +319,15 @@ func isRetriable(err error) bool
 ```
 
 isRetriable returns true for short\-lived transport and gateway failures that are worth retrying.
+
+<a name="normalizePortalRoot"></a>
+## func normalizePortalRoot
+
+```go
+func normalizePortalRoot(rawPath string) string
+```
+
+normalizePortalRoot preserves an explicit portal root and strips any trailing API suffix from it.
 
 <a name="sleepWithContext"></a>
 ## func sleepWithContext
@@ -765,6 +776,15 @@ func (c *Client) doOperation(ctx context.Context, operationID string, opts Reque
 ```
 
 doOperation resolves one endpoint from the vendored manifest and then sends the request.
+
+<a name="Client.doSystemInfo"></a>
+### func \(\*Client\) doSystemInfo
+
+```go
+func (c *Client) doSystemInfo(ctx context.Context, operationID string, opts RequestOptions) (SystemInfo, error)
+```
+
+doSystemInfo calls the installation\-information operation and preserves its typed public response contract.
 
 <a name="Client.sendOnce"></a>
 ### func \(\*Client\) sendOnce

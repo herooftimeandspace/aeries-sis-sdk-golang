@@ -33,6 +33,10 @@ The implementation plan requires:
 - 95% or better test coverage
 - GitHub Pages publishing from `main`
 
+## Regenerating contract wrappers
+
+Public service methods are generated from the vendored endpoint inventory, a compact operation-to-request mapping, and the public request structs. Run `make generate` after changing any of those sources. Run `make generate-check` to verify that the checked-in contract and wrapper artifacts are current without rewriting them. See the [API Contract guide](contract.md) for the canonical files, documented parameter aliases, and the fail-closed process for adding an unusual endpoint shape.
+
 ## Aeries docs used as source material
 
 - [Full Documentation](https://support.aeries.com/support/solutions/articles/14000077926-aeries-api-full-documentation)

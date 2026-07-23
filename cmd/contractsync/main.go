@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/json"
 	"flag"
@@ -8,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 )
 
 type sourceFile struct {
@@ -66,6 +68,8 @@ type publicSurfaceEntry struct {
 	ID            string `json:"id"`
 	Service       string `json:"service"`
 	MethodName    string `json:"method_name"`
+	RequestType   string `json:"request_type"`
+	ReturnType    string `json:"return_type"`
 	ResponseShape string `json:"response_shape"`
 }
 
@@ -82,6 +86,7 @@ func main() {
 func run(args []string) error {
 	flagSet := flag.NewFlagSet("contractsync", flag.ContinueOnError)
 	checkOnly := flagSet.Bool("check", false, "verify generated artifacts without rewriting them")
+	validateOnly := flagSet.Bool("validate", false, "validate generation inputs without reading or writing generated artifacts")
 	if err := flagSet.Parse(args); err != nil {
 		return err
 	}
@@ -96,6 +101,9 @@ func run(args []string) error {
 	manifestValue, publicSurfaceValue, err := generateArtifacts(sourceDir)
 	if err != nil {
 		return fmt.Errorf("failed to generate contract artifacts: %w", err)
+	}
+	if *validateOnly {
+		return nil
 	}
 	if *checkOnly {
 		if err := checkFile(manifestPath, manifestValue); err != nil {
@@ -140,6 +148,13 @@ func generateArtifacts(sourceDir string) ([]byte, []byte, error) {
 	if err := loadJSON(filepath.Join(sourceDir, "endpoints.json"), &endpoints); err != nil {
 		return nil, nil, err
 	}
+	requestTypes, err := loadWrapperRequestTypes(filepath.Join(sourceDir, "service_wrappers.txt"))
+	if err != nil {
+		return nil, nil, err
+	}
+	if len(requestTypes) != len(endpoints.Endpoints) {
+		return nil, nil, fmt.Errorf("wrapper metadata has %d entries but contract has %d endpoints", len(requestTypes), len(endpoints.Endpoints))
+	}
 
 	sort.SliceStable(sources.Sources, func(i, j int) bool {
 		return sources.Sources[i].ID < sources.Sources[j].ID
@@ -165,10 +180,20 @@ func generateArtifacts(sourceDir string) ([]byte, []byte, error) {
 
 	surface := make([]publicSurfaceEntry, 0, len(endpoints.Endpoints))
 	for _, endpoint := range endpoints.Endpoints {
+		requestType, ok := requestTypes[endpoint.ID]
+		if !ok {
+			return nil, nil, fmt.Errorf("endpoint %s has no wrapper request type", endpoint.ID)
+		}
+		returnType, err := publicReturnType(endpoint)
+		if err != nil {
+			return nil, nil, err
+		}
 		surface = append(surface, publicSurfaceEntry{
 			ID:            endpoint.ID,
 			Service:       endpoint.Service,
 			MethodName:    endpoint.MethodName,
+			RequestType:   requestType,
+			ReturnType:    returnType,
 			ResponseShape: endpoint.ResponseShape,
 		})
 	}
@@ -177,6 +202,65 @@ func generateArtifacts(sourceDir string) ([]byte, []byte, error) {
 		return nil, nil, err
 	}
 	return manifestJSON, publicSurfaceJSON, nil
+}
+
+// loadWrapperRequestTypes reads the compact wrapper mapping used to generate public method signatures.
+func loadWrapperRequestTypes(path string) (map[string]string, error) {
+	file, err := os.Open(path)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open wrapper metadata: %w", err)
+	}
+	defer file.Close()
+	requests := map[string]string{}
+	scanner := bufio.NewScanner(file)
+	for line := 1; scanner.Scan(); line++ {
+		text := strings.TrimSpace(scanner.Text())
+		if text == "" || strings.HasPrefix(text, "#") {
+			continue
+		}
+		columns := strings.SplitN(text, "|", 2)
+		if len(columns) != 2 || strings.TrimSpace(columns[1]) == "" {
+			return nil, fmt.Errorf("wrapper metadata line %d must contain a public method comment", line)
+		}
+		parts := strings.Fields(columns[0])
+		if len(parts) < 2 || len(parts) > 3 {
+			return nil, fmt.Errorf("wrapper metadata line %d must contain operation id, request type, and optional body field", line)
+		}
+		if len(parts) == 3 {
+			body := strings.TrimPrefix(parts[2], "body=")
+			if !strings.HasPrefix(parts[2], "body=") || (body != "Values" && body != "Items") {
+				return nil, fmt.Errorf("wrapper metadata line %d has invalid body field %q", line, parts[2])
+			}
+		}
+		if _, exists := requests[parts[0]]; exists {
+			return nil, fmt.Errorf("duplicate wrapper metadata for %s", parts[0])
+		}
+		requests[parts[0]] = parts[1]
+	}
+	if err := scanner.Err(); err != nil {
+		return nil, fmt.Errorf("failed to scan wrapper metadata: %w", err)
+	}
+	return requests, nil
+}
+
+// publicReturnType records the resolved Go result contract independently of wrapper generation.
+func publicReturnType(endpoint endpointSnapshot) (string, error) {
+	if endpoint.ID == "system.get_info" {
+		if endpoint.ResponseShape != "object" {
+			return "", fmt.Errorf("endpoint %s has unsupported response shape %q", endpoint.ID, endpoint.ResponseShape)
+		}
+		return "(SystemInfo, error)", nil
+	}
+	switch endpoint.ResponseShape {
+	case "object":
+		return "(JSONDocument, error)", nil
+	case "list":
+		return "([]JSONDocument, error)", nil
+	case "empty":
+		return "error", nil
+	default:
+		return "", fmt.Errorf("endpoint %s has unsupported response shape %q", endpoint.ID, endpoint.ResponseShape)
+	}
 }
 
 // loadJSON decodes one JSON file into the caller's struct.
