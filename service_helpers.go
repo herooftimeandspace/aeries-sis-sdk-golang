@@ -27,7 +27,7 @@ func (c *Client) doDocument(ctx context.Context, operationID string, opts Reques
 func (c *Client) doSystemInfo(ctx context.Context, operationID string, opts RequestOptions) (SystemInfo, error) {
 	var out SystemInfo
 	if err := c.doOperation(ctx, operationID, opts, &out); err != nil {
-		return SystemInfo{}, err
+		return nil, err
 	}
 	return out, nil
 }

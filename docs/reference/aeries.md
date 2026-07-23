@@ -2387,10 +2387,10 @@ type SupplementalRecord = JSONDocument
 <a name="SystemInfo"></a>
 ## type SystemInfo
 
-SystemInfo is the documented JSON object returned by the system information endpoint.
+SystemInfo is the distinct documented JSON object returned by the system information endpoint.
 
 ```go
-type SystemInfo = JSONDocument
+type SystemInfo map[string]any
 ```
 
 <a name="SystemInfoRequest"></a>

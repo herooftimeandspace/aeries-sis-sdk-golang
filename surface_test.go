@@ -17,6 +17,8 @@ type surfaceEntry struct {
 	ID            string `json:"id"`
 	Service       string `json:"service"`
 	MethodName    string `json:"method_name"`
+	RequestType   string `json:"request_type"`
+	ReturnType    string `json:"return_type"`
 	ResponseShape string `json:"response_shape"`
 }
 
@@ -67,10 +69,30 @@ func TestPublicSurfaceMethodsExist(t *testing.T) {
 		if !service.IsValid() || service.IsNil() {
 			t.Fatalf("client missing service field %s", entry.Service)
 		}
-		if !service.MethodByName(entry.MethodName).IsValid() {
+		method := service.MethodByName(entry.MethodName)
+		if !method.IsValid() {
 			t.Fatalf("%s missing method %s", entry.Service, entry.MethodName)
 		}
+		if got := method.Type().In(1).Name(); got != entry.RequestType {
+			t.Fatalf("%s.%s request type = %s, want %s", entry.Service, entry.MethodName, got, entry.RequestType)
+		}
+		if got := reflectedReturnType(method.Type()); got != entry.ReturnType {
+			t.Fatalf("%s.%s return type = %s, want %s", entry.Service, entry.MethodName, got, entry.ReturnType)
+		}
 	}
+}
+
+// reflectedReturnType formats the generated methods' supported result shapes like the public-surface golden.
+func reflectedReturnType(method reflect.Type) string {
+	if method.NumOut() == 1 {
+		return method.Out(0).Name()
+	}
+	result := method.Out(0)
+	name := result.Name()
+	if result.Kind() == reflect.Slice {
+		name = "[]" + result.Elem().Name()
+	}
+	return "(" + name + ", " + method.Out(1).Name() + ")"
 }
 
 // TestPublicSurfaceMethodsInvokeThroughTransport exercises every documented wrapper against a local test server.

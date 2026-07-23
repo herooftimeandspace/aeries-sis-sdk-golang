@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"os"
 	"path/filepath"
@@ -228,8 +229,32 @@ func TestRunReportsSourceAndOutputFailures(t *testing.T) {
 		if err := os.Chdir(temporary); err != nil {
 			t.Fatalf("enter temporary checkout: %v", err)
 		}
-		if err := run(nil); err == nil || !strings.Contains(err.Error(), "inspect generated wrapper") {
+		if err := run(nil); err == nil || !strings.Contains(err.Error(), "non-regular generated target") {
 			t.Fatalf("run error = %v", err)
+		}
+	})
+
+	t.Run("symlinked output target", func(t *testing.T) {
+		temporary := t.TempDir()
+		for _, name := range []string{"internal/contract/source/endpoints.json", "internal/contract/source/service_wrappers.txt", "requests.go"} {
+			writeFixture(t, filepath.Join(repository, name), filepath.Join(temporary, name))
+		}
+		outside := filepath.Join(t.TempDir(), "outside.go")
+		original := []byte(generatedWrapperHeader + "\npackage outside\n")
+		if err := os.WriteFile(outside, original, 0o644); err != nil {
+			t.Fatalf("write external target: %v", err)
+		}
+		if err := os.Symlink(outside, filepath.Join(temporary, "alerts.go")); err != nil {
+			t.Fatalf("create output symlink: %v", err)
+		}
+		if err := os.Chdir(temporary); err != nil {
+			t.Fatalf("enter temporary checkout: %v", err)
+		}
+		if err := run(nil); err == nil || !strings.Contains(err.Error(), "non-regular generated target") {
+			t.Fatalf("run error = %v", err)
+		}
+		if content, err := os.ReadFile(outside); err != nil || !bytes.Equal(content, original) {
+			t.Fatalf("external target changed: %q, %v", content, err)
 		}
 	})
 }
@@ -310,8 +335,11 @@ func TestSmallMetadataHelpers(t *testing.T) {
 			t.Fatalf("responseBinding(%q): %v", shape, err)
 		}
 	}
-	if result, helper, err := responseBinding(endpoint{ID: "system.get_info"}); err != nil || result != "(SystemInfo, error)" || helper != "doSystemInfo" {
+	if result, helper, err := responseBinding(endpoint{ID: "system.get_info", ResponseShape: "object"}); err != nil || result != "(SystemInfo, error)" || helper != "doSystemInfo" {
 		t.Fatalf("system binding = %q, %q, %v", result, helper, err)
+	}
+	if _, _, err := responseBinding(endpoint{ID: "system.get_info", ResponseShape: "list"}); err == nil {
+		t.Fatal("system binding accepted a non-object response shape")
 	}
 }
 
@@ -328,6 +356,7 @@ func TestLoadSpecsRejectsMalformedMetadata(t *testing.T) {
 		{name: "missing comment", text: "one Request\n", want: "public method comment"},
 		{name: "invalid body", text: "one Request payload | comment\n", want: "invalid body field"},
 		{name: "empty body", text: "one Request body= | comment\n", want: "invalid body field"},
+		{name: "unsupported body", text: "one Request body=DatabaseYear | comment\n", want: "invalid body field"},
 		{name: "too many fields", text: "one Request body=Values extra | comment\n", want: "optional body field"},
 		{name: "duplicate", text: "one Request | comment\none Request | comment\n", want: "duplicate"},
 	} {
@@ -424,8 +453,12 @@ func TestRenderMethodUsesOnlyExplicitBodyMetadata(t *testing.T) {
 		t.Fatalf("explicit body operation omitted its payload:\n%s", withBody)
 	}
 	_, err = renderMethod("SampleService", withBodyOperation, requestSpec{Request: "SampleRequest", Comment: "updates the sample."}, fields)
-	if err == nil || !strings.Contains(err.Error(), "must declare body=Values") {
+	if err == nil || !strings.Contains(err.Error(), "must declare body metadata") {
 		t.Fatalf("missing body metadata error = %v", err)
+	}
+	_, err = renderMethod("SampleService", withBodyOperation, requestSpec{Request: "EmptyRequest", Comment: "updates the sample."}, map[string]fieldInfo{})
+	if err == nil || !strings.Contains(err.Error(), "must declare body metadata") {
+		t.Fatalf("missing mutation payload metadata error = %v", err)
 	}
 	_, err = renderMethod("SampleService", operation, requestSpec{Request: "SampleRequest", Body: "Values", Comment: "deletes the sample."}, fields)
 	if err == nil || !strings.Contains(err.Error(), "invalid body field") {

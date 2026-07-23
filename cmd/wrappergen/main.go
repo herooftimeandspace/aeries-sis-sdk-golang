@@ -100,21 +100,31 @@ func run(args []string) error {
 	if err != nil {
 		return err
 	}
-	existing, err := findGeneratedWrappers(root)
-	if err != nil {
-		return err
-	}
 	// Preflight every write target before removing stale files so a malformed
 	// inventory cannot leave the checkout partially modified.
 	for name := range outputs {
 		path := filepath.Join(root, name)
-		if actual, readErr := os.ReadFile(path); readErr == nil {
-			if !bytes.HasPrefix(actual, []byte(generatedWrapperHeader)) {
-				return fmt.Errorf("refuse to overwrite non-generated file %s", name)
-			}
-		} else if !os.IsNotExist(readErr) {
+		info, statErr := os.Lstat(path)
+		if os.IsNotExist(statErr) {
+			continue
+		}
+		if statErr != nil {
+			return fmt.Errorf("inspect generated wrapper %s: %w", name, statErr)
+		}
+		if info.Mode()&os.ModeSymlink != 0 || !info.Mode().IsRegular() {
+			return fmt.Errorf("refuse to overwrite non-regular generated target %s", name)
+		}
+		actual, readErr := os.ReadFile(path)
+		if readErr != nil {
 			return fmt.Errorf("inspect generated wrapper %s: %w", name, readErr)
 		}
+		if !bytes.HasPrefix(actual, []byte(generatedWrapperHeader)) {
+			return fmt.Errorf("refuse to overwrite non-generated file %s", name)
+		}
+	}
+	existing, err := findGeneratedWrappers(root)
+	if err != nil {
+		return err
 	}
 	for _, name := range existing {
 		if _, expected := outputs[name]; expected {
@@ -211,10 +221,10 @@ func loadSpecs(path string) ([]requestSpec, error) {
 		seen[parts[0]] = true
 		body := ""
 		if len(parts) == 3 {
-			if !strings.HasPrefix(parts[2], "body=") || strings.TrimPrefix(parts[2], "body=") == "" {
+			body = strings.TrimPrefix(parts[2], "body=")
+			if !strings.HasPrefix(parts[2], "body=") || (body != "Values" && body != "Items") {
 				return nil, fmt.Errorf("wrapper metadata line %d has invalid body field %q", line, parts[2])
 			}
-			body = strings.TrimPrefix(parts[2], "body=")
 		}
 		specs = append(specs, requestSpec{ID: parts[0], Request: parts[1], Body: body, Comment: strings.TrimSpace(columns[1])})
 	}
@@ -381,6 +391,9 @@ func renderMethod(serviceType string, operation endpoint, spec requestSpec, fiel
 	if spec.Body != "" && (!allowsBody || (spec.Body != "Values" && spec.Body != "Items")) {
 		return "", fmt.Errorf("endpoint %s has invalid body field %s for %s", operation.ID, spec.Body, operation.HTTPMethod)
 	}
+	if allowsBody && operation.Mutation && spec.Body == "" {
+		return "", fmt.Errorf("endpoint %s must declare body metadata for %s mutation", operation.ID, operation.HTTPMethod)
+	}
 	if allowsBody && payloadField != "" && spec.Body != payloadField {
 		return "", fmt.Errorf("endpoint %s must declare body=%s for %s", operation.ID, payloadField, operation.HTTPMethod)
 	}
@@ -400,6 +413,9 @@ func renderMethod(serviceType string, operation endpoint, spec requestSpec, fiel
 // responseBinding selects the existing helper and public return contract for each documented response shape.
 func responseBinding(operation endpoint) (string, string, error) {
 	if operation.ID == "system.get_info" {
+		if operation.ResponseShape != "object" {
+			return "", "", fmt.Errorf("endpoint %s has unsupported response shape %q", operation.ID, operation.ResponseShape)
+		}
 		return "(SystemInfo, error)", "doSystemInfo", nil
 	}
 	switch operation.ResponseShape {

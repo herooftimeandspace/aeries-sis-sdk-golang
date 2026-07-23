@@ -78,6 +78,23 @@ func TestWrapperSurfaceHelpersRejectInvalidMetadata(t *testing.T) {
 	if _, err := publicReturnType(endpointSnapshot{ID: "one", ResponseShape: "binary"}); err == nil {
 		t.Fatal("unsupported public return shape unexpectedly succeeded")
 	}
+	if _, err := publicReturnType(endpointSnapshot{ID: "system.get_info", ResponseShape: "list"}); err == nil {
+		t.Fatal("system public return type accepted a non-object response shape")
+	}
+	for _, metadata := range []string{
+		"one Request\n",
+		"one Request | \n",
+		"one Request payload | comment\n",
+		"one Request body=DatabaseYear | comment\n",
+		"one Request body=Values extra | comment\n",
+	} {
+		if err := os.WriteFile(path, []byte(metadata), 0o644); err != nil {
+			t.Fatalf("write strict wrapper metadata fixture: %v", err)
+		}
+		if _, err := loadWrapperRequestTypes(path); err == nil {
+			t.Fatalf("invalid wrapper metadata unexpectedly succeeded: %q", metadata)
+		}
+	}
 }
 
 // TestGenerateArtifactsFailsForMissingInputs verifies that input validation fails early when the source snapshot is incomplete.

@@ -212,9 +212,18 @@ func loadWrapperRequestTypes(path string) (map[string]string, error) {
 			continue
 		}
 		columns := strings.SplitN(text, "|", 2)
+		if len(columns) != 2 || strings.TrimSpace(columns[1]) == "" {
+			return nil, fmt.Errorf("wrapper metadata line %d must contain a public method comment", line)
+		}
 		parts := strings.Fields(columns[0])
-		if len(parts) < 2 {
-			return nil, fmt.Errorf("wrapper metadata line %d is missing an operation id or request type", line)
+		if len(parts) < 2 || len(parts) > 3 {
+			return nil, fmt.Errorf("wrapper metadata line %d must contain operation id, request type, and optional body field", line)
+		}
+		if len(parts) == 3 {
+			body := strings.TrimPrefix(parts[2], "body=")
+			if !strings.HasPrefix(parts[2], "body=") || (body != "Values" && body != "Items") {
+				return nil, fmt.Errorf("wrapper metadata line %d has invalid body field %q", line, parts[2])
+			}
 		}
 		if _, exists := requests[parts[0]]; exists {
 			return nil, fmt.Errorf("duplicate wrapper metadata for %s", parts[0])
@@ -230,6 +239,9 @@ func loadWrapperRequestTypes(path string) (map[string]string, error) {
 // publicReturnType records the resolved Go result contract independently of wrapper generation.
 func publicReturnType(endpoint endpointSnapshot) (string, error) {
 	if endpoint.ID == "system.get_info" {
+		if endpoint.ResponseShape != "object" {
+			return "", fmt.Errorf("endpoint %s has unsupported response shape %q", endpoint.ID, endpoint.ResponseShape)
+		}
 		return "(SystemInfo, error)", nil
 	}
 	switch endpoint.ResponseShape {
