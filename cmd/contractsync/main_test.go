@@ -22,7 +22,7 @@ func projectRoot(t *testing.T) string {
 func copySourceFixtures(t *testing.T, destination string) {
 	t.Helper()
 	root := projectRoot(t)
-	for _, name := range []string{"sources.json", "request_defaults.json", "endpoints.json"} {
+	for _, name := range []string{"sources.json", "request_defaults.json", "endpoints.json", "service_wrappers.txt"} {
 		sourcePath := filepath.Join(root, "internal", "contract", "source", name)
 		data, err := os.ReadFile(sourcePath)
 		if err != nil {
@@ -50,6 +50,50 @@ func TestGenerateArtifacts(t *testing.T) {
 	}
 	if !bytes.Contains(publicSurfaceJSON, []byte(`"method_name"`)) {
 		t.Fatal("public surface output is missing method_name")
+	}
+	if !bytes.Contains(publicSurfaceJSON, []byte(`"request_type"`)) || !bytes.Contains(publicSurfaceJSON, []byte(`"return_type"`)) {
+		t.Fatal("public surface output is missing resolved method signature fields")
+	}
+}
+
+// TestWrapperSurfaceHelpersRejectInvalidMetadata verifies signature goldens fail closed on malformed mappings and shapes.
+func TestWrapperSurfaceHelpersRejectInvalidMetadata(t *testing.T) {
+	directory := t.TempDir()
+	path := filepath.Join(directory, "service_wrappers.txt")
+	if _, err := loadWrapperRequestTypes(filepath.Join(directory, "missing.txt")); err == nil {
+		t.Fatal("missing wrapper metadata unexpectedly succeeded")
+	}
+	if err := os.WriteFile(path, []byte("malformed\n"), 0o644); err != nil {
+		t.Fatalf("write malformed wrapper metadata: %v", err)
+	}
+	if _, err := loadWrapperRequestTypes(path); err == nil {
+		t.Fatal("malformed wrapper metadata unexpectedly succeeded")
+	}
+	if err := os.WriteFile(path, []byte("one Request | comment\none OtherRequest | duplicate\n"), 0o644); err != nil {
+		t.Fatalf("write wrapper metadata: %v", err)
+	}
+	if _, err := loadWrapperRequestTypes(path); err == nil {
+		t.Fatal("duplicate wrapper metadata unexpectedly succeeded")
+	}
+	if _, err := publicReturnType(endpointSnapshot{ID: "one", ResponseShape: "binary"}); err == nil {
+		t.Fatal("unsupported public return shape unexpectedly succeeded")
+	}
+	if _, err := publicReturnType(endpointSnapshot{ID: "system.get_info", ResponseShape: "list"}); err == nil {
+		t.Fatal("system public return type accepted a non-object response shape")
+	}
+	for _, metadata := range []string{
+		"one Request\n",
+		"one Request | \n",
+		"one Request payload | comment\n",
+		"one Request body=DatabaseYear | comment\n",
+		"one Request body=Values extra | comment\n",
+	} {
+		if err := os.WriteFile(path, []byte(metadata), 0o644); err != nil {
+			t.Fatalf("write strict wrapper metadata fixture: %v", err)
+		}
+		if _, err := loadWrapperRequestTypes(path); err == nil {
+			t.Fatalf("invalid wrapper metadata unexpectedly succeeded: %q", metadata)
+		}
 	}
 }
 
@@ -87,6 +131,76 @@ func TestGenerateArtifactsFailsForIntermediateInputs(t *testing.T) {
 	}
 }
 
+// TestGenerateArtifactsRejectsSignatureDrift verifies every endpoint must resolve to a complete Go method signature.
+func TestGenerateArtifactsRejectsSignatureDrift(t *testing.T) {
+	t.Run("missing request type", func(t *testing.T) {
+		root := t.TempDir()
+		copySourceFixtures(t, root)
+		sourceDir := filepath.Join(root, "internal", "contract", "source")
+		path := filepath.Join(sourceDir, "service_wrappers.txt")
+		metadata, err := os.ReadFile(path)
+		if err != nil {
+			t.Fatalf("read wrapper metadata: %v", err)
+		}
+		rowStart := bytes.Index(metadata, []byte("system.get_info "))
+		if rowStart < 0 {
+			t.Fatal("wrapper metadata has no system.get_info row")
+		}
+		rowEnd := bytes.IndexByte(metadata[rowStart:], '\n')
+		if rowEnd < 0 {
+			rowEnd = len(metadata) - rowStart
+		} else {
+			rowEnd++
+		}
+		metadata = append(metadata[:rowStart], metadata[rowStart+rowEnd:]...)
+		if err := os.WriteFile(path, metadata, 0o644); err != nil {
+			t.Fatalf("remove wrapper mapping: %v", err)
+		}
+		if _, _, err := generateArtifacts(sourceDir); err == nil {
+			t.Fatal("missing request type unexpectedly succeeded")
+		}
+	})
+
+	t.Run("unsupported return type", func(t *testing.T) {
+		root := t.TempDir()
+		copySourceFixtures(t, root)
+		sourceDir := filepath.Join(root, "internal", "contract", "source")
+		path := filepath.Join(sourceDir, "endpoints.json")
+		metadata, err := os.ReadFile(path)
+		if err != nil {
+			t.Fatalf("read endpoint metadata: %v", err)
+		}
+		metadata = bytes.ReplaceAll(metadata, []byte(`"response_shape": "object"`), []byte(`"response_shape": "binary"`))
+		if err := os.WriteFile(path, metadata, 0o644); err != nil {
+			t.Fatalf("write unsupported response shape: %v", err)
+		}
+		if _, _, err := generateArtifacts(sourceDir); err == nil {
+			t.Fatal("unsupported return type unexpectedly succeeded")
+		}
+	})
+
+	t.Run("stale wrapper mapping", func(t *testing.T) {
+		root := t.TempDir()
+		copySourceFixtures(t, root)
+		sourceDir := filepath.Join(root, "internal", "contract", "source")
+		path := filepath.Join(sourceDir, "service_wrappers.txt")
+		file, err := os.OpenFile(path, os.O_APPEND|os.O_WRONLY, 0o644)
+		if err != nil {
+			t.Fatalf("open wrapper metadata: %v", err)
+		}
+		if _, err := file.WriteString("stale.operation SystemInfoRequest | stale mapping\n"); err != nil {
+			_ = file.Close()
+			t.Fatalf("append stale mapping: %v", err)
+		}
+		if err := file.Close(); err != nil {
+			t.Fatalf("close wrapper metadata: %v", err)
+		}
+		if _, _, err := generateArtifacts(sourceDir); err == nil {
+			t.Fatal("stale wrapper mapping unexpectedly succeeded")
+		}
+	})
+}
+
 // TestCheckFile verifies that generated drift detection passes and fails in the expected cases.
 func TestCheckFile(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "artifact.json")
@@ -119,6 +233,12 @@ func TestRunWritesArtifacts(t *testing.T) {
 
 	if err := os.Chdir(tempRoot); err != nil {
 		t.Fatalf("chdir: %v", err)
+	}
+	if err := run([]string{"-validate"}); err != nil {
+		t.Fatalf("validate: %v", err)
+	}
+	if _, err := os.Stat(filepath.Join(tempRoot, "internal", "contract", "manifest.json")); !os.IsNotExist(err) {
+		t.Fatalf("validate mode wrote manifest: %v", err)
 	}
 	if err := run(nil); err != nil {
 		t.Fatalf("run: %v", err)
@@ -221,6 +341,12 @@ func TestRunCheckMode(t *testing.T) {
 	}
 	if err := run([]string{"-check"}); err != nil {
 		t.Fatalf("run -check: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(tempRoot, "internal", "contract", "golden", "public_surface.json"), []byte("[]\n"), 0o644); err != nil {
+		t.Fatalf("write public surface drift: %v", err)
+	}
+	if err := run([]string{"-check"}); err == nil {
+		t.Fatal("check mode missed public surface drift")
 	}
 }
 

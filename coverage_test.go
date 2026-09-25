@@ -144,6 +144,9 @@ func TestClientBranchCoverage(t *testing.T) {
 	if _, err := client.doDocument(context.Background(), "missing.operation", RequestOptions{}); err == nil {
 		t.Fatal("doDocument should surface operation lookup errors")
 	}
+	if info, err := client.doSystemInfo(context.Background(), "missing.operation", RequestOptions{}); err == nil || info != nil {
+		t.Fatalf("doSystemInfo error result = %#v, %v; want nil value and error", info, err)
+	}
 	if _, err := client.doDocuments(context.Background(), "missing.operation", RequestOptions{}); err == nil {
 		t.Fatal("doDocuments should surface operation lookup errors")
 	}

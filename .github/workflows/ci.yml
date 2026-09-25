@@ -40,6 +40,9 @@ jobs:
       - name: Verify contract artifacts are current
         run: go run ./cmd/contractsync -check
 
+      - name: Verify generated service wrappers are current
+        run: go run ./cmd/wrappergen -check
+
       - name: Verify docs are current
         run: |
           make docs-check
