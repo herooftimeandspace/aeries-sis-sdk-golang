@@ -528,3 +528,30 @@ func TestFindGeneratedWrappersReportsIOFailures(t *testing.T) {
 		}
 	})
 }
+
+// TestRenderMethodKeepsFiltersAlongsideQueryParameters verifies a filterable request keeps its caller-supplied
+// query values when the contract also declares named query parameters for the same operation.
+func TestRenderMethodKeepsFiltersAlongsideQueryParameters(t *testing.T) {
+	operation := endpoint{ID: "sample.list", MethodName: "List", HTTPMethod: "GET", ResponseShape: "list", QueryParameters: []string{"DatabaseYear", "StartingRecord"}}
+	fields := map[string]fieldInfo{"Filters": {}, "StartingRecord": {Integer: true}}
+	rendered, err := renderMethod("SampleService", operation, requestSpec{Request: "SampleRequest", Comment: "lists samples."}, fields)
+	if err != nil {
+		t.Fatalf("render filterable method: %v", err)
+	}
+	if !strings.Contains(rendered, "query := cloneMap(req.Filters)") {
+		t.Fatalf("filters dropped when query parameters exist:\n%s", rendered)
+	}
+	if !strings.Contains(rendered, `addIntQueryValue(query, "StartingRecord", req.StartingRecord)`) {
+		t.Fatalf("named query parameter missing:\n%s", rendered)
+	}
+	if !strings.Contains(rendered, "Query: query,") {
+		t.Fatalf("query map not passed to RequestOptions:\n%s", rendered)
+	}
+	withoutFilters, err := renderMethod("SampleService", operation, requestSpec{Request: "SampleRequest", Comment: "lists samples."}, map[string]fieldInfo{"StartingRecord": {Integer: true}})
+	if err != nil {
+		t.Fatalf("render filter-free method: %v", err)
+	}
+	if !strings.Contains(withoutFilters, "query := map[string]string{}") {
+		t.Fatalf("filter-free operation should start from an empty map:\n%s", withoutFilters)
+	}
+}

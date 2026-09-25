@@ -351,7 +351,13 @@ func renderMethod(serviceType string, operation endpoint, spec requestSpec, fiel
 	queryParams := withoutDatabaseYear(operation.QueryParameters)
 	_, hasFilters := fields["Filters"]
 	if len(queryParams) > 0 {
-		out.WriteString("\tquery := map[string]string{}\n")
+		// Caller-supplied filters stay in the same map so adding a contract query
+		// parameter to a filterable endpoint cannot silently drop req.Filters.
+		if hasFilters {
+			out.WriteString("\tquery := cloneMap(req.Filters)\n")
+		} else {
+			out.WriteString("\tquery := map[string]string{}\n")
+		}
 		for _, parameter := range queryParams {
 			field := requestField(parameter, spec.Request)
 			info, ok := fields[field]
