@@ -168,6 +168,12 @@
     "response_shape": "object"
   },
   {
+    "id": "preenroll.trigger_inactive",
+    "service": "PreEnroll",
+    "method_name": "TriggerInactive",
+    "response_shape": "list"
+  },
+  {
     "id": "programs.list",
     "service": "Programs",
     "method_name": "List",
@@ -208,6 +214,12 @@
     "service": "Scheduling",
     "method_name": "DeleteStudentCourseRequest",
     "response_shape": "empty"
+  },
+  {
+    "id": "scheduling.get_scheduling_section",
+    "service": "Scheduling",
+    "method_name": "GetSchedulingSection",
+    "response_shape": "object"
   },
   {
     "id": "scheduling.list_alternate_course_requests",
@@ -324,6 +336,12 @@
     "response_shape": "list"
   },
   {
+    "id": "staff.create",
+    "service": "Staff",
+    "method_name": "Create",
+    "response_shape": "object"
+  },
+  {
     "id": "staff.get_by_hrid",
     "service": "Staff",
     "method_name": "GetByHRID",
@@ -360,9 +378,21 @@
     "response_shape": "list"
   },
   {
+    "id": "staff.update",
+    "service": "Staff",
+    "method_name": "Update",
+    "response_shape": "object"
+  },
+  {
     "id": "student_grades.list_gpa",
     "service": "StudentGrades",
     "method_name": "ListGPA",
+    "response_shape": "list"
+  },
+  {
+    "id": "student_grades.list_grades",
+    "service": "StudentGrades",
+    "method_name": "ListGrades",
     "response_shape": "list"
   },
   {
@@ -417,6 +447,12 @@
     "id": "students.create",
     "service": "Students",
     "method_name": "Create",
+    "response_shape": "object"
+  },
+  {
+    "id": "students.create_contact",
+    "service": "Students",
+    "method_name": "CreateContact",
     "response_shape": "object"
   },
   {
@@ -477,6 +513,12 @@
     "id": "students.list_data_changes",
     "service": "Students",
     "method_name": "ListDataChanges",
+    "response_shape": "list"
+  },
+  {
+    "id": "students.list_discipline",
+    "service": "Students",
+    "method_name": "ListDiscipline",
     "response_shape": "list"
   },
   {
