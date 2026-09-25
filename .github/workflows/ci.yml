@@ -50,12 +50,12 @@ jobs:
         run: |
           total="$(go tool cover -func=coverage.out | tail -n 1 | awk '{print $3}' | tr -d '%')"
           python - "$total" <<'PY'
-import sys
-coverage = float(sys.argv[1])
-if coverage < 95.0:
-    raise SystemExit(f"coverage floor not met: {coverage:.1f}% < 95.0%")
-print(f"coverage floor met: {coverage:.1f}%")
-PY
+          import sys
+          coverage = float(sys.argv[1])
+          if coverage < 95.0:
+              raise SystemExit(f"coverage floor not met: {coverage:.1f}% < 95.0%")
+          print(f"coverage floor met: {coverage:.1f}%")
+          PY
 
-      - name: Build docs site
-        run: mkdocs build --strict
+                - name: Build docs site
+                  run: mkdocs build --stricts
