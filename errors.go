@@ -26,6 +26,9 @@ type APIError struct {
 	Path       string
 	// Message contains at most a small, sanitized provider detail. It never contains the complete response body.
 	Message string
+	// Body is retained for source compatibility and is always empty so raw provider payloads cannot escape through errors.
+	// Deprecated: use Message for the optional bounded, sanitized provider detail.
+	Body string
 }
 
 // Error returns a message that includes the HTTP status and any API-provided detail.

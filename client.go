@@ -10,8 +10,12 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"regexp"
+	"sort"
+	"strconv"
 	"strings"
 	"time"
+	"unicode"
 	"unicode/utf8"
 
 	publiccontract "github.com/herooftimeandspace/aeries-sis-sdk-golang/contract"
@@ -88,12 +92,16 @@ func NewClient(config Config) (*Client, error) {
 }
 
 // Do performs one raw API request using the shared transport and error handling rules without automatic retries.
+//
+// A raw path carries no contract metadata, so the SDK cannot tell a safe read from a mutation
+// and never replays the request on its own.
 func (c *Client) Do(ctx context.Context, method string, path string, opts RequestOptions, out any) error {
-	return c.do(ctx, method, path, opts, out, false)
+	return c.do(ctx, method, path, "", opts, out, false)
 }
 
-// do prepares one request and enables retries only when trusted contract metadata has classified the operation as a safe read.
-func (c *Client) do(ctx context.Context, method string, path string, opts RequestOptions, out any, retrySafe bool) error {
+// do performs a request while keeping raw caller paths out of retained diagnostic metadata, and
+// enables retries only when trusted contract metadata has classified the operation as a safe read.
+func (c *Client) do(ctx context.Context, method string, path string, diagnosticPath string, opts RequestOptions, out any, retrySafe bool) error {
 	if strings.TrimSpace(path) == "" {
 		return &ValidationError{Message: "path is required"}
 	}
@@ -109,7 +117,7 @@ func (c *Client) do(ctx context.Context, method string, path string, opts Reques
 	if method == "" {
 		return &ValidationError{Message: "method is required"}
 	}
-	return c.doHTTPRequest(ctx, method, path, requestURL, bodyReader, opts.Headers, out, retrySafe)
+	return c.doHTTPRequest(ctx, method, path, diagnosticPath, requestURL, bodyReader, opts.Headers, out, retrySafe)
 }
 
 // doOperation resolves one endpoint from the vendored manifest and then sends the request.
@@ -118,9 +126,11 @@ func (c *Client) doOperation(ctx context.Context, operationID string, opts Reque
 	if !ok {
 		return &ValidationError{Message: fmt.Sprintf("unknown contract operation %q", operationID)}
 	}
+	// Only a documented read is safe to replay. Mutations and side-effecting GET commands
+	// are sent once even when the failure looks transient.
 	method := strings.ToUpper(strings.TrimSpace(endpoint.HTTPMethod))
 	retrySafe := !endpoint.Mutation && (method == http.MethodGet || method == http.MethodHead)
-	return c.do(ctx, method, endpoint.PathTemplate, opts, out, retrySafe)
+	return c.do(ctx, method, endpoint.PathTemplate, endpoint.PathTemplate, opts, out, retrySafe)
 }
 
 // buildURL expands path parameters, applies the base URL, and appends any supported query parameters.
@@ -155,8 +165,9 @@ func (c *Client) buildURL(pathTemplate string, opts RequestOptions) (string, err
 	return base.String(), nil
 }
 
-// doHTTPRequest sends the HTTP request and retries short-lived failures only when contract metadata approved replay.
-func (c *Client) doHTTPRequest(ctx context.Context, method string, path string, requestURL string, body []byte, headers map[string]string, out any, retrySafe bool) error {
+// doHTTPRequest sends the HTTP request and retries short-lived transport failures only when
+// contract metadata approved replay for this operation.
+func (c *Client) doHTTPRequest(ctx context.Context, method string, contractPath string, diagnosticPath string, requestURL string, body []byte, headers map[string]string, out any, retrySafe bool) error {
 	maxRetries := 0
 	if retrySafe {
 		maxRetries = c.maxRetries
@@ -168,7 +179,7 @@ func (c *Client) doHTTPRequest(ctx context.Context, method string, path string, 
 				return err
 			}
 		}
-		err := c.sendOnce(ctx, method, path, requestURL, body, headers, out)
+		err := c.sendOnce(ctx, method, contractPath, diagnosticPath, requestURL, body, headers, out)
 		if err == nil {
 			return nil
 		}
@@ -181,7 +192,7 @@ func (c *Client) doHTTPRequest(ctx context.Context, method string, path string, 
 }
 
 // sendOnce performs a single HTTP attempt and decodes the JSON response when one is present.
-func (c *Client) sendOnce(ctx context.Context, method string, path string, requestURL string, body []byte, headers map[string]string, out any) error {
+func (c *Client) sendOnce(ctx context.Context, method string, contractPath string, diagnosticPath string, requestURL string, body []byte, headers map[string]string, out any) error {
 	request, err := http.NewRequestWithContext(ctx, method, requestURL, bytes.NewReader(body))
 	if err != nil {
 		return err
@@ -208,19 +219,19 @@ func (c *Client) sendOnce(ctx context.Context, method string, path string, reque
 		return &ResponseTooLargeError{
 			StatusCode: response.StatusCode,
 			Method:     method,
-			Path:       path,
+			Path:       diagnosticPath,
 			Limit:      c.maxResponseBytes,
 			Retryable:  false,
 		}
 	}
 	if response.StatusCode < http.StatusOK || response.StatusCode >= http.StatusMultipleChoices {
-		return decodeAPIError(response.StatusCode, method, path, payload, sensitiveRequestValues(c.certificate, requestURL, request.Header))
+		return decodeAPIError(response.StatusCode, method, diagnosticPath, payload, sensitiveRequestValues(c.certificate, requestURL, contractPath, request.Header), len(body) == 0)
 	}
 	if len(bytes.TrimSpace(payload)) == 0 || out == nil {
 		return nil
 	}
 	if err := json.Unmarshal(payload, out); err != nil {
-		return &ValidationError{Message: fmt.Sprintf("response for %s %s was not valid JSON: %v", method, path, err)}
+		return &ValidationError{Message: fmt.Sprintf("response for %s %s was not valid JSON: %v", method, diagnosticPath, err)}
 	}
 	return nil
 }
@@ -250,7 +261,7 @@ func encodeBody(body any) ([]byte, error) {
 }
 
 // decodeAPIError prefers the documented Aeries {"Message": "..."} error format when it is present.
-func decodeAPIError(statusCode int, method string, path string, payload []byte, sensitiveValues []string) error {
+func decodeAPIError(statusCode int, method string, path string, payload []byte, sensitiveValues []string, retainProviderDetail bool) error {
 	apiErr := &APIError{
 		StatusCode: statusCode,
 		Method:     method,
@@ -259,8 +270,13 @@ func decodeAPIError(statusCode int, method string, path string, payload []byte, 
 	var structured struct {
 		Message string `json:"Message"`
 	}
-	if err := json.Unmarshal(payload, &structured); err == nil && structured.Message != "" {
-		apiErr.Message = sanitizeProviderDetail(structured.Message, sensitiveValues)
+	// Requests with bodies can contain student or staff data that cannot be
+	// exhaustively identified by field name. Dropping provider detail for those
+	// calls is safer than retaining an echo of a partial JSON payload.
+	if retainProviderDetail {
+		if err := json.Unmarshal(payload, &structured); err == nil && structured.Message != "" {
+			apiErr.Message = sanitizeProviderDetail(structured.Message, sensitiveValues)
+		}
 	}
 	return apiErr
 }
@@ -268,28 +284,152 @@ func decodeAPIError(statusCode int, method string, path string, payload []byte, 
 const maxProviderDetailBytes = 512
 
 // sensitiveRequestValues returns values that a provider might echo but that diagnostics must never retain.
-func sensitiveRequestValues(certificate string, requestURL string, headers http.Header) []string {
+func sensitiveRequestValues(certificate string, requestURL string, contractPath string, headers http.Header) []string {
 	values := []string{certificate, requestURL}
-	for _, headerValues := range headers {
-		values = append(values, headerValues...)
+	for name, headerValues := range headers {
+		for _, value := range headerValues {
+			values = append(values, value)
+			values = append(values, credentialHeaderComponents(name, value)...)
+		}
 	}
 	if parsed, err := url.Parse(requestURL); err == nil {
 		values = append(values, parsed.RequestURI(), parsed.Path)
 		for _, queryValues := range parsed.Query() {
-			values = append(values, queryValues...)
+			for _, value := range queryValues {
+				values = append(values, value, url.QueryEscape(value), url.PathEscape(value))
+			}
+		}
+		values = append(values, expandedPathParameterValues(contractPath, parsed)...)
+	}
+	return values
+}
+
+// credentialHeaderComponents extracts tokens that providers may echo without their surrounding header scheme or key.
+func credentialHeaderComponents(name string, value string) []string {
+	switch strings.ToLower(name) {
+	case "authorization", "proxy-authorization":
+		parts := strings.Fields(value)
+		if len(parts) > 1 {
+			return []string{strings.Join(parts[1:], " ")}
+		}
+	case "cookie":
+		var components []string
+		for _, cookie := range strings.Split(value, ";") {
+			if _, token, ok := strings.Cut(cookie, "="); ok && strings.TrimSpace(token) != "" {
+				token = strings.TrimSpace(token)
+				if unquoted, err := strconv.Unquote(token); err == nil {
+					token = unquoted
+				}
+				components = append(components, token)
+			}
+		}
+		return components
+	}
+	return nil
+}
+
+// canonicalizePercentEscapes normalizes hexadecimal triplets without changing literal character case.
+func canonicalizePercentEscapes(value string) string {
+	encoded := []byte(value)
+	for index := 0; index+2 < len(encoded); index++ {
+		if encoded[index] == '%' && isHexDigit(encoded[index+1]) && isHexDigit(encoded[index+2]) {
+			encoded[index+1] = byte(unicode.ToUpper(rune(encoded[index+1])))
+			encoded[index+2] = byte(unicode.ToUpper(rune(encoded[index+2])))
+			index += 2
+		}
+	}
+	return string(encoded)
+}
+
+// isHexDigit reports whether a byte can participate in a percent-encoded triplet.
+func isHexDigit(value byte) bool {
+	return value >= '0' && value <= '9' || value >= 'a' && value <= 'f' || value >= 'A' && value <= 'F'
+}
+
+// expandedPathParameterValues extracts only expanded placeholder segments, avoiding broad redaction of fixed API path words.
+func expandedPathParameterValues(contractPath string, requestURL *url.URL) []string {
+	templateSegments := strings.Split(strings.Trim(contractPath, "/"), "/")
+	escapedSegments := strings.Split(strings.Trim(requestURL.EscapedPath(), "/"), "/")
+	if len(templateSegments) == 0 || len(escapedSegments) < len(templateSegments) {
+		return nil
+	}
+	escapedSegments = escapedSegments[len(escapedSegments)-len(templateSegments):]
+	values := []string{}
+	for index, templateSegment := range templateSegments {
+		if !strings.HasPrefix(templateSegment, "{") || !strings.HasSuffix(templateSegment, "}") {
+			continue
+		}
+		escaped := escapedSegments[index]
+		values = append(values, escaped)
+		for attempt := 0; attempt < 3; attempt++ {
+			decoded, err := url.PathUnescape(escaped)
+			if err != nil || decoded == escaped {
+				break
+			}
+			values = append(values, decoded)
+			escaped = decoded
 		}
 	}
 	return values
 }
 
-// sanitizeProviderDetail removes request values and control characters, normalizes whitespace, and enforces a small byte bound.
+// normalizeProviderDetail removes controls and collapses whitespace so formatting cannot conceal a sensitive value.
+func normalizeProviderDetail(detail string) string {
+	detail = strings.Map(func(character rune) rune {
+		if unicode.IsControl(character) {
+			if unicode.IsSpace(character) {
+				return ' '
+			}
+			return -1
+		}
+		return character
+	}, detail)
+	return canonicalizePercentEscapes(strings.Join(strings.Fields(detail), " "))
+}
+
+// redactWhitespaceInsensitive removes a sensitive value even when a provider inserts formatting whitespace inside it.
+func redactWhitespaceInsensitive(detail string, value string) string {
+	compact := strings.Map(func(character rune) rune {
+		if unicode.IsSpace(character) {
+			return -1
+		}
+		return character
+	}, value)
+	if utf8.RuneCountInString(compact) < 4 {
+		return detail
+	}
+	var pattern strings.Builder
+	for index, character := range []rune(compact) {
+		if index > 0 {
+			pattern.WriteString(`\s*`)
+		}
+		pattern.WriteString(regexp.QuoteMeta(string(character)))
+	}
+	compiled, err := regexp.Compile(pattern.String())
+	if err != nil {
+		return detail
+	}
+	return compiled.ReplaceAllString(detail, "[redacted]")
+}
+
+// sanitizeProviderDetail normalizes provider text before redacting request values and enforcing a small byte bound.
 func sanitizeProviderDetail(detail string, sensitiveValues []string) string {
+	detail = normalizeProviderDetail(detail)
+	// Replace longer values first so an overlapping short identifier cannot
+	// leave a revealing suffix behind when it appears inside a longer value.
+	sensitiveValues = append([]string(nil), sensitiveValues...)
+	for index, value := range sensitiveValues {
+		sensitiveValues[index] = normalizeProviderDetail(value)
+	}
+	sort.SliceStable(sensitiveValues, func(left int, right int) bool {
+		return len(sensitiveValues[left]) > len(sensitiveValues[right])
+	})
 	for _, value := range sensitiveValues {
 		if value != "" {
 			detail = strings.ReplaceAll(detail, value, "[redacted]")
+			detail = redactWhitespaceInsensitive(detail, value)
 		}
 	}
-	detail = strings.Join(strings.Fields(detail), " ")
 	if len(detail) <= maxProviderDetailBytes {
 		return detail
 	}

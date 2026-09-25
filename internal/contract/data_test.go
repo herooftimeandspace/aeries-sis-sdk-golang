@@ -25,12 +25,14 @@ func TestLoadReportsJSONErrors(t *testing.T) {
 	originalJSON := manifestJSON
 	originalManifest := cachedManifest
 	originalErr := cachedManifestErr
-	originalOnce := loadOnce
+	// A sync.Once cannot be copied, so the cleanup restores the cached values behind a fresh
+	// Once instead of saving and reassigning the original one.
 	t.Cleanup(func() {
+		loadOnce = sync.Once{}
 		manifestJSON = originalJSON
 		cachedManifest = originalManifest
 		cachedManifestErr = originalErr
-		loadOnce = originalOnce
+		loadOnce.Do(func() {})
 	})
 
 	manifestJSON = []byte("{")
