@@ -14,6 +14,7 @@ The package is intentionally organized around plain\-language service groups so 
 
 - [Constants](<#constants>)
 - [Variables](<#variables>)
+- [func WithResponseObserver\(ctx context.Context, observe ResponseObserver\) context.Context](<#WithResponseObserver>)
 - [func addIntQueryValue\(target map\[string\]string, key string, value int\)](<#addIntQueryValue>)
 - [func addQueryValue\(target map\[string\]string, key string, value string\)](<#addQueryValue>)
 - [func canonicalizePercentEscapes\(value string\) string](<#canonicalizePercentEscapes>)
@@ -27,6 +28,7 @@ The package is intentionally organized around plain\-language service groups so 
 - [func isRetriable\(err error\) bool](<#isRetriable>)
 - [func normalizePortalRoot\(rawPath string\) string](<#normalizePortalRoot>)
 - [func normalizeProviderDetail\(detail string\) string](<#normalizeProviderDetail>)
+- [func observeStatus\(ctx context.Context, statusCode int\)](<#observeStatus>)
 - [func readBoundedResponse\(reader io.Reader, limit int64\) \(\[\]byte, bool, error\)](<#readBoundedResponse>)
 - [func redactWhitespaceInsensitive\(detail string, value string\) string](<#redactWhitespaceInsensitive>)
 - [func sanitizeProviderDetail\(detail string, sensitiveValues \[\]string\) string](<#sanitizeProviderDetail>)
@@ -134,6 +136,10 @@ The package is intentionally organized around plain\-language service groups so 
 - [type ProgramsService](<#ProgramsService>)
   - [func \(s \*ProgramsService\) List\(ctx context.Context, req ProgramLookupRequest\) \(\[\]JSONDocument, error\)](<#ProgramsService.List>)
 - [type RequestOptions](<#RequestOptions>)
+- [type ResponseDecodeError](<#ResponseDecodeError>)
+  - [func \(e \*ResponseDecodeError\) Error\(\) string](<#ResponseDecodeError.Error>)
+- [type ResponseObserver](<#ResponseObserver>)
+  - [func responseObserverFrom\(ctx context.Context\) ResponseObserver](<#responseObserverFrom>)
 - [type ResponseTooLargeError](<#ResponseTooLargeError>)
   - [func \(e \*ResponseTooLargeError\) Error\(\) string](<#ResponseTooLargeError.Error>)
 - [type SchedulingService](<#SchedulingService>)
@@ -258,6 +264,7 @@ The package is intentionally organized around plain\-language service groups so 
 - [type TranscriptRecord](<#TranscriptRecord>)
 - [type ValidationError](<#ValidationError>)
   - [func \(e \*ValidationError\) Error\(\) string](<#ValidationError.Error>)
+- [type responseObserverKey](<#responseObserverKey>)
 
 
 ## Constants
@@ -288,6 +295,21 @@ const maxProviderDetailBytes = 512
 ```go
 var certificatePattern = regexp.MustCompile(`^[A-Za-z0-9]{32}$`)
 ```
+
+<a name="WithResponseObserver"></a>
+## func WithResponseObserver
+
+```go
+func WithResponseObserver(ctx context.Context, observe ResponseObserver) context.Context
+```
+
+WithResponseObserver returns a context that reports the HTTP status of every completed attempt made with it to the supplied function.
+
+The SDK's typed service methods build their own RequestOptions, so the observer travels on the context instead, in the same spirit as httptrace.WithClientTrace. That keeps the hook available to every service method and to raw Client.Do calls without changing a single method signature.
+
+The function is called once per attempt that produced an HTTP response, which means a retried safe read reports each attempt in order and the final call is the one the returned value or error came from. Attempts that never reached a response, such as a transport or context failure, report nothing. The call happens on the goroutine performing the request and before the response body is read, so an observer should record the status and return promptly.
+
+A nil observer clears any observer already attached to the context.
 
 <a name="addIntQueryValue"></a>
 ## func addIntQueryValue
@@ -405,6 +427,15 @@ func normalizeProviderDetail(detail string) string
 ```
 
 normalizeProviderDetail removes controls and collapses whitespace so formatting cannot conceal a sensitive value.
+
+<a name="observeStatus"></a>
+## func observeStatus
+
+```go
+func observeStatus(ctx context.Context, statusCode int)
+```
+
+observeStatus reports one completed attempt's status when the caller asked for it.
 
 <a name="readBoundedResponse"></a>
 ## func readBoundedResponse
@@ -1531,6 +1562,53 @@ type RequestOptions struct {
     DatabaseYear string
 }
 ```
+
+<a name="ResponseDecodeError"></a>
+## type ResponseDecodeError
+
+ResponseDecodeError reports a success response whose body was not valid JSON.
+
+The transport already observed the HTTP status when the decode failed, so the error keeps it rather than dropping it. Like the other transport errors, it retains no response bytes, no full URL, no query values, and no headers.
+
+```go
+type ResponseDecodeError struct {
+    StatusCode int
+    Method     string
+    Path       string
+    // Message describes the decoding failure. It contains the JSON decoder's own
+    // complaint and never the response body.
+    Message string
+}
+```
+
+<a name="ResponseDecodeError.Error"></a>
+### func \(\*ResponseDecodeError\) Error
+
+```go
+func (e *ResponseDecodeError) Error() string
+```
+
+Error returns the decode failure together with the status the response carried.
+
+<a name="ResponseObserver"></a>
+## type ResponseObserver
+
+ResponseObserver receives the HTTP status code of one completed API attempt.
+
+The hook deliberately carries the status integer and nothing else. Response headers, response bytes, and the request URL are withheld so an audit or diagnostic sink cannot become a new escape path for provider payloads, student identifiers, or the Aeries certificate.
+
+```go
+type ResponseObserver func(statusCode int)
+```
+
+<a name="responseObserverFrom"></a>
+### func responseObserverFrom
+
+```go
+func responseObserverFrom(ctx context.Context) ResponseObserver
+```
+
+responseObserverFrom returns the observer attached to the context, if any.
 
 <a name="ResponseTooLargeError"></a>
 ## type ResponseTooLargeError
@@ -2788,5 +2866,14 @@ func (e *ValidationError) Error() string
 ```
 
 Error returns the validation detail in plain English.
+
+<a name="responseObserverKey"></a>
+## type responseObserverKey
+
+responseObserverKey is the unexported context key used to carry the observer.
+
+```go
+type responseObserverKey struct{}
+```
 
 Generated by [gomarkdoc](<https://github.com/princjef/gomarkdoc>)

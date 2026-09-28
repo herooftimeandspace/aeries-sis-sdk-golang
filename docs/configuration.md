@@ -25,6 +25,8 @@ An oversized response returns `*aeries.ResponseTooLargeError`. For typed service
 
 Non-success responses within the configured limit return `*aeries.APIError`. The SDK does not retain the raw provider body. The deprecated `APIError.Body` field remains available for source compatibility but is always empty. For body-free requests using the documented `{"Message":"..."}` shape, `APIError.Message` contains only a control-character-free, whitespace-normalized provider detail capped at 512 bytes after known credential, custom-header, encoded and decoded query, and expanded path values are redacted. Provider detail is omitted entirely when the request had a JSON body because that body can contain student or staff data that cannot be safely identified field by field.
 
+A `2xx` response whose body is not valid JSON returns `*aeries.ResponseDecodeError`. It carries the HTTP status the transport observed along with the HTTP method and the contract path template, so a malformed success does not have to be recorded as an unknown status. Like the other transport errors it retains no response bytes; its `Message` holds only the JSON decoder's own complaint.
+
 Applications should use `errors.As` rather than matching error text:
 
 ```go
@@ -35,6 +37,26 @@ if errors.As(err, &tooLarge) {
 ```
 
 Do not add the original request URL, headers, query parameters, or provider response body to that diagnostic. Those values can contain credentials, student identifiers, or base64 photo data.
+
+## Observing the response status
+
+The typed error paths carry the HTTP status, but a successful call returns only the decoded value. Applications that record provider call metadata, such as a human-gated sync run writing an audit row per request, can attach a status observer to the context instead of fabricating a status:
+
+```go
+var status int
+ctx = aeries.WithResponseObserver(ctx, func(statusCode int) {
+	status = statusCode
+})
+pictures, err := client.Students.ListPictures(ctx, req)
+// status now holds what the server actually returned, including 200 versus 206.
+```
+
+The observer travels on the context rather than on `RequestOptions` because the typed service methods build their own `RequestOptions`. That keeps the hook available to every service method and to raw `Client.Do` calls without changing any method signature, in the same spirit as `httptrace.WithClientTrace`.
+
+The hook is deliberately limited to the status integer. Response headers, response bytes, and the request URL are withheld so an audit sink cannot become a new escape path for provider payloads, student identifiers, or the Aeries certificate.
+
+It is called once per attempt that produced an HTTP response, on the goroutine performing the request and before the response body is read. A retried safe read therefore reports each attempt in order, and the last reported status is the one the returned value or error came from. Attempts that never reached a response, such as a transport or context failure, report nothing. An observer should record the status and return promptly. Passing `nil` clears an observer already attached to the context.
+
 
 ## Environment variables
 

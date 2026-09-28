@@ -72,3 +72,25 @@ func (e *ValidationError) Error() string {
 	}
 	return e.Message
 }
+
+// ResponseDecodeError reports a success response whose body was not valid JSON.
+//
+// The transport already observed the HTTP status when the decode failed, so the
+// error keeps it rather than dropping it. Like the other transport errors, it
+// retains no response bytes, no full URL, no query values, and no headers.
+type ResponseDecodeError struct {
+	StatusCode int
+	Method     string
+	Path       string
+	// Message describes the decoding failure. It contains the JSON decoder's own
+	// complaint and never the response body.
+	Message string
+}
+
+// Error returns the decode failure together with the status the response carried.
+func (e *ResponseDecodeError) Error() string {
+	if e == nil {
+		return ""
+	}
+	return fmt.Sprintf("response for %s %s with status %d was not valid JSON: %s", e.Method, e.Path, e.StatusCode, e.Message)
+}
