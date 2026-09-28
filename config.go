@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	defaultUserAgent              = "aeries-sis-sdk-golang/0.1.1"
+	defaultUserAgent              = "aeries-sis-sdk-golang/0.3.0"
 	defaultTimeout                = 30 * time.Second
 	defaultMaxRetries             = 2
 	defaultRetryBackoff           = 300 * time.Millisecond
