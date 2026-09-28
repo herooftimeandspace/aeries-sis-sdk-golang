@@ -224,6 +224,14 @@
     "response_shape": "object"
   },
   {
+    "id": "preenroll.trigger_inactive",
+    "service": "PreEnroll",
+    "method_name": "TriggerInactive",
+    "request_type": "PreEnrollInactiveRequest",
+    "return_type": "([]JSONDocument, error)",
+    "response_shape": "list"
+  },
+  {
     "id": "programs.list",
     "service": "Programs",
     "method_name": "List",
@@ -278,6 +286,14 @@
     "request_type": "CourseRequestMutationRequest",
     "return_type": "error",
     "response_shape": "empty"
+  },
+  {
+    "id": "scheduling.get_scheduling_section",
+    "service": "Scheduling",
+    "method_name": "GetSchedulingSection",
+    "request_type": "SectionLookupRequest",
+    "return_type": "(JSONDocument, error)",
+    "response_shape": "object"
   },
   {
     "id": "scheduling.list_alternate_course_requests",
@@ -432,6 +448,14 @@
     "response_shape": "list"
   },
   {
+    "id": "staff.create",
+    "service": "Staff",
+    "method_name": "Create",
+    "request_type": "StaffCreateRequest",
+    "return_type": "(JSONDocument, error)",
+    "response_shape": "object"
+  },
+  {
     "id": "staff.get_by_hrid",
     "service": "Staff",
     "method_name": "GetByHRID",
@@ -480,10 +504,26 @@
     "response_shape": "list"
   },
   {
+    "id": "staff.update",
+    "service": "Staff",
+    "method_name": "Update",
+    "request_type": "StaffUpdateRequest",
+    "return_type": "(JSONDocument, error)",
+    "response_shape": "object"
+  },
+  {
     "id": "student_grades.list_gpa",
     "service": "StudentGrades",
     "method_name": "ListGPA",
     "request_type": "SchoolStudentLookupRequest",
+    "return_type": "([]JSONDocument, error)",
+    "response_shape": "list"
+  },
+  {
+    "id": "student_grades.list_grades",
+    "service": "StudentGrades",
+    "method_name": "ListGrades",
+    "request_type": "SchoolLookupRequest",
     "return_type": "([]JSONDocument, error)",
     "response_shape": "list"
   },
@@ -556,6 +596,14 @@
     "service": "Students",
     "method_name": "Create",
     "request_type": "StudentCreateRequest",
+    "return_type": "(JSONDocument, error)",
+    "response_shape": "object"
+  },
+  {
+    "id": "students.create_contact",
+    "service": "Students",
+    "method_name": "CreateContact",
+    "request_type": "StudentMutationRequest",
     "return_type": "(JSONDocument, error)",
     "response_shape": "object"
   },
@@ -636,6 +684,14 @@
     "service": "Students",
     "method_name": "ListDataChanges",
     "request_type": "StudentDataChangesRequest",
+    "return_type": "([]JSONDocument, error)",
+    "response_shape": "list"
+  },
+  {
+    "id": "students.list_discipline",
+    "service": "Students",
+    "method_name": "ListDiscipline",
+    "request_type": "SchoolStudentLookupRequest",
     "return_type": "([]JSONDocument, error)",
     "response_shape": "list"
   },

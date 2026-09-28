@@ -91,13 +91,17 @@ func NewClient(config Config) (*Client, error) {
 	return client, nil
 }
 
-// Do performs one raw API request using the shared transport and error handling rules.
+// Do performs one raw API request using the shared transport and error handling rules without automatic retries.
+//
+// A raw path carries no contract metadata, so the SDK cannot tell a safe read from a mutation
+// and never replays the request on its own.
 func (c *Client) Do(ctx context.Context, method string, path string, opts RequestOptions, out any) error {
-	return c.do(ctx, method, path, "", opts, out)
+	return c.do(ctx, method, path, "", opts, out, false)
 }
 
-// do performs a request while keeping raw caller paths out of retained diagnostic metadata.
-func (c *Client) do(ctx context.Context, method string, path string, diagnosticPath string, opts RequestOptions, out any) error {
+// do performs a request while keeping raw caller paths out of retained diagnostic metadata, and
+// enables retries only when trusted contract metadata has classified the operation as a safe read.
+func (c *Client) do(ctx context.Context, method string, path string, diagnosticPath string, opts RequestOptions, out any, retrySafe bool) error {
 	if strings.TrimSpace(path) == "" {
 		return &ValidationError{Message: "path is required"}
 	}
@@ -113,7 +117,7 @@ func (c *Client) do(ctx context.Context, method string, path string, diagnosticP
 	if method == "" {
 		return &ValidationError{Message: "method is required"}
 	}
-	return c.doHTTPRequest(ctx, method, path, diagnosticPath, requestURL, bodyReader, opts.Headers, out)
+	return c.doHTTPRequest(ctx, method, path, diagnosticPath, requestURL, bodyReader, opts.Headers, out, retrySafe)
 }
 
 // doOperation resolves one endpoint from the vendored manifest and then sends the request.
@@ -122,7 +126,11 @@ func (c *Client) doOperation(ctx context.Context, operationID string, opts Reque
 	if !ok {
 		return &ValidationError{Message: fmt.Sprintf("unknown contract operation %q", operationID)}
 	}
-	return c.do(ctx, endpoint.HTTPMethod, endpoint.PathTemplate, endpoint.PathTemplate, opts, out)
+	// Only a documented read is safe to replay. Mutations and side-effecting GET commands
+	// are sent once even when the failure looks transient.
+	method := strings.ToUpper(strings.TrimSpace(endpoint.HTTPMethod))
+	retrySafe := !endpoint.Mutation && (method == http.MethodGet || method == http.MethodHead)
+	return c.do(ctx, method, endpoint.PathTemplate, endpoint.PathTemplate, opts, out, retrySafe)
 }
 
 // buildURL expands path parameters, applies the base URL, and appends any supported query parameters.
@@ -157,10 +165,15 @@ func (c *Client) buildURL(pathTemplate string, opts RequestOptions) (string, err
 	return base.String(), nil
 }
 
-// doHTTPRequest sends the HTTP request and retries short-lived transport failures when configured.
-func (c *Client) doHTTPRequest(ctx context.Context, method string, contractPath string, diagnosticPath string, requestURL string, body []byte, headers map[string]string, out any) error {
+// doHTTPRequest sends the HTTP request and retries short-lived transport failures only when
+// contract metadata approved replay for this operation.
+func (c *Client) doHTTPRequest(ctx context.Context, method string, contractPath string, diagnosticPath string, requestURL string, body []byte, headers map[string]string, out any, retrySafe bool) error {
+	maxRetries := 0
+	if retrySafe {
+		maxRetries = c.maxRetries
+	}
 	var lastErr error
-	for attempt := 0; attempt <= c.maxRetries; attempt++ {
+	for attempt := 0; attempt <= maxRetries; attempt++ {
 		if attempt > 0 {
 			if err := sleepWithContext(ctx, time.Duration(attempt)*c.retryBackoff); err != nil {
 				return err
@@ -171,7 +184,7 @@ func (c *Client) doHTTPRequest(ctx context.Context, method string, contractPath 
 			return nil
 		}
 		lastErr = err
-		if !isRetriable(err) || attempt == c.maxRetries {
+		if !isRetriable(err) || attempt == maxRetries {
 			return err
 		}
 	}

@@ -20,3 +20,14 @@ func (s *PreEnrollService) Trigger(ctx context.Context, req PreEnrollRequest) (J
 		DatabaseYear: req.DatabaseYear,
 	})
 }
+
+// TriggerInactive creates a new pre-enrollment record from an inactive student at the requested destination school.
+func (s *PreEnrollService) TriggerInactive(ctx context.Context, req PreEnrollInactiveRequest) ([]JSONDocument, error) {
+	return s.client.doDocuments(ctx, "preenroll.trigger_inactive", RequestOptions{
+		PathParams: map[string]string{
+			"StudentID":      intString(req.StudentID),
+			"NextSchoolCode": intString(req.NextSchoolCode),
+		},
+		DatabaseYear: req.DatabaseYear,
+	})
+}

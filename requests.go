@@ -39,6 +39,13 @@ type PreEnrollRequest struct {
 	DatabaseYear string
 }
 
+// PreEnrollInactiveRequest identifies an inactive student and the destination school for a state-changing pre-enrollment command.
+type PreEnrollInactiveRequest struct {
+	StudentID      int
+	NextSchoolCode int
+	DatabaseYear   string
+}
+
 // StudentLookupRequest identifies a student or student collection using district student IDs.
 type StudentLookupRequest struct {
 	SchoolCode     string
@@ -182,6 +189,19 @@ type TimestampRequest struct {
 type StaffLookupRequest struct {
 	StaffID      int
 	Filters      map[string]string
+	DatabaseYear string
+}
+
+// StaffCreateRequest carries the values for one new staff record.
+type StaffCreateRequest struct {
+	Values       JSONDocument
+	DatabaseYear string
+}
+
+// StaffUpdateRequest identifies one staff record and carries its replacement values.
+type StaffUpdateRequest struct {
+	StaffID      int
+	Values       JSONDocument
 	DatabaseYear string
 }
 

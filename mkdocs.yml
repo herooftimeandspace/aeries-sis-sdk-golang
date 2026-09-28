@@ -18,6 +18,7 @@ nav:
   - Quickstart: quickstart.md
   - Configuration: configuration.md
   - API Contract: contract.md
+  - Go and Python Parity: contract-parity.md
   - Testing Guide: testing.md
   - Generated API Reference:
       - Overview: reference/index.md
@@ -36,4 +37,3 @@ markdown_extensions:
   - pymdownx.details
   - pymdownx.superfences
   - tables
-

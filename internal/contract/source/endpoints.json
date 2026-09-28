@@ -136,6 +136,21 @@
       "source_ids": ["full_documentation", "preenroll"]
     },
     {
+      "id": "preenroll.trigger_inactive",
+      "service": "PreEnroll",
+      "method_name": "TriggerInactive",
+      "summary": "Create a pre-enrollment record from an inactive student and place it at the requested school.",
+      "http_method": "GET",
+      "path_template": "/api/v5/PreEnrollInactiveStudent/{StudentID}/{NextSchoolCode}",
+      "api_version": "v5",
+      "response_shape": "list",
+      "path_parameters": ["StudentID", "NextSchoolCode"],
+      "query_parameters": ["DatabaseYear"],
+      "supports_database_year": true,
+      "mutation": true,
+      "source_ids": ["preenroll"]
+    },
+    {
       "id": "students.list",
       "service": "Students",
       "method_name": "List",
@@ -301,6 +316,21 @@
       "source_ids": ["quick_reference", "student_related"]
     },
     {
+      "id": "students.create_contact",
+      "service": "Students",
+      "method_name": "CreateContact",
+      "summary": "Insert a contact for one student.",
+      "http_method": "POST",
+      "path_template": "/api/v5/InsertContact/{StudentID}",
+      "api_version": "v5",
+      "response_shape": "object",
+      "path_parameters": ["StudentID"],
+      "query_parameters": ["DatabaseYear"],
+      "supports_database_year": true,
+      "mutation": true,
+      "source_ids": ["student_related"]
+    },
+    {
       "id": "students.update_contact",
       "service": "Students",
       "method_name": "UpdateContact",
@@ -419,6 +449,21 @@
       "supports_database_year": true,
       "mutation": false,
       "source_ids": ["quick_reference", "student_related"]
+    },
+    {
+      "id": "students.list_discipline",
+      "service": "Students",
+      "method_name": "ListDiscipline",
+      "summary": "List discipline history for one school and optional student.",
+      "http_method": "GET",
+      "path_template": "/api/v5/schools/{SchoolCode}/Discipline/{StudentID}",
+      "api_version": "v5",
+      "response_shape": "list",
+      "path_parameters": ["SchoolCode", "StudentID"],
+      "query_parameters": ["StartingRecord", "EndingRecord", "DatabaseYear"],
+      "supports_database_year": true,
+      "mutation": false,
+      "source_ids": ["student_related"]
     },
     {
       "id": "students.list_district_supplemental",
@@ -706,6 +751,21 @@
       "source_ids": ["quick_reference", "student_grades"]
     },
     {
+      "id": "student_grades.list_grades",
+      "service": "StudentGrades",
+      "method_name": "ListGrades",
+      "summary": "List current student grade records for one school.",
+      "http_method": "GET",
+      "path_template": "/api/v5/schools/{SchoolCode}/Grades",
+      "api_version": "v5",
+      "response_shape": "list",
+      "path_parameters": ["SchoolCode"],
+      "query_parameters": ["DatabaseYear"],
+      "supports_database_year": true,
+      "mutation": false,
+      "source_ids": ["student_grades"]
+    },
+    {
       "id": "student_grades.list_report_cards",
       "service": "StudentGrades",
       "method_name": "ListReportCards",
@@ -824,6 +884,36 @@
       "supports_database_year": true,
       "mutation": false,
       "source_ids": ["quick_reference", "staff_related"]
+    },
+    {
+      "id": "staff.create",
+      "service": "Staff",
+      "method_name": "Create",
+      "summary": "Insert a staff record.",
+      "http_method": "POST",
+      "path_template": "/api/v5/staff",
+      "api_version": "v5",
+      "response_shape": "object",
+      "path_parameters": [],
+      "query_parameters": ["DatabaseYear"],
+      "supports_database_year": true,
+      "mutation": true,
+      "source_ids": ["staff_related"]
+    },
+    {
+      "id": "staff.update",
+      "service": "Staff",
+      "method_name": "Update",
+      "summary": "Update one staff record.",
+      "http_method": "PUT",
+      "path_template": "/api/v5/staff/{StaffID}",
+      "api_version": "v5",
+      "response_shape": "object",
+      "path_parameters": ["StaffID"],
+      "query_parameters": ["DatabaseYear"],
+      "supports_database_year": true,
+      "mutation": true,
+      "source_ids": ["staff_related"]
     },
     {
       "id": "staff.get_by_hrid",
@@ -959,6 +1049,21 @@
       "supports_database_year": true,
       "mutation": false,
       "source_ids": ["quick_reference", "scheduling"]
+    },
+    {
+      "id": "scheduling.get_scheduling_section",
+      "service": "Scheduling",
+      "method_name": "GetSchedulingSection",
+      "summary": "Get one section from the scheduling master schedule.",
+      "http_method": "GET",
+      "path_template": "/api/v5/schools/{SchoolCode}/scheduling/sections/{SectionNumber}",
+      "api_version": "v5",
+      "response_shape": "object",
+      "path_parameters": ["SchoolCode", "SectionNumber"],
+      "query_parameters": ["DatabaseYear"],
+      "supports_database_year": true,
+      "mutation": false,
+      "source_ids": ["scheduling"]
     },
     {
       "id": "scheduling.list_section_data_changes",

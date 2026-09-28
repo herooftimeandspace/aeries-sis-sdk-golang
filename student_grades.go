@@ -36,6 +36,16 @@ func (s *StudentGradesService) UpdateGrades(ctx context.Context, req SchoolPaylo
 	})
 }
 
+// ListGrades returns current student grade records for one school.
+func (s *StudentGradesService) ListGrades(ctx context.Context, req SchoolLookupRequest) ([]JSONDocument, error) {
+	return s.client.doDocuments(ctx, "student_grades.list_grades", RequestOptions{
+		PathParams: map[string]string{
+			"SchoolCode": req.SchoolCode,
+		},
+		DatabaseYear: req.DatabaseYear,
+	})
+}
+
 // ListReportCards returns report card rows for one student or many students.
 func (s *StudentGradesService) ListReportCards(ctx context.Context, req SchoolStudentLookupRequest) ([]JSONDocument, error) {
 	return s.client.doDocuments(ctx, "student_grades.list_report_cards", RequestOptions{

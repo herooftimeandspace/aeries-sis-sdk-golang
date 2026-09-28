@@ -11,7 +11,7 @@ This page is the first-stop guide for a developer who is new to Aeries and new t
 
 ## Create a client
 
-The following configuration uses the default 30-second timeout, two transient retries, and 32 MiB response limit. Load the base URL and certificate from a secret-aware application configuration source; do not hard-code a real certificate in source code.
+The following configuration uses the default 30-second timeout, up to two transient retries for contract-classified safe reads, and a 32 MiB response limit. Mutations and command-style side effects receive one attempt. Load the base URL and certificate from a secret-aware application configuration source; do not hard-code a real certificate in source code.
 
 ```go
 client, err := aeries.NewClient(aeries.Config{
