@@ -211,6 +211,9 @@ func (c *Client) sendOnce(ctx context.Context, method string, contractPath strin
 		return err
 	}
 	defer response.Body.Close()
+	// The status is reported as soon as it is known so an attempt that later
+	// fails the size limit or the JSON decode still shows up in an audit trail.
+	observeStatus(ctx, response.StatusCode)
 	payload, oversized, err := readBoundedResponse(response.Body, c.maxResponseBytes)
 	if err != nil {
 		return err
@@ -231,7 +234,12 @@ func (c *Client) sendOnce(ctx context.Context, method string, contractPath strin
 		return nil
 	}
 	if err := json.Unmarshal(payload, out); err != nil {
-		return &ValidationError{Message: fmt.Sprintf("response for %s %s was not valid JSON: %v", method, diagnosticPath, err)}
+		return &ResponseDecodeError{
+			StatusCode: response.StatusCode,
+			Method:     method,
+			Path:       diagnosticPath,
+			Message:    err.Error(),
+		}
 	}
 	return nil
 }
