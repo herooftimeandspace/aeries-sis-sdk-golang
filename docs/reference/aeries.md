@@ -87,6 +87,7 @@ The package is intentionally organized around plain\-language service groups so 
   - [func \(c Config\) normalizedMaxRetries\(\) int](<#Config.normalizedMaxRetries>)
   - [func \(c Config\) normalizedRetryBackoff\(\) time.Duration](<#Config.normalizedRetryBackoff>)
   - [func \(c Config\) normalizedUserAgent\(\) string](<#Config.normalizedUserAgent>)
+  - [func \(c Config\) portalRoot\(rawPath string\) \(string, error\)](<#Config.portalRoot>)
   - [func \(c Config\) validate\(\) error](<#Config.validate>)
 - [type ConfigError](<#ConfigError>)
   - [func \(e \*ConfigError\) Error\(\) string](<#ConfigError.Error>)
@@ -255,7 +256,7 @@ The package is intentionally organized around plain\-language service groups so 
 
 ```go
 const (
-    defaultUserAgent              = "aeries-sis-sdk-golang/0.1.0"
+    defaultUserAgent              = "aeries-sis-sdk-golang/0.1.1"
     defaultTimeout                = 30 * time.Second
     defaultMaxRetries             = 2
     defaultRetryBackoff           = 300 * time.Millisecond
@@ -969,6 +970,10 @@ type Config struct {
     // MaxResponseBytes limits every response body before error handling or JSON decoding. Zero uses the 32 MiB default.
     MaxResponseBytes    int64
     DefaultDatabaseYear string
+    // PortalRoot overrides the portal root inferred from BaseURL's path. A nil value keeps the
+    // inferred behaviour. A non-nil value is used verbatim, so a pointer to the empty string means
+    // "the portal root is the domain root" and suppresses the historical /aeries default entirely.
+    PortalRoot *string
 }
 ```
 
@@ -1025,6 +1030,15 @@ func (c Config) normalizedUserAgent() string
 ```
 
 normalizedUserAgent fills in the SDK's default user agent when the caller does not provide one.
+
+<a name="Config.portalRoot"></a>
+### func \(Config\) portalRoot
+
+```go
+func (c Config) portalRoot(rawPath string) (string, error)
+```
+
+portalRoot resolves the portal root to use for the supplied BaseURL path, honouring an explicit Config.PortalRoot override and applying the historical /aeries default only when the caller supplied no path at all.
 
 <a name="Config.validate"></a>
 ### func \(Config\) validate
