@@ -20,6 +20,9 @@ func TestConfigNormalizedBaseURLVariants(t *testing.T) {
 		{name: "admin api v5 path", input: "https://demo.aeries.net/admin/api/v5", wantURL: "https://demo.aeries.net/admin"},
 		{name: "custom api path", input: "https://demo.aeries.net/portal/api", wantURL: "https://demo.aeries.net/portal"},
 		{name: "trailing slash", input: "https://demo.aeries.net/aeries/", wantURL: "https://demo.aeries.net/aeries"},
+		{name: "bare host trailing slash", input: "https://demo.aeries.net/", wantURL: "https://demo.aeries.net/aeries"},
+		{name: "domain root api path", input: "https://demo.aeries.net/api", wantURL: "https://demo.aeries.net"},
+		{name: "domain root api v5 path", input: "https://demo.aeries.net/api/v5", wantURL: "https://demo.aeries.net"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -121,5 +124,46 @@ func TestConfigNormalizedDefaults(t *testing.T) {
 	}
 	if custom.normalizedMaxResponseBytes() != 64<<20 {
 		t.Fatalf("normalizedMaxResponseBytes did not preserve caller value")
+	}
+}
+
+// TestConfigPortalRootOverride verifies that an explicit PortalRoot wins over whatever BaseURL implies.
+func TestConfigPortalRootOverride(t *testing.T) {
+	tests := []struct {
+		name       string
+		input      string
+		portalRoot string
+		wantURL    string
+	}{
+		{name: "empty override on bare host", input: "https://demo.aeries.net", portalRoot: "", wantURL: "https://demo.aeries.net"},
+		{name: "empty override on aeries path", input: "https://demo.aeries.net/aeries", portalRoot: "", wantURL: "https://demo.aeries.net"},
+		{name: "slash override is the domain root", input: "https://demo.aeries.net/aeries", portalRoot: "/", wantURL: "https://demo.aeries.net"},
+		{name: "explicit override on bare host", input: "https://demo.aeries.net", portalRoot: "/portal", wantURL: "https://demo.aeries.net/portal"},
+		{name: "explicit override replaces path", input: "https://demo.aeries.net/aeries/api/v5", portalRoot: "/admin", wantURL: "https://demo.aeries.net/admin"},
+		{name: "override trailing slash", input: "https://demo.aeries.net", portalRoot: "/portal/", wantURL: "https://demo.aeries.net/portal"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			portalRoot := tt.portalRoot
+			config := Config{BaseURL: tt.input, Certificate: testCertificate, PortalRoot: &portalRoot}
+			got, err := config.normalizedBaseURL()
+			if err != nil {
+				t.Fatalf("normalizedBaseURL returned error: %v", err)
+			}
+			if got != tt.wantURL {
+				t.Fatalf("normalizedBaseURL = %q, want %q", got, tt.wantURL)
+			}
+		})
+	}
+}
+
+// TestConfigPortalRootRejectsBadValues verifies that a malformed PortalRoot fails configuration rather than a request.
+func TestConfigPortalRootRejectsBadValues(t *testing.T) {
+	for _, portalRoot := range []string{"portal", "https://elsewhere.example.test/portal", "/portal?x=1", "/portal#frag"} {
+		value := portalRoot
+		err := (Config{BaseURL: "https://demo.aeries.net", Certificate: testCertificate, PortalRoot: &value}).validate()
+		if err == nil || !strings.Contains(err.Error(), "PortalRoot") {
+			t.Fatalf("validate(PortalRoot=%q) error = %v, want a PortalRoot error", portalRoot, err)
+		}
 	}
 }

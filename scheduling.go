@@ -195,7 +195,6 @@ func (s *SchedulingService) DeleteStudentCourseRequest(ctx context.Context, req 
 			"StudentID":      intString(req.StudentID),
 			"SequenceNumber": intString(req.SequenceNumber),
 		},
-		JSONBody:     req.Values,
 		DatabaseYear: req.DatabaseYear,
 	})
 }
@@ -245,7 +244,6 @@ func (s *SchedulingService) DeleteAlternateCourseRequest(ctx context.Context, re
 			"StudentID":      intString(req.StudentID),
 			"SequenceNumber": intString(req.SequenceNumber),
 		},
-		JSONBody:     req.Values,
 		DatabaseYear: req.DatabaseYear,
 	})
 }

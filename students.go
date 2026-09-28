@@ -181,7 +181,6 @@ func (s *StudentsService) DeleteContact(ctx context.Context, req StudentSequence
 			"StudentID":      intString(req.StudentID),
 			"SequenceNumber": intString(req.SequenceNumber),
 		},
-		JSONBody:     req.Values,
 		DatabaseYear: req.DatabaseYear,
 	})
 }

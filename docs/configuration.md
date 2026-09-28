@@ -5,6 +5,7 @@ This page explains the runtime settings accepted by `aeries.NewClient`. Configur
 ## Settings
 
 - `BaseURL` is the HTTPS district portal root. It is required.
+- `PortalRoot` optionally overrides the portal root inferred from `BaseURL`. A nil pointer keeps the inferred behaviour. A non-nil pointer is used verbatim, so a pointer to `""` (or `"/"`) means the portal root is the domain root and suppresses the `/aeries` default entirely.
 - `Certificate` is the required 32-character alphanumeric Aeries API certificate. Treat it as a secret and never log it.
 - `HTTPClient` optionally supplies an application-managed `http.Client`. When it is omitted, the SDK creates one using `Timeout`.
 - `UserAgent` optionally replaces the default SDK user agent.
@@ -47,3 +48,15 @@ The SDK accepts the district portal root and then adds the documented API path d
 - an explicit portal root like `https://district.example.org/aeries` is preserved
 - an admin portal root like `https://district.example.org/admin` is preserved
 - an explicit API root like `https://district.example.org/admin/api/v5` is normalized back to `https://district.example.org/admin`
+- a path that normalizes to the domain root, like `https://district.example.org/api` or `https://district.example.org/api/v5`, is preserved as the domain root, so requests are sent to `https://district.example.org/api/v5/...`
+
+The `/aeries` default applies only when `BaseURL` carries no path at all. A district whose Aeries API is served from the domain root can supply `https://district.example.org/api`, or set `PortalRoot` to a pointer to the empty string to guarantee no portal root is injected regardless of the `BaseURL` shape:
+
+```go
+portalRoot := ""
+client, err := aeries.NewClient(aeries.Config{
+	BaseURL:     "https://district.example.org",
+	PortalRoot:  &portalRoot,
+	Certificate: os.Getenv("AERIES_CERT"),
+})
+```

@@ -6,7 +6,7 @@ This page is the first-stop guide for a developer who is new to Aeries and new t
 
 - How to create a client
 - How the certificate header works
-- How the base URL is normalized for `/aeries`, `/admin`, and explicit `/api/...` inputs
+- How the base URL is normalized for `/aeries`, `/admin`, domain-root, and explicit `/api/...` inputs
 - How to make a safe first request
 
 ## Create a client
